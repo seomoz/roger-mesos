@@ -1,0 +1,9 @@
+---
+# Main task for setting up marathon nodes on a cluster.
+
+- hosts: marathon_servers
+
+  roles:
+    - common
+    - java # Java must come before marathon-server
+    - marathon-server

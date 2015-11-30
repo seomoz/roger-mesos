@@ -1,0 +1,21 @@
+#!/bin/bash
+
+echo "Kernel reload()..."
+ansible-playbook -i ../ansible/hosts/single --user=vagrant --ask-pass ../ansible/base.yml
+vagrant reload
+
+echo "Starting ansible-playbook to set up other services..."
+
+ansible-playbook -i ../ansible/hosts/single --user=vagrant --ask-pass --extra-vars="mesos_cluster_name=localcluster-on-`hostname` mesos_master_network_interface=ansible_eth1 mesos_slave_network_interface=ansible_eth1" ../ansible/initial-cluster.yml
+
+# restart Zookeeper
+ansible zookeeper -i ../ansible/hosts/single --user=vagrant -s -m command -a "service zookeeper restart" --ask-pass
+
+# rstart mesos-master
+ansible masters -i ../ansible/hosts/single --user=vagrant -s -m command -a "service mesos-master restart" --ask-pass
+
+# restart mesos-slave
+ansible slaves -i ../ansible/hosts/single --user=vagrant -s -m command -a "service mesos-slave restart" --ask-pass
+
+#restart marathon
+ansible marathon_servers -i ../ansible/hosts/single --user=vagrant -s -m command -a "service marathon restart" --ask-pass

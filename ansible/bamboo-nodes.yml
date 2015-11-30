@@ -1,0 +1,8 @@
+---
+# Main task for setting up bamboo nodes on a cluster.
+
+- hosts: bamboo_servers
+
+  roles:
+    - common
+    - bamboo

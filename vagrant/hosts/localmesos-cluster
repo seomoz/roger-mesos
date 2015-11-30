@@ -1,0 +1,33 @@
+#inventory file for local multi-cluster environment
+
+[machines]
+localmesos[01:03] env=test
+
+[masters]
+localmesos[01:03]
+
+
+[zookeeper]
+localmesos01 zk_id=1
+localmesos02 zk_id=2
+localmesos03 zk_id=3
+
+[slaves]
+localmesos[02:03]
+
+[marathon_servers]
+localmesos[01:03]
+
+[docker_registry]
+localmesos01
+registry.roger.dal.moz.com
+
+[localmesos:children]
+masters
+slaves
+
+[bamboo_servers:children]
+machines
+
+[haproxy:children]
+machines

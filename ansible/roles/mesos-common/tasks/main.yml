@@ -1,0 +1,59 @@
+---
+# Common tasks on a cluster node that is a mesos master or slave (or both).
+
+- name: Create directories which need to exist, if necessary
+  file: path={{ item }} state=directory owner=root
+  with_items:
+    - "{{ mesos_tmp_dir }}"
+    - "{{ mesos_work_dir }}"
+    - "{{ mesos_log_dir }}"
+  ignore_errors: yes
+  sudo: yes
+  tags:
+    - mesos-core
+    - configuration
+
+- name: Add Mesosphere repository key to local keychain
+  apt_key: keyserver=keyserver.ubuntu.com id=E56151BF
+  sudo: yes
+  tags:
+    - packages
+    - mesos-core
+
+- name: Add Mesosphere repository to apt sources list
+  apt_repository: repo='deb http://repos.mesosphere.io/ubuntu trusty main' state=present update_cache=yes
+  sudo: yes
+  tags:
+    - packages
+    - mesos-core
+
+- name: Update package repo cache
+  apt: update_cache=yes
+  sudo: yes
+  tags:
+    - packages
+    - update_cache
+
+- name: Install mesos dependencies
+  apt: name={{ item }} state=present
+  with_items: mesos_package_deps
+  sudo: yes
+  tags:
+    - mesos-core
+    - packages
+    - mesos-package-install
+
+- name: Install the Mesos package
+  apt: name="mesos={{ mesos_version }}" state=present
+  sudo: yes
+  tags:
+    - mesos-core
+    - packages
+    - mesos-package-install
+
+- name: Configure mesos default settings file
+  template: src=mesos_defaults.j2 dest=/etc/default/mesos owner=root group=root mode=0644
+  sudo: yes
+  tags:
+    - mesos-core
+    - configuration

@@ -1,0 +1,18 @@
+# inventory file for local environment
+
+[masters]
+localmesos[01:03]
+
+[zookeeper]
+localmesos01 zk_id=1
+localmesos02 zk_id=2
+localmesos03 zk_id=3
+
+[slaves]
+localmesos[04:06]
+
+[marathon_servers]
+localmesos[01:03]
+
+[docker_registry]
+localmesos01

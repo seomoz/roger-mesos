@@ -1,0 +1,15 @@
+- name: restart docker
+  service: name=docker state=restarted
+  sudo: yes
+  tags:
+   - docker
+   - mesos-core
+   - mesos-slave
+
+- name: restart mesos-slave
+  when: inventory_hostname in groups.slaves
+  service: name=mesos-slave state=restarted
+  sudo: yes
+  tags:
+    - mesos-core
+    - mesos-slave

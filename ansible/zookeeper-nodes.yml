@@ -1,0 +1,8 @@
+---
+# Main task for setting up zookeeper nodes on a cluster.
+
+- hosts: zookeeper
+
+  roles:
+    - common
+    - zookeeper

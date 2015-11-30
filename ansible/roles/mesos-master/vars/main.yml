@@ -1,0 +1,23 @@
+---
+# The mesos master's config files to delete. We delete these as we supply all params using
+# individual files under /etc/mesos-master directory.
+# See mesos_master_args_files for more details
+mesos_master_config_files_to_delete:
+  - /etc/default/mesos-master
+
+# This is the list of files that contain the arguments to the mesos master.
+# The mesosphere package we're using has the weird requirement that each
+# commandline argument to the mesos master be present in its own file under /etc/mesos-master directory
+# i.e to pass argument foo=bar, we need to have a file named foo with contents of bar
+# under /etc/mesos-master directory.
+mesos_master_args_files:
+  - cluster
+  - work_dir
+  - zk
+  - log_dir
+  - quorum
+  - hostname
+  - port
+  - ip
+
+mesos_master_config_dir: /etc/mesos-master

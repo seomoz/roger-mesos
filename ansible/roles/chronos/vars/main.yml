@@ -1,0 +1,14 @@
+---
+# This is the list of files that contain the arguments to Chronos.
+# The mesosphere package we're using has the weird requirement that each
+# commandline argument to chronos be present in its own file under
+# /etc/chronos/conf directory i.e to pass argument foo=bar, we need to have a
+# file named foo with contents of bar under /etc/chronos/conf directory.
+chronos_args_files:
+  - http_port
+  - master
+  - zk_hosts
+
+chronos_args_directory: /etc/chronos/conf
+
+chronos_version: 2.4.0-0.1.20151007110204.ubuntu1404

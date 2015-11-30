@@ -1,0 +1,9 @@
+---
+# Main task for setting up slave nodes on a cluster.
+
+- hosts: slaves
+
+  roles:
+    - common
+    - mesos-common
+    - mesos-slave

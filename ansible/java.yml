@@ -1,0 +1,7 @@
+---
+# Main task for setting up JDK on Java hosts.
+
+- hosts: java
+
+  roles:
+    - java

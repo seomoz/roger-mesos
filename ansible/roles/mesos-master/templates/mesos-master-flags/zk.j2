@@ -1,0 +1,4 @@
+zk://
+{%- for node in groups['zookeeper'] -%}
+{{ node }}:2181{% if not loop.last %},{% endif %}
+{%- endfor %}/mesos

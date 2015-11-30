@@ -1,0 +1,4 @@
+zk://
+{%- for host in groups['masters'] -%}
+{{ host }}:2181{% if not loop.last %},{% endif %}
+{%- endfor %}/mesos

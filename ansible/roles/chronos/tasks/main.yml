@@ -1,0 +1,48 @@
+---
+ # TODO(jord): Refactor the mesosphere tasks to a common mesosphere role.
+- name: Add Mesosphere repository key to local keychain
+  apt_key: keyserver=keyserver.ubuntu.com id=E56151BF
+  sudo: yes
+  tags:
+    - packages
+    - chronos
+
+- name: Add Mesosphere repository to apt sources list
+  apt_repository: repo='deb http://repos.mesosphere.io/ubuntu trusty main' state=present update_cache=yes
+  sudo: yes
+  tags:
+    - packages
+    - chronos
+
+- name: Update package repo cache
+  apt: update_cache=yes
+  sudo: yes
+  tags:
+    - chronos
+    - packages
+    - update_cache
+
+- name: Install the Chronos package
+  apt: name="chronos={{ chronos_version }}" state=present
+  sudo: yes
+  notify: restart chronos
+  tags:
+    - packages
+    - chronos
+
+- name: Remove Chronos init.d script
+  file: path=/etc/init.d/chronos state=absent
+  sudo: yes
+  tags:
+    - packages
+    - chronos
+
+- name: Configure Chronos commandline flags
+  template: src=chronos-flags/{{item}}.j2 dest={{ chronos_args_directory }}/{{item}} owner=root group=root mode=0644
+  with_items: chronos_args_files
+  sudo: yes
+  notify: restart chronos
+  tags:
+    - packages
+    - chronos
+    - configure

@@ -1,0 +1,40 @@
+---
+# Common tasks for a Java node.
+
+- name: Add webupd8team PPA repository
+  apt_repository: repo='ppa:webupd8team/java' state=present update_cache=yes
+  sudo: yes
+  tags:
+    - java
+
+- name: Update APT cache
+  apt: update_cache=yes
+  sudo: yes
+  tags:
+    - java
+    - update_cache
+
+
+- name: Install debconf tools
+  apt: name=debconf state=present
+  sudo: yes
+  tags:
+    - java
+
+- name: Automatically set Oracle Java license as accepted
+  debconf: name='oracle-java8-installer' question='shared/accepted-oracle-license-v1-1' value='true' vtype='select'
+  sudo: yes
+  tags:
+    - java
+
+- name: Install Oracle Java
+  apt: name="oracle-java8-installer={{ oracle_java_version }}" state=present
+  sudo: yes
+  tags:
+    - java
+
+- name: Install Oracle Java defaults
+  apt: name="oracle-java8-set-default={{ oracle_java_version }}" state=present
+  sudo: yes
+  tags:
+    - java

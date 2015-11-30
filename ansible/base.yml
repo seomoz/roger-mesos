@@ -1,0 +1,8 @@
+---
+# Main task for configuring a base machine for ClusterOS.
+# This deals with very very basic stuff such as upgrading the kernel.
+# Tasks in the 'base' role imply that a reboot is needed.
+
+- hosts: machines
+  roles:
+    - base

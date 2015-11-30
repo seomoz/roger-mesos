@@ -1,0 +1,8 @@
+---
+
+zk_packages:
+  - zookeeper
+  - zookeeperd
+  - zookeeper-bin
+
+zk_log_dir: "{{ base_data_dir }}/zk/logs"

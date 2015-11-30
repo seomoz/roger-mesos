@@ -1,0 +1,39 @@
+---
+# Tasks for setting up the initial cluster.
+
+- hosts: zookeeper
+  roles:
+    - common
+    - java
+    - zookeeper
+
+- hosts: masters
+  roles:
+    - common
+    - java
+    - mesos-common
+    - mesos-master
+
+- hosts: marathon_servers
+  roles:
+    - common
+    - java
+    - marathon-server
+    - chronos
+
+- hosts: bamboo_servers
+  roles:
+    - common
+    - bamboo
+
+- hosts: slaves
+  roles:
+    - common
+    - java
+    - mesos-common
+    - mesos-slave
+
+- hosts: machines
+  roles:
+    - common
+    - monitoring-agent

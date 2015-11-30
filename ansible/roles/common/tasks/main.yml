@@ -1,0 +1,41 @@
+---
+# Common tasks on a cluster node.
+
+# This check was added after finding that monitoring metrics from daldevmesos08 was sent as from "localhost"
+# instead of as from "daldevmesos08.dal.moz.com". It turned out that `hostname -f` on the system returned "localhost".
+- name: Check that hostname and FQDN are similar
+  fail: msg="The name of the host in hostname and FQDN do not match. Ensure that `hostname` and `hostname -f` have similar outputs (e.g. daldevmesos08 & daldevmesos08.dal.moz.com.)"
+  when: ansible_hostname.split('.', 1)[0] != ansible_fqdn.split('.', 1)[0]
+  tags:
+    - monitoring
+    - basic-checks
+
+- name: Update package repo cache
+  apt: update_cache=yes
+  sudo: yes
+  tags:
+    - update_cache
+    - packages
+
+- name: Install unzip
+  apt: name=unzip state=present
+  sudo: yes
+  tags:
+    - packages
+
+- name: Create directories which need to exist, if necessary
+  file: path={{ item }} state=directory owner=root
+  with_flattened:
+    - group_dirs_to_create
+    - host_dirs_to_create
+  sudo: yes
+  ignore_errors: yes
+  tags:
+    - configuration
+
+- name: Update configuration to send syslogs to mozstash
+  copy: src="10-mozstash::emitter-forward-to-collector.conf" dest="/etc/rsyslog.d/"
+  sudo: yes
+  notify: restart rsyslog
+  tags:
+    - mozstash

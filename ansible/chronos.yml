@@ -1,0 +1,8 @@
+---
+# Main task for setting up chronos nodes on a cluster.
+
+- hosts: masters
+
+  roles:
+    - java # Java must come before chronos
+    - chronos

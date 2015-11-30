@@ -1,0 +1,5 @@
+- name: restart marathon
+  service: name=marathon state=restarted
+  sudo: yes
+  tags:
+    - marathon

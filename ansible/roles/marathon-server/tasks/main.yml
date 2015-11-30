@@ -1,0 +1,62 @@
+---
+  - name: Create host independent directories which need to exist, if necessary
+    file: path={{item}} state=directory owner=root
+    with_items: 
+      - /etc/marathon/conf
+    sudo: yes
+    tags:
+      - marathon
+
+  - name: Add Mesosphere repository key to local keychain
+    apt_key: keyserver=keyserver.ubuntu.com id=E56151BF
+    sudo: yes
+    tags:
+      - packages
+      - marathon
+
+  - name: Add Mesosphere repository to apt sources list
+    apt_repository: repo='deb http://repos.mesosphere.io/ubuntu trusty main' state=present update_cache=yes
+    sudo: yes
+    tags:
+      - packages
+      - marathon
+
+  - name: Update package repo cache
+    apt: update_cache=yes
+    sudo: yes
+    tags:
+      - marathon
+      - packages
+      - update_cache
+
+  - name: Install marathon dependencies
+    apt: name={{ item }} state=present
+    with_items: marathon_package_deps
+    sudo: yes
+    tags:
+      - packages
+      - marathon
+
+  - name: Install the Marathon package
+    apt: name="marathon={{ marathon_version }}" state=present
+    sudo: yes
+    notify: restart marathon
+    tags:
+      - packages
+      - marathon
+
+  - name: Remove old marathon dependencies
+    apt: name={{ item }} state=absent
+    with_items: old_marathon_package_deps
+    sudo: yes
+    tags:
+      - packages
+      - marathon
+
+  - name: Configure marathon commandline flags
+    template: src=marathon-flags/{{item}}.j2 dest=/etc/marathon/conf/{{item}} owner=root group=root mode=0644
+    with_items: marathon_args_files
+    sudo: yes
+    notify: restart marathon
+    tags:
+      - marathon

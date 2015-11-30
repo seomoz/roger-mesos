@@ -1,0 +1,9 @@
+---
+# Main task for setting up master nodes on a cluster.
+
+- hosts: masters
+
+  roles:
+    - common
+    - mesos-common
+    - mesos-master

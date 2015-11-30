@@ -1,0 +1,50 @@
+---
+# Tasks for a zookeeper node
+
+- name: Create directories which need to exist, if necessary
+  file: path={{ item }} state=directory owner=root
+  with_items: 
+    - "{{ zk_log_dir }}"
+  sudo: yes
+  tags:
+    - configuration
+
+- name: Install zk packages
+  apt: name={{ item }} state=present
+  with_items: zk_packages
+  sudo: yes
+  tags:
+    - packages
+
+- name: Configure zk id file
+  template: src=zk_id.j2 dest=/etc/zookeeper/conf/myid owner=root group=root mode=0644
+  notify: restart zookeeper
+  sudo: yes
+  tags:
+    - configuration
+
+- name: Point /var/lib/zookeeper/myid to the id file
+  file: src=/etc/zookeeper/conf/myid dest=/var/lib/zookeeper/myid state=link
+  notify: restart zookeeper
+  sudo: yes
+
+- name: Configure zk settings file
+  template: src=zoo_cfg.j2 dest=/etc/zookeeper/conf/zoo.cfg owner=root group=root mode=0644
+  notify: restart zookeeper
+  sudo: yes
+  tags:
+    - configuration
+
+- name: Configure zk log4j file
+  template: src=log4j.properties.j2 dest=/etc/zookeeper/conf/log4j.properties
+  notify: restart zookeeper
+  sudo: yes
+  tags:
+    - configuration
+
+- name: Configure zk environment file
+  template: src=environment.j2 dest=/etc/zookeeper/conf/environment
+  sudo: yes
+  notify: restart zookeeper
+  tags:
+    - configuration

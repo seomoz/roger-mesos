@@ -1,0 +1,36 @@
+---
+
+# The mesos slave's config files to delete. We delete these as we supply all params using
+# individual files under /etc/mesos-slave directory.
+# See mesos_slave_args_files for more details
+mesos_slave_config_files_to_delete:
+  - /etc/default/mesos-slave
+
+# This is the list of files that contain the arguments to the mesos slave.
+# The mesosphere package we're using has the weird requirement that each
+# commandline argument to the mesos slave be present in its own file under /etc/mesos-slave directory
+# i.e to pass argument foo=bar, we need to have a file named foo with contents of bar
+# under /etc/mesos-slave directory.
+mesos_slave_args_files:
+  - cgroups_enable_cfs
+  - work_dir
+  - master
+  - log_dir
+  - hostname
+  - ip
+  - containerizers
+  - executor_registration_timeout
+  - isolation
+  - resources
+
+# Controls the interface used by default by the mesos slave.
+# This is only set at Ansible configuration time as it is
+# resolved to the IP.
+# Usually this will be eth0, however single and local clusters
+# may override this if using Vagrant, as eth1 is the interface
+# used to tie VMs together.
+
+mesos_slave_config_dir: /etc/mesos-slave
+docker_rt_root_dir: "{{ base_data_dir }}/docker"
+docker_version_to_use: 1.8.2
+docker_package_version: "1.8.2-0~trusty"

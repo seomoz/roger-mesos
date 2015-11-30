@@ -1,0 +1,26 @@
+{
+  "Marathon": {
+    "Endpoint": "{%- for host in groups['marathon_servers'] -%}http://{{ host }}:8080{% if not loop.last %},{% endif %}{%- endfor %}"
+  },
+
+  "Bamboo": {
+    "Endpoint": "http://{{ inventory_hostname }}:8000",
+    "Zookeeper": {
+      "Host": "{%- for host in groups['zookeeper'] -%}{{ host }}{% if not loop.last %},{% endif %}{%- endfor %}",
+      "Path": "/bamboo/state",
+      "ReportingDelay": 5
+    }
+  },
+
+  "HAProxy": {
+    "TemplatePath": "{{ bamboo_haproxy_template_file }}",
+    "OutputPath": "/etc/haproxy/haproxy.cfg",
+    "ReloadCommand": "service haproxy reload"
+  },
+
+  "StatsD": {
+    "Enabled": false,
+    "Host": "localhost:8125",
+    "Prefix": "bamboo-server.development."
+  }
+}

@@ -1,0 +1,27 @@
+# Ubuntu upstart file at /etc/init/bamboo-server.conf
+
+description "Bamboo"
+
+console log
+
+limit nofile 32768 65536
+
+start on runlevel [2345]
+stop on [!12345]
+
+respawn
+
+env HOME="/opt/bamboo"
+
+umask 007
+
+kill timeout 300
+
+# It's working with haproxy that requires reload command
+setuid root
+setgid root
+
+script
+    cd $HOME
+    exec ./bamboo -config {{ bamboo_conf_file }}
+end script

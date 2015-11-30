@@ -1,0 +1,49 @@
+---
+
+# This is the list of files that contain the arguments to Marathon.
+# The mesosphere package we're using has the weird requirement that each
+# commandline argument to marathon be present in its own file under /etc/marathon directory
+# i.e to pass argument foo=bar, we need to have a file named foo with contents of bar
+# under /etc/marathon directory.
+marathon_args_files:
+  - event_subscriber
+  - hostname
+  - master
+  - max_apps
+  - task_launch_timeout
+  - zk
+
+old_marathon_package_deps:
+  - openjdk-7-jre-headless
+  - openjdk-7-jre
+  - openjdk-7-jdk
+
+marathon_package_deps:
+  - ca-certificates-java
+  - tzdata-java
+  - java-common
+  - libcurl3
+  - libsvn1
+  - fontconfig-config
+  - fonts-dejavu-core
+  - libasyncns0
+  - libavahi-client3
+  - libavahi-common-data
+  - libavahi-common3
+  - libcups2
+  - libflac8
+  - libfontconfig1
+  - libjpeg-turbo8
+  - libjpeg8
+  - liblcms2-2
+  - libnspr4
+  - libnss3
+  - libnss3-nssdb
+  - libogg0
+  - libpcsclite1
+  - libpulse0
+  - libsndfile1
+  - libvorbis0a
+  - libvorbisenc2
+
+marathon_version: 0.11.1-1.0.432.ubuntu1404

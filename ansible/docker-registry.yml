@@ -1,0 +1,8 @@
+---
+# Main task for setting up slave nodes on a cluster.
+
+- hosts: docker_registry
+
+  roles:
+    - common
+    - docker-registry

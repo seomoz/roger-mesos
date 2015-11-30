@@ -1,0 +1,35 @@
+# inventory file for 'single' environment
+
+[machines]
+localmesos01 env=test
+
+[masters]
+localmesos01
+
+[zookeeper]
+localmesos01 zk_id=1
+
+[slaves]
+localmesos01
+
+[marathon_servers]
+localmesos01
+
+[docker_registry]
+localmesos01
+registry.roger.dal.moz.com
+
+[single]
+localmesos01
+
+[bamboo_servers]
+localmesos01
+
+[haproxy]
+localmesos01
+
+[statsd_repeater_servers]
+localmesos01
+
+[influxdb_servers]
+localmesos01 base_monitoring_dir=/data/monitoring

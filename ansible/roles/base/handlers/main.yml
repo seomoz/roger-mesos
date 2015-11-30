@@ -1,0 +1,11 @@
+---
+- name: update grub
+  command: "update-grub"
+  sudo: yes
+  tags:
+    - kernel_parameters
+    - grub
+
+- name: reload sysctl
+  shell: "sysctl -p /etc/sysctl.conf"
+  sudo: yes
