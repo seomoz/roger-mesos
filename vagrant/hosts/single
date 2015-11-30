@@ -17,7 +17,6 @@ localmesos01
 
 [docker_registry]
 localmesos01
-registry.roger.dal.moz.com
 
 [single]
 localmesos01

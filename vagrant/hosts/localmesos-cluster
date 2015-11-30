@@ -20,7 +20,6 @@ localmesos[01:03]
 
 [docker_registry]
 localmesos01
-registry.roger.dal.moz.com
 
 [localmesos:children]
 masters
