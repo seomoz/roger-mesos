@@ -32,8 +32,3 @@
     - java
     - mesos-common
     - mesos-slave
-
-- hosts: machines
-  roles:
-    - common
-    - monitoring-agent

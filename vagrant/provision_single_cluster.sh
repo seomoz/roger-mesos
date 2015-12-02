@@ -1,4 +1,6 @@
 #!/bin/bash
+set -e
+set -u
 
 echo "Kernel reload()..."
 ansible-playbook -i hosts/single --user=vagrant --ask-pass ../ansible/base.yml
