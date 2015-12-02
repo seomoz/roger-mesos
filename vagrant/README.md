@@ -1,14 +1,11 @@
 # Setting up local clusters
-
 ### Install required plugins
-
 ```
 * vagrant plugin install vagrant-triggers
 * vagrant plugin install vagrant-hostsupdater
 ```
 
 ## Single-Machine cluster setup
-
 This will set up a single machine with the following services installed:
 ```
 1. Zookeeper
@@ -24,7 +21,6 @@ You can look at the definition of this file at
 ```
 
 ### Setup:
-
 1. `cd vagrant`
 2. `cat Vagrantfile` (Make sure only `localmesos01` is uncommented and the others `localmesos[02:04]` are commented)
 3. `vagrant up`
@@ -55,7 +51,6 @@ The reason is that it is not configued as a slave node in `/ansible/hosts/localm
 
 ## Multiple-Machine cluster setup (3 by default)  
 This will set up a single machine with the following services installed
-```
 1. Mesos-master
 2. Mesos-slave
 3. Zookeeper
@@ -87,7 +82,7 @@ You can look at the definition of this file at
 
 ### Good to know:
 1. You need to know the sudo password as to clear known_host entry at the time of destroying vagrant.
-2. You need to be around as you need to pass on the ssh password ```vagrant``` mutiple times when running the ```provision_multi_cluster.sh``` script.
-3. Check your ````/data/zk/logs/zookeeper.log``` for any Address already in use Exception if you find your cluster having problem in master selection=> zk is not functional
-4. Use the ```./restartServicesCluster.sh``` script to restart all the services on all the hosts if required.
+2. You need to be around as you need to pass on the ssh password ```vagrant``` mutiple times when running the `provision_multi_cluster.sh` script.
+3. Check your `/data/zk/logs/zookeeper.log` for any Address already in use Exception if you find your cluster having problem in master selection=> zk is not functional
+4. Use the `./restartServicesCluster.sh` script to restart all the services on all the hosts if required.
 5. If you just restart mesos-slave it should be fine as well if resources are not getting registered.
