@@ -2,9 +2,9 @@
 set -e
 set -u
 
-#echo "Kernel reload()..."
-#ansible-playbook -i hosts/single --user=vagrant --ask-pass ../ansible/base.yml
-#vagrant reload
+echo "Kernel reload()..."
+ansible-playbook -i hosts/single --user=vagrant --ask-pass ../ansible/base.yml
+vagrant reload
 
 echo "Starting ansible-playbook to set up other services..."
 
