@@ -71,6 +71,7 @@
    - bamboo
 
 - name: Add local HAProxy as 127.0.0.2 in /etc/hosts
+  when: haproxy_local is defined
   lineinfile: dest=/etc/hosts regexp='.*{{ haproxy_local }}$' line="127.0.0.2 {{ haproxy_local }}" state=present
   sudo: yes
   tags:

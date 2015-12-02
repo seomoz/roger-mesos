@@ -1,7 +1,7 @@
 # inventory file for 'single' environment
 
 [machines]
-localmesos01 env=test
+localmesos01 env=test base_data_dir=/data
 
 [masters]
 localmesos01
@@ -26,9 +26,3 @@ localmesos01
 
 [haproxy]
 localmesos01
-
-[statsd_repeater_servers]
-localmesos01
-
-[influxdb_servers]
-localmesos01 base_monitoring_dir=/data/monitoring
