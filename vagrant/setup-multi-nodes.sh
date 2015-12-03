@@ -1,7 +1,9 @@
 #!/bin/bash
+set -e
+set -u
+
 echo "Running base playbook..."
 ansible-playbook -i hosts/localmesos-cluster --user=vagrant --ask-pass ../ansible/base.yml
-
 vagrant reload
 
 echo "Running initial-cluster..."

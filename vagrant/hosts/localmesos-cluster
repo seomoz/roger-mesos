@@ -1,7 +1,7 @@
-#inventory file for local multi-cluster environment
+#inventory file for local multi-node cluster environment
 
 [machines]
-localmesos[01:03] env=test
+localmesos[01:03] env=test base_data_dir=/data
 
 [masters]
 localmesos[01:03]
