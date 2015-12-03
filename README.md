@@ -18,8 +18,9 @@ It also contains examples to show how to set up single as well as multi-node clu
 
 ### Steps to get the cluster up and running
 * Ensure that an inventory file exists with the list of masters, slaves, etc. (see an existing hosts file in the hosts dir under [vagrant](vagrant).)
-* Run:
+* Run the following commands (*WARNING:* the first command below will reboot the hosts):
 ```
+$ ansible-playbook -i <path-to-hosts-file> --user=<user> --ask-pass --ask-sudo-pass --extra-vars="restart_machine=true" base.yml
 $ ansible-playbook -i <path-to-hosts-file> --user=<user> --ask-pass --ask-sudo-pass zookeeper-nodes.yml
 $ ansible-playbook -i <path-to-hosts-file> --user=<user> --ask-pass --ask-sudo-pass --extra-vars="mesos_cluster_name=<cluster-name-to-use>" master-nodes.yml
 $ ansible-playbook -i <path-to-hosts-file> --user=<user> --ask-pass --ask-sudo-pass marathon-nodes.yml

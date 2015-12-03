@@ -1,8 +1,8 @@
 # Setting up local clusters
 ### Install required plugins
 ```
-* vagrant plugin install vagrant-triggers
-* vagrant plugin install vagrant-hostsupdater
+$ vagrant plugin install vagrant-triggers
+$ vagrant plugin install vagrant-hostsupdater
 ```
 
 ## Single-Machine cluster setup
