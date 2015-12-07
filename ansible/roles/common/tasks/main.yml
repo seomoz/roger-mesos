@@ -32,10 +32,3 @@
   ignore_errors: yes
   tags:
     - configuration
-
-- name: Update configuration to send syslogs to mozstash
-  copy: src="10-mozstash::emitter-forward-to-collector.conf" dest="/etc/rsyslog.d/"
-  sudo: yes
-  notify: restart rsyslog
-  tags:
-    - mozstash
