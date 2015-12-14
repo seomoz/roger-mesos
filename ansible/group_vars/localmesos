@@ -1,0 +1,7 @@
+---
+# Common variables for local mesos cluster
+
+base_data_dir: /data
+tmp_dir: /tmp
+
+san_mount: /vagrant
