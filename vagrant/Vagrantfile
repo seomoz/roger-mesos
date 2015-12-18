@@ -131,7 +131,6 @@ Vagrant.configure(2) do |config|
             'bamboo_servers' => node,
             'haproxy' => node
           }
-          ansible.tags = 'vagrant'
         else
           # Group config here
         end
