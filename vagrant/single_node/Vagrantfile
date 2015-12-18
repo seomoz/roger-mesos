@@ -2,10 +2,7 @@
 # vi: set ft=ruby :
 
 nodes = [
-  { :hostname => 'localmesos01', :ip => '192.168.2.101', :mem => 4096, :cpus => 1 },
-  #{ :hostname => 'localmesos02', :ip => '192.168.2.102', :mem => 1024, :cpus => 1 },
-  #{ :hostname => 'localmesos03', :ip => '192.168.2.103', :mem => 1024, :cpus => 1 },
-  #{ :hostname => 'localmesos04', :ip => '192.168.2.104', :mem => 1024, :cpus => 1 },
+  { :hostname => 'localmesos01', :ip => '192.168.2.101', :mem => 4096, :cpus => 1 }
 ]
 
 Vagrant.configure(2) do |config|

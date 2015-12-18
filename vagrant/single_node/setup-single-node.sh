@@ -3,12 +3,12 @@ set -e
 set -u
 
 echo "Kernel reload()..."
-ansible-playbook -i hosts/single --user=vagrant --ask-pass ../ansible/base.yml
+ansible-playbook -i hosts/single --user=vagrant --ask-pass ../../ansible/base.yml
 vagrant reload
 
 echo "Starting ansible-playbook to set up other services..."
 
-ansible-playbook -i hosts/single --user=vagrant --ask-pass --extra-vars="mesos_cluster_name=localcluster-on-`hostname` mesos_master_network_interface=ansible_eth1 mesos_slave_network_interface=ansible_eth1" ../ansible/initial-cluster.yml
+ansible-playbook -i hosts/single --user=vagrant --ask-pass --extra-vars="mesos_cluster_name=localcluster-on-`hostname` mesos_master_network_interface=ansible_eth1 mesos_slave_network_interface=ansible_eth1" ../../ansible/initial-cluster.yml
 
 # restart Zookeeper
 ansible zookeeper -i hosts/single --user=vagrant -s -m command -a "service zookeeper restart" --ask-pass
