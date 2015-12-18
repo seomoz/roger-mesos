@@ -1,7 +1,7 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
-# Options should be single and multi
+# return single or multi-instance mode
 def roger_mode
   ENV['ROGER_MODE'] || 'single'
 end
@@ -11,6 +11,7 @@ when 'single'
   nodes = [
     {
       hostname: 'localmesos01',
+      ip: '192.168.33.100',
       mem: 4096,
       cpus: 1
     }
@@ -47,7 +48,9 @@ def validate_mode
   end
 end
 
-# Install plugin
+# Install vagrant plugin
+#
+# @param: plugin type: String desc: The desired plugin to install
 def ensure_plugin(plugin)
   pm = Vagrant::Plugin::Manager.new(
     Vagrant::Plugin::Manager.user_plugins_file
@@ -92,7 +95,8 @@ Vagrant.configure(2) do |config|
     vb.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
   end
 
-  # On destroy, remove entries (if any) for the nodes in the host's ssh authorized keys
+  # # On destroy, remove entries (if any) for the nodes in the host's ssh
+  # # authorized keys
   # config.trigger.after :destroy do
   #   run "ssh-keygen -R #{@machine.name}"
   # end
@@ -100,20 +104,30 @@ Vagrant.configure(2) do |config|
   nodes.each do |entry|
     config.vm.define entry[:hostname] do |node|
       node.vm.hostname = entry[:hostname]
-      node.vm.network :private_network, type: 'dhcp'
+      node.vm.network :private_network, ip: entry[:ip]
+      node.hostmanager.aliases = ["#{entry[:hostname]}.dal.moz.com"]
       node.vm.provider :virtualbox do |vb|
         vb.memory = entry[:mem]
         vb.cpus = entry[:cpus]
       end
       config.vm.provision "ansible" do |ansible|
-        ansible.playbook = "ansible/base.yml"
+        ansible.playbook = "ansible/vagrant-provision.yml"
         if roger_mode == 'single'
-          # Single config here
+          ansible.groups = {
+            'machines' => 'localmesos01',
+            'masters' => 'localmesos01',
+            'zookeeper' => 'localmesos01',
+            'slaves' => 'localmesos01',
+            'marathon_servers' => 'localmesos01',
+            'docker_registry' => 'localmesos01',
+            'single' => 'localmesos01',
+            'bamboo_servers' => 'localmesos01',
+            'haproxy' => 'localmesos01'
+          }
         else
           # Group config here
         end
       end
     end
   end
-
 end

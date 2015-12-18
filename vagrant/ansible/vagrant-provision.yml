@@ -1,0 +1,39 @@
+---
+- hosts: machines
+  roles:
+    - base
+
+- hosts: zookeeper
+  roles:
+    - common
+    - java
+    - zookeeper
+
+- hosts: masters
+  roles:
+    - common
+    - java
+    - mesos-common
+    - mesos-master
+  vars:
+    mesos_cluster_name: localcluster-on-{{ ansible_hostname }}
+    mesos_master_network_interface: ansible_eth1
+
+- hosts: marathon_servers
+  roles:
+    - common
+    - java
+    - marathon-server
+    - chronos
+
+- hosts: bamboo_servers
+  roles:
+    - common
+    - bamboo
+
+- hosts: slaves
+  roles:
+    - common
+    - java
+    - mesos-common
+    - mesos-slave

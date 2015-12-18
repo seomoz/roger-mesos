@@ -1,13 +1,23 @@
 ---
+- name: Update apt
+  apt: update_cache=yes
+  sudo: yes
+  tags:
+    - kernel_install
+
 - name: Install Linux kernel image
   apt: name="linux-image-{{kernel_version}}" state=present
   sudo: yes
+  notify:
+    - restart machine
   tags:
     - kernel_install
 
 - name: Install Linux kernel image extras
   apt: name="linux-image-extra-{{kernel_version}}" state=present
   sudo: yes
+  notify:
+    - restart machine
   tags:
     - kernel_install
 
@@ -82,6 +92,7 @@
 - name: restart machine
   command: shutdown -r now "Ansible updates triggered"
   when: restart_machine == "true"
+  when: restart_machine == true
   async: 0
   poll: 0
   ignore_errors: true
@@ -93,5 +104,6 @@
   local_action: wait_for host={{ inventory_hostname }}
                 state=started
   when: restart_machine == "true"
+  when: restart_machine == true
   tags:
     - restart

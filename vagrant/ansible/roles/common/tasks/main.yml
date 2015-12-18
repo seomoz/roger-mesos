@@ -4,8 +4,8 @@
 # This check was added after finding that monitoring metrics from daldevmesos08 was sent as from "localhost"
 # instead of as from "daldevmesos08.dal.moz.com". It turned out that `hostname -f` on the system returned "localhost".
 - name: Check that hostname and FQDN are similar
-  fail: msg="The name of the host in hostname and FQDN do not match. Ensure that `hostname` and `hostname -f` have similar outputs (e.g. daldevmesos08 & daldevmesos08.dal.moz.com.)"
-  when: ansible_hostname.split('.', 1)[0] != ansible_fqdn.split('.', 1)[0]
+  fail: msg="The name of the host in hostname and FQDN do not match. Ensure that $(hostname) and $(hostname -f) have similar outputs"
+  when: (ansible_hostname.split('.', 1)[0] != ansible_fqdn.split('.', 1)[0] and env != 'test')
   tags:
     - monitoring
     - basic-checks
