@@ -83,7 +83,7 @@ Vagrant.configure(2) do |config|
 
   if ARGV[0] == 'destroy'
     nodes.each do |n|
-      system("ssh-keygen -R #{node[:hostname]}")
+      system("ssh-keygen -R #{n[:hostname]}")
     end
   end
 
