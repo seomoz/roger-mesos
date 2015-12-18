@@ -17,7 +17,7 @@ It also contains examples to show how to set up single as well as multi-node clu
 * Sudo access to each of the host machines is available.
 
 ### Steps to get the cluster up and running
-* Ensure that an inventory file exists with the list of masters, slaves, etc. (see an existing hosts file in the hosts dir under [vagrant](vagrant).)
+* Ensure that an inventory file exists with the list of masters, slaves, etc. (see an existing hosts file in the hosts dir under [vagrant/single_node or vagrant/multi_node](vagrant).)
 * Run the following commands (*WARNING:* the first command below will reboot the hosts):
 ```
 $ ansible-playbook -i <path-to-hosts-file> --user=<user> --ask-pass --ask-sudo-pass --extra-vars="restart_machine=true" base.yml

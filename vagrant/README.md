@@ -62,7 +62,7 @@ zk://localmesos01:2181/mesos
 
 ## Develepor Notes:
 1. You need to know the sudo password to clear known_host entry at the time of destroying vagrant.
-2. You need to be around as you need to pass on the ssh password `vagrant mutiple times when running the the script.
+2. You need to be around as you need to pass on the ssh password `vagrant` mutiple times when running the the script.
 3. Check your `/data/zk/logs/zookeeper.log` for any `Address already in use` exception if you find your cluster having problems in master selection (zk is not functional.)
 4. Use the restart services script to restart all the services on all the hosts if required.
 5. If you just restart mesos-slave it should be fine as well if resources are not getting registered.
