@@ -1,25 +1,25 @@
 #inventory file for local multi-node cluster environment
 
 [machines]
-localmesos[01:03] env=test base_data_dir=/data shared_mount=/vagrant
+localmesos[02:04] env=test base_data_dir=/data shared_mount=/vagrant
 
 [masters]
-localmesos[01:03]
+localmesos[02:04]
 
 
 [zookeeper]
-localmesos01 zk_id=1
-localmesos02 zk_id=2
-localmesos03 zk_id=3
+localmesos02 zk_id=1
+localmesos03 zk_id=2
+localmesos04 zk_id=3
 
 [slaves]
-localmesos[02:03]
+localmesos[03:04]
 
 [marathon_servers]
-localmesos[01:03]
+localmesos[02:04]
 
 [docker_registry]
-localmesos01
+localmesos02
 
 [localmesos:children]
 masters
