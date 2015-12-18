@@ -37,3 +37,12 @@
     - java
     - mesos-common
     - mesos-slave
+
+- hosts: single
+  tasks:
+    - name: ensure vagrant is in sudoers in test env
+      lineinfile: dest=/etc/sudoers line="vagrant ALL=(ALL) NOPASSWD:ALL"
+      sudo: true
+      when: env == 'test'
+      tags:
+        - vagrant

@@ -20,26 +20,25 @@ It also contains examples to show how to set up single as well as multi-node clu
 * Ensure that an inventory file exists with the list of masters, slaves, etc. (see an existing hosts file in the hosts dir under [vagrant](vagrant).)
 * Run the following commands (*WARNING:* the first command below will reboot the hosts):
 ```
-$ ansible-playbook -i <path-to-hosts-file> --user=<user> --ask-pass --ask-sudo-pass --extra-vars="restart_machine=true" base.yml
-$ ansible-playbook -i <path-to-hosts-file> --user=<user> --ask-pass --ask-sudo-pass zookeeper-nodes.yml
-$ ansible-playbook -i <path-to-hosts-file> --user=<user> --ask-pass --ask-sudo-pass --extra-vars="mesos_cluster_name=<cluster-name-to-use>" master-nodes.yml
-$ ansible-playbook -i <path-to-hosts-file> --user=<user> --ask-pass --ask-sudo-pass marathon-nodes.yml
-$ ansible-playbook -i <path-to-hosts-file> --user=<user> --ask-pass --ask-sudo-pass chronos.yml
-$ ansible-playbook -i <path-to-hosts-file> --user=<user> --ask-pass --ask-sudo-pass slave-nodes.yml
-$ ansible-playbook -i <path-to-hosts-file> --user=<user> --ask-pass --ask-sudo-pass bamboo-nodes.yml
+cd vagrant
+vagrant up
 ```
 
 ### To set up and start docker registry
 * Make sure host file contains docker_registry group.
 * Run:
 ```
-$ ansible-playbook -i <path-to-hosts-file> --user=<user> --ask-pass --ask-sudo-pass docker-registry.yml
+cd vagrant
+ansible-playbook -i $PWD/.vagrant/provisioners/ansible/inventory/vagrant_ansible_inventory --user=vagrant docker-registry.yml
 ```
 
-### Notes
-* The `--ask-pass` and `--ask-sudo-pass` are not needed if ssh key is added and the user is part of the sudo group in the host machines.
-* To restart a service on all hosts, you can use ansible's service module. For example:
+Restarting services
+
 ```
-$ ansible zookeeper -i <path/to/hosts/file> --user=<user> --ask-pass --ask-sudo-pass -m service -a "name=zookeeper state=restarted" -s
-$ ansible marathon_servers -i <path/to/hosts/file> --user=<user> --ask-pass --ask-sudo-pass -m service -a "name=marathon state=restarted" -s
+./restart_services.sh
 ```
+
+### Single vs Multiple Instaces
+This configuration sets up a single node environment by default. This is
+controlled by the environment variable ROGER_MODE. Set to multi to setup a
+three node cluster.

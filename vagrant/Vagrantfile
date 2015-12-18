@@ -81,6 +81,12 @@ Vagrant.configure(2) do |config|
     check_ansible
   end
 
+  if ARGV[0] == 'destroy'
+    nodes.each do |n|
+      system("ssh-keygen -R #{node[:hostname]}")
+    end
+  end
+
   if use_hostmanager
     config.hostmanager.enabled = true
     config.hostmanager.manage_host = true
@@ -113,17 +119,19 @@ Vagrant.configure(2) do |config|
       config.vm.provision "ansible" do |ansible|
         ansible.playbook = "ansible/vagrant-provision.yml"
         if roger_mode == 'single'
+          node = nodes[0][:hostname]
           ansible.groups = {
-            'machines' => 'localmesos01',
-            'masters' => 'localmesos01',
-            'zookeeper' => 'localmesos01',
-            'slaves' => 'localmesos01',
-            'marathon_servers' => 'localmesos01',
-            'docker_registry' => 'localmesos01',
-            'single' => 'localmesos01',
-            'bamboo_servers' => 'localmesos01',
-            'haproxy' => 'localmesos01'
+            'machines' => node,
+            'masters' => node,
+            'zookeeper' => node,
+            'slaves' => node,
+            'marathon_servers' => node,
+            'docker_registry' => node,
+            'single' => node,
+            'bamboo_servers' => node,
+            'haproxy' => node
           }
+          ansible.tags = 'vagrant'
         else
           # Group config here
         end
