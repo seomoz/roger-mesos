@@ -42,3 +42,10 @@ Restarting services
 This configuration sets up a single node environment by default. This is
 controlled by the environment variable ROGER_MODE. Set to multi to setup a
 three node cluster.
+
+### URLS
+
+* Marathon: http://localmesos01:8080
+* Mesos: http://localmesos01:5050
+* Bamboo: http://localmesos01:8000
+
