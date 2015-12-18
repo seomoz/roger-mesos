@@ -1,4 +1,11 @@
 ---
+- name: Update package repo cache
+  apt: update_cache=yes
+  sudo: yes
+  tags:
+    - update_cache
+    - packages
+
 - name: Install Linux kernel image
   apt: name="linux-image-{{kernel_version}}" state=present
   sudo: yes
