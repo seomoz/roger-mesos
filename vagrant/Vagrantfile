@@ -1,34 +1,119 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
-nodes = [
-  { :hostname => 'localmesos01', :ip => '192.168.2.101', :mem => 4096, :cpus => 1 },
-  #{ :hostname => 'localmesos02', :ip => '192.168.2.102', :mem => 1024, :cpus => 1 },
-  #{ :hostname => 'localmesos03', :ip => '192.168.2.103', :mem => 1024, :cpus => 1 },
-  #{ :hostname => 'localmesos04', :ip => '192.168.2.104', :mem => 1024, :cpus => 1 },
-]
+# Options should be single and multi
+def roger_mode
+  ENV['ROGER_MODE'] || 'single'
+end
+
+case roger_mode
+when 'single'
+  nodes = [
+    {
+      hostname: 'localmesos01',
+      mem: 4096,
+      cpus: 1
+    }
+  ]
+when 'multi'
+  nodes = [
+    {
+      hostname: 'localmesos01',
+      mem: 1536,
+      cpus: 1
+    },
+    {
+      hostname: 'localmesos02',
+      mem: 1536,
+      cpus: 1
+    },
+    {
+      hostname: 'localmesos03',
+      mem: 1536,
+      cpus: 1
+    }
+  ]
+end
+
+
+# landrush handles hostname resolution in guests and host
+use_hostmanager = true
+
+# Validate if we're running one or three instances
+def validate_mode
+  unless roger_mode == 'single' || roger_mode == 'multi'
+    puts "You must set ROGER_MODE to single or multi"
+    exit 1
+  end
+end
+
+# Install plugin
+def ensure_plugin(plugin)
+  pm = Vagrant::Plugin::Manager.new(
+    Vagrant::Plugin::Manager.user_plugins_file
+  )
+  plugin_hash = pm.installed_plugins
+  return if plugin_hash.has_key?(plugin)
+
+  puts "Installing plugin #{plugin}"
+  pm.install_plugin(plugin)
+end
+
+def check_ansible
+  output = %x(which ansible)
+  return if /.*ansible.*/ =~ output
+
+  puts "You must install ansible. Try pip install ansible or sudo pip " +
+       "install andible"
+  exit 1
+end
 
 Vagrant.configure(2) do |config|
+
   config.vm.box = "ubuntu/trusty64"
 
-  # The following lines were added to support access registry etc. when connected via vpn (see: http://akrabat.com/sharing-host-vpn-with-vagrant/)
+  if ARGV[0] == 'up'
+    validate_mode
+    ensure_plugin('vagrant-hostmanager') if use_hostmanager
+    check_ansible
+  end
+
+  if use_hostmanager
+    config.hostmanager.enabled = true
+    config.hostmanager.manage_host = true
+    config.hostmanager.ignore_private_ip = false
+  end
+
+  # The following lines were added to support access registry etc.
+  # when connected via vpn:
+  #
+  # http://akrabat.com/sharing-host-vpn-with-vagrant/)
   config.vm.provider :virtualbox do |vb|
     vb.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
   end
 
   # On destroy, remove entries (if any) for the nodes in the host's ssh authorized keys
-  config.trigger.after :destroy do
-    run "ssh-keygen -R #{@machine.name}"
-  end
+  # config.trigger.after :destroy do
+  #   run "ssh-keygen -R #{@machine.name}"
+  # end
 
   nodes.each do |entry|
     config.vm.define entry[:hostname] do |node|
       node.vm.hostname = entry[:hostname]
-      node.vm.network :private_network, ip: entry[:ip]
+      node.vm.network :private_network, type: 'dhcp'
       node.vm.provider :virtualbox do |vb|
         vb.memory = entry[:mem]
         vb.cpus = entry[:cpus]
       end
+      config.vm.provision "ansible" do |ansible|
+        ansible.playbook = "ansible/base.yml"
+        if roger_mode == 'single'
+          # Single config here
+        else
+          # Group config here
+        end
+      end
     end
   end
+
 end
