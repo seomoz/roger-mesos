@@ -1,7 +1,7 @@
 # inventory file for 'single' environment
 
 [machines]
-localmesos01 env=test base_data_dir=/data
+localmesos01 env=test base_data_dir=/data shared_mount=/vagrant
 
 [masters]
 localmesos01

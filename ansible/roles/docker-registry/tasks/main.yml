@@ -11,9 +11,10 @@
   file: path={{ docker_registry_dir }} state=directory owner=root
   sudo: yes
 
-- name: Backup registry to SAN using rsync and cron
-  cron: name="backupdockerregistry" state="present" job="rsync -a {{ docker_registry_dir }}/ {{ san_mount }}/docker-registry" special_time="daily"
+- name: Backup registry to docker_backup_dir (if defined) using rsync and cron
+  cron: name="backupdockerregistry" state="present" job="rsync -a {{ docker_registry_dir }}/ {{ docker_backup_dir }}/docker-registry" special_time="daily"
   sudo: yes
+  when: docker_backup_dir is defined
 
 - name: Start docker (if needed)
   service: name=docker state=started

@@ -1,12 +1,11 @@
 ---
-
 # Common variables for the 'single' group
 
 base_data_dir: /data/mesos
-
 tmp_dir: /tmp
 
-group_dirs_to_create: 
+group_dirs_to_create:
   - /data/mesos
   - /tmp
-  
+
+common_mount_dir: /shared_mount

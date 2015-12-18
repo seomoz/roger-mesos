@@ -1,7 +1,11 @@
 ---
 # Common variables for local mesos cluster
 
-base_data_dir: /data
+base_data_dir: /data/mesos
 tmp_dir: /tmp
 
-san_mount: /vagrant
+group_dirs_to_create:
+  - /data/mesos
+  - /tmp
+
+common_mount_dir: /shared_mount

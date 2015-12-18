@@ -21,12 +21,12 @@
     - mesos-core
     - configuration
 
-- name: Create link to shared nfs san mount
-  file: src={{ san_mount }} dest=/nfs state=link
+- name: Create link to shared mount (if defined)
+  file: src={{ shared_mount }} dest={{ common_mount_dir }} state=link
   sudo: yes
-  when: san_mount is defined
+  when: shared_mount is defined and common_mount_dir is defined
   tags:
-    - nfs-link
+    - shared-link
 
 - name: Disable mesos master
   when: inventory_hostname not in groups.masters
