@@ -9,3 +9,10 @@
 - name: reload sysctl
   shell: "sysctl -p /etc/sysctl.conf"
   sudo: yes
+
+- name: restart machine
+  set_fact: restart_machine=true
+  when: env == 'test'
+  tags:
+    - kernel
+    - restart
