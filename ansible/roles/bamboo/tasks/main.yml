@@ -11,7 +11,7 @@
     - bamboo
 
 - name: Copy bamboo deb file
-  copy: src="large_files/bamboo_1.0.0-1_all.deb" dest={{ bamboo_tmp_dir }}
+  copy: src="large_files/bamboo_{{ bamboo_version }}-1_all.deb" dest={{ bamboo_tmp_dir }}
   sudo: yes
   tags:
     - bamboo
@@ -42,8 +42,8 @@
   tags:
     - bamboo
 
-- name: Install the Bamboo package
-  apt: deb="{{ bamboo_tmp_dir }}/bamboo_1.0.0-1_all.deb"
+- name: Install the Bamboo package - bamboo_{{ bamboo_version }}
+  apt: deb="{{ bamboo_tmp_dir }}/bamboo_{{ bamboo_version }}-1_all.deb"
   sudo: yes
   notify: restart bamboo
   tags:

@@ -5,3 +5,4 @@ bamboo_log_dir: "{{ base_data_dir | mandatory}}/bamboo/logs"
 bamboo_tmp_dir: "{{ base_data_dir | mandatory}}/bamboo/tmp"
 bamboo_conf_file: "{{ bamboo_conf_dir }}/production.json"
 bamboo_haproxy_template_file: "{{ bamboo_conf_dir }}/haproxy_template.cfg"
+bamboo_version: 1.0.0
