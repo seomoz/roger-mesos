@@ -64,7 +64,7 @@
    - bamboo
 
 - name: Copy Haproxy template
-  copy: src=haproxy_template.cfg dest="{{ bamboo_haproxy_template_file }}"
+  command: "cp /opt/bamboo/config/haproxy_template.cfg '{{ bamboo_haproxy_template_file }}'"
   sudo: yes
   notify: restart bamboo
   tags:
