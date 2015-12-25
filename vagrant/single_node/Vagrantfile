@@ -13,6 +13,8 @@ Vagrant.configure(2) do |config|
     vb.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
   end
 
+  config.vm.network :forwarded_port, guest: 22, host: 2223, id: "ssh"
+
   # On destroy, remove entries (if any) for the nodes in the host's ssh authorized keys
   config.trigger.after :destroy do
     run "ssh-keygen -R #{@machine.name}"
