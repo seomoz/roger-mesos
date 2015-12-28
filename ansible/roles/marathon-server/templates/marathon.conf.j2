@@ -7,9 +7,10 @@ respawn
 respawn limit 10 5
 
 {% if (marathon_password is defined) and not(marathon_password | trim == '') %}env MESOSPHERE_HTTP_CREDENTIALS="{{ marathon_username }}:{{ marathon_password }}"{% endif %}
-{% if (ssl_keystore_password is defined) and not (ssl_keystore_password | trim =='') %}
+
+{% if (ssl_keystore_pass is defined) and not(ssl_keystore_pass | trim =='') %}
 env MESOSPHERE_KEYSTORE_PATH={{ ssl_keystore_path }}
-env MESOSPHERE_KEYSTORE_PASS={{ ssl_keystore_password }}
+env MESOSPHERE_KEYSTORE_PASS={{ ssl_keystore_pass }}
 {% endif %}
 
 exec /usr/bin/marathon
