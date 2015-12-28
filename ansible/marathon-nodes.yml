@@ -6,7 +6,7 @@
   vars_prompt:
     - name: "ssl_keystore_path"
       prompt: "Keystore Path?"
-      default: "/etc/marathon/keystore/keystore.jks"
+      default: "/etc/marathon/keys/marathon.jks"
       private: no
 
     - name: "ssl_keystore_pass"
@@ -20,7 +20,7 @@
       private: no
 
     - name: "marathon_password"
-      prompt: "Marathon password? (keep blank to disable auth)"
+      prompt: "Marathon password? (keep blank to disable authentication)"
       default: ""
       private: yes
 
