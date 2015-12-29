@@ -1,0 +1,107 @@
+#!/bin/bash
+
+# Adapted/modified (to work with ansible and create Java keystore) on 2015-12-28
+# by Ankan Mukherjee from the original here - https://gist.github.com/bradland/1690807
+##
+# WARNING:
+#  This script was created only for dev/test purposes. It *DELETES* existing keys and certs.
+#  So, do *NOT* run this in production (and similar) environmetns unless you know what you're doing!!
+##
+
+# Bash shell script for generating self-signed certs. Large portions of this script were taken from the
+# following artcile:
+#
+# http://usrportage.de/archives/919-Batch-generating-SSL-certificates.html
+#
+# Additional alterations by: Brad Landers
+# Date: 2012-01-27
+
+# Script accepts a single argument, the fqdn for the cert
+DOMAIN="$1"
+if [ -z "$DOMAIN" ]; then
+  echo "Usage: $(basename $0) <domain>"
+  exit 11
+fi
+
+fail_if_error() {
+  [ $1 != 0 ] && {
+    unset PASSPHRASE
+    exit 10
+  }
+}
+
+# Generate a passphrase
+export PASSPHRASE=$(head -c 500 /dev/urandom | tr -dc a-z0-9A-Z | head -c 128; echo)
+
+# Certificate details
+subj="
+C={{ cert_country }}
+ST={{ cert_state }}
+O={{ cert_company_name }}
+localityName={{ cert_city }}
+commonName=$DOMAIN
+organizationalUnitName={{ cert_department_name }}
+emailAddress={{ cert_admin_email }}
+"
+
+# Generate the server private key
+rm -f $DOMAIN.key
+fail_if_error $?
+openssl genrsa -des3 -out $DOMAIN.key -passout env:PASSPHRASE 2048
+fail_if_error $?
+
+# Generate the CSR
+rm -f $DOMAIN.csr
+fail_if_error $?
+openssl req \
+    -new \
+    -batch \
+    -subj "$(echo -n "$subj" | tr "\n" "/")" \
+    -key $DOMAIN.key \
+    -out $DOMAIN.csr \
+    -passin env:PASSPHRASE
+fail_if_error $?
+
+rm -f $DOMAIN.key.orig
+fail_if_error $?
+cp $DOMAIN.key $DOMAIN.key.orig
+fail_if_error $?
+
+# Strip the password so we don't have to type it every time we restart Apache
+openssl rsa -in $DOMAIN.key.orig -out $DOMAIN.key -passin env:PASSPHRASE
+fail_if_error $?
+
+# Generate the cert (good for 1 year)
+rm -f $DOMAIN.pem
+fail_if_error $?
+openssl x509 -req -days 365 -in $DOMAIN.csr -signkey $DOMAIN.key -out $DOMAIN.pem
+fail_if_error $?
+
+# PKCS password
+export PKCS_PASSWORD={{ ssl_keystore_pass }}
+
+# Combine the key and certificate files into a PKCS12 format file, the format used by the Java keystore
+rm -f $DOMAIN.pkcs12
+fail_if_error $?
+openssl pkcs12 -inkey $DOMAIN.key \
+    -passin env:PASSPHRASE \
+    -name $DOMAIN \
+    -in $DOMAIN.pem \
+    -password env:PKCS_PASSWORD \
+    -export -out $DOMAIN.pkcs12
+fail_if_error $?
+
+# Remove the keystore first
+rm -f {{ ssl_keystore_path }}
+fail_if_error $?
+# Import the keystore
+keytool -importkeystore -srckeystore $DOMAIN.pkcs12 \
+    -srcalias $DOMAIN \
+    -srcstorepass $PKCS_PASSWORD \
+    -srcstoretype PKCS12 \
+    -destkeystore {{ ssl_keystore_path }} \
+    -deststorepass {{ ssl_keystore_pass }} \
+    -noprompt
+fail_if_error $?
+
+exit 0

@@ -1,0 +1,23 @@
+---
+
+- name: Create cert dir (if necessary) in host
+  file: path={{ cert_dir }} state=directory owner=root
+  sudo: yes
+
+- name: Copy gencert script to host
+  template: src=gencert.sh.j2 dest="{{ cert_dir }}/gencert.sh" owner=root group=root mode=0744
+  sudo: yes
+
+- name: Run gencert with cert_domain
+  shell: ./gencert.sh {{ cert_domain }} chdir="{{ cert_dir }}/"
+  when: cert_domain is defined and not(cert_domain | trim == '')
+  sudo: yes
+
+- name: Run gencert with ansible_fqdn
+  shell: ./gencert.sh {{ ansible_fqdn }} chdir="{{ cert_dir }}/"
+  when: cert_domain is not defined or (cert_domain | trim == '')
+  sudo: yes
+
+- name: Remove gencert script from host
+  file: path="{{ cert_dir }}/gencert.sh" state=absent
+  sudo: yes
