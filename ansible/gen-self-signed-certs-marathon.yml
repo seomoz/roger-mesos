@@ -1,0 +1,54 @@
+---
+# Task for setting up self signed certs on marathon servers
+
+- hosts: marathon_servers
+
+  vars_prompt:
+    - name: "ssl_keystore_path"
+      prompt: "SSL keystore path? (must match marathon configuration; WARNING: Existing keystore will be overwritten.)"
+      default: /etc/marathon/keys/marathon.jks
+      private: no
+
+    - name: "ssl_keystore_pass"
+      prompt: "SSL keystore password? (must match marathon configuration.)"
+      default: ""
+      private: yes
+
+    - name: "cert_dir"
+      prompt: "Dir to store generated certs in?"
+      default: /etc/marathon/keys
+      private: no
+
+    - name: "cert_admin_email"
+      prompt: "Admin Email?"
+      private: no
+
+    - name: "cert_domain"
+      prompt: "Domain name for cert? (keep blank to use host fqdn)"
+      private: no
+
+    - name: "cert_country"
+      prompt: "Country? (2 letter code)"
+      default: US
+      private: no
+
+    - name: "cert_state"
+      prompt: "State?"
+      default: WA
+      private: no
+
+    - name: "cert_city"
+      prompt: "City?"
+      default: Seattle
+      private: no
+
+    - name: "cert_company_name"
+      prompt: "Company Name?"
+      private: no
+
+    - name: "cert_department_name"
+      prompt: "Department Name?"
+      private: no
+
+  roles:
+    - cert-generator

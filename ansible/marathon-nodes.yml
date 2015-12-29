@@ -3,6 +3,27 @@
 
 - hosts: marathon_servers
 
+  vars_prompt:
+    - name: "ssl_keystore_path"
+      prompt: "Keystore Path?"
+      default: "/etc/marathon/keys/marathon.jks"
+      private: no
+
+    - name: "ssl_keystore_pass"
+      prompt: "Keystore password? (keep blank to disable SSL)"
+      default: ""
+      private: yes
+
+    - name: "marathon_username"
+      prompt: "Marathon username?"
+      default: "admin"
+      private: no
+
+    - name: "marathon_password"
+      prompt: "Marathon password? (keep blank to disable authentication)"
+      default: ""
+      private: yes
+
   roles:
     - common
     - java # Java must come before marathon-server

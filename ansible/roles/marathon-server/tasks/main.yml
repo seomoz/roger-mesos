@@ -1,7 +1,8 @@
 ---
+
   - name: Create host independent directories which need to exist, if necessary
     file: path={{item}} state=directory owner=root
-    with_items: 
+    with_items:
       - /etc/marathon/conf
     sudo: yes
     tags:
@@ -56,6 +57,13 @@
   - name: Configure marathon commandline flags
     template: src=marathon-flags/{{item}}.j2 dest=/etc/marathon/conf/{{item}} owner=root group=root mode=0644
     with_items: marathon_args_files
+    sudo: yes
+    notify: restart marathon
+    tags:
+      - marathon
+
+  - name: Configure marathon upstart job
+    template: src=marathon.conf.j2 dest=/etc/init/marathon.conf owner=root group=root mode=0600
     sudo: yes
     notify: restart marathon
     tags:
