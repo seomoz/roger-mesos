@@ -13,4 +13,4 @@ env MESOSPHERE_KEYSTORE_PATH={{ ssl_keystore_path }}
 env MESOSPHERE_KEYSTORE_PASS={{ ssl_keystore_pass }}
 {% endif %}
 
-exec /usr/bin/marathon
+exec /usr/bin/marathon {% if (ssl_keystore_pass is defined) and not(ssl_keystore_pass | trim =='') %}--disable_http{% endif %}
