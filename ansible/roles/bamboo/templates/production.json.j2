@@ -13,7 +13,7 @@
   },
 
   "HAProxy": {
-    "TemplatePath": "{{ bamboo_haproxy_template_file }}",
+    "TemplatePath": "{{ bamboo_conf_dir }}/haproxy_template.cfg",
     "OutputPath": "/etc/haproxy/haproxy.cfg",
     "ReloadCommand": "service haproxy reload"
   },
