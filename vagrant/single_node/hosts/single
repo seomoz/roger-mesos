@@ -26,3 +26,11 @@ localmesos01
 
 [haproxy]
 localmesos01
+
+# Needed for https://github.com/seomoz/roger-monitoring
+[influxdb9_servers]
+localmesos01 base_monitoring_dir=/data/monitoring
+
+# Needed for https://github.com/seomoz/roger-monitoring
+[statsd_repeater_servers]
+localmesos01
