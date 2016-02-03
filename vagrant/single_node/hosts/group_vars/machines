@@ -1,0 +1,5 @@
+---
+
+# Needed for https://github.com/seomoz/roger-monitoring
+influxdb_host:
+      - "localmesos01"
