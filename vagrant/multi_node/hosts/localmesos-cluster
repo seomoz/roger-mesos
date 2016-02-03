@@ -33,9 +33,9 @@ machines
 
 # Needed for https://github.com/seomoz/roger-monitoring
 [influxdb9_servers]
-localmesos01 base_monitoring_dir=/data/monitoring
 localmesos02 base_monitoring_dir=/data/monitoring
+localmesos03 base_monitoring_dir=/data/monitoring
 
 # Needed for https://github.com/seomoz/roger-monitoring
 [statsd_repeater_servers]
-localmesos[01:04]
+localmesos[02:04]
