@@ -19,7 +19,7 @@ localmesos[03:04]
 localmesos[02:04]
 
 [docker_registry]
-localmesos02
+localmesos03
 
 [localmesos:children]
 masters
