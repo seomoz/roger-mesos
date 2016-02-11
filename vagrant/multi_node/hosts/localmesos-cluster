@@ -13,7 +13,7 @@ localmesos03 zk_id=2
 localmesos04 zk_id=3
 
 [slaves]
-localmesos[03:04]
+localmesos[02:04]
 
 [marathon_servers]
 localmesos[02:04]
