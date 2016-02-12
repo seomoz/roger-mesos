@@ -48,3 +48,10 @@
   notify: restart zookeeper
   tags:
     - configuration
+
+- name: Install cron job to clean zk snapshots.
+  cron: name="zkCleanup" state="present" job="/usr/share/zookeeper/bin/zkCleanup.sh -n 3" special_time="daily"
+  sudo: yes
+  tags:
+    - configuration
+
