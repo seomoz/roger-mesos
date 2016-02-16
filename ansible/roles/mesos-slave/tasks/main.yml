@@ -12,15 +12,6 @@
     - mesos-core
     - configuration
 
-- name: Create directories which need to exist, if necessary
-  file: path={{ item }} state=directory owner=root
-  with_items:
-    - "{{ docker_rt_root_dir }}"
-  sudo: yes
-  tags:
-    - mesos-core
-    - configuration
-
 - name: Create link to shared mount (if defined)
   file: src={{ shared_mount }} dest={{ common_mount_dir }} state=link
   sudo: yes
@@ -52,89 +43,18 @@
     - mesos-core
     - configuration
 
-- name: Add Docker repository key to local keychain
-  apt_key: keyserver=p80.pool.sks-keyservers.net id=58118E89F3A912897C070ADBF76221572C52609D
-  sudo: yes
-  tags:
-    - packages
-    - docker
-
-- name: Add docker repository to apt sources list
-  apt_repository: repo='deb https://apt.dockerproject.org/repo ubuntu-trusty main' update_cache=yes
-  sudo: yes
-  tags:
-    - packages
-    - docker
-
 - name: Update package repo cache
   apt: update_cache=yes
   sudo: yes
   tags:
-    - docker
     - packages
     - update_cache
-
-- name: Check if docker is installed
-  command: "which docker"
-  register: which_docker
-  failed_when: which_docker.stdout == ""
-  ignore_errors: yes
-  always_run: yes
-  tags:
-    - packages
-    - docker
-    - docker-install
-
-- name: Find docker version (if installed)
-  command: "docker --version"
-  register: current_docker_version
-  when: not which_docker.failed
-  ignore_errors: yes
-  tags:
-    - packages
-    - docker
-    - docker-install
-
-- name: Docker version found
-  debug: msg="Current docker version is [{{ current_docker_version.stdout }}]"
-  when: not which_docker.failed and
-        current_docker_version.stdout.find("Docker version") != -1
-  ignore_errors: yes
-  tags:
-    - packages
-    - docker
-    - docker-install
-
-- name: Find docker running containers
-  command: "docker ps -q"
-  register: docker_containers_running
-  # only if docker exists on the host and if docker needs upgrade
-  when: not which_docker.failed and
-        current_docker_version.stdout.find("Docker version") != -1 and
-        current_docker_version.stdout.find("Docker version {{ docker_version_to_use }},") == -1
-  ignore_errors: yes
-  sudo: yes
-  tags:
-    - packages
-    - docker
-    - docker-install
-
-- name: Docker running containers found
-  debug: msg="Currently running docker containers are [{{ docker_containers_running.stdout }}]"
-  # only if docker exists on the host and if docker needs upgrade
-  when: not which_docker.failed and
-        current_docker_version.stdout.find("Docker version") != -1 and
-        current_docker_version.stdout.find("Docker version {{ docker_version_to_use }},") == -1
-  tags:
-    - packages
-    - docker
-    - docker-install
 
 # This will cause the slave to unregister and quit.  Upstart will restart it
 # but it will be stopped again by 'Stop mesos-slave' below.
 
 - name: Send SIGUSR1 to mesos-slave
-  when: inventory_hostname in groups.slaves and
+  when: inventory_hostname in groups.docker_machines and
         not which_docker.failed and
         current_docker_version.stdout.find("Docker version") != -1 and
         current_docker_version.stdout.find("Docker version {{ docker_version_to_use }},") == -1
@@ -153,69 +73,6 @@
   sudo: yes
   tags:
     - mesos-core
-
-- name: Stop all running docker containers
-  command: "docker stop {{ docker_containers_running.stdout }} "
-  # only if docker exists on the host and if docker needs upgrade and if there are docker containers running on the host
-  when: not which_docker.failed and
-        current_docker_version.stdout.find("Docker version") != -1 and
-        current_docker_version.stdout.find("Docker version {{ docker_version_to_use }},") == -1 and
-        docker_containers_running.stdout != ""
-  sudo: yes
-  tags:
-    - packages
-    - docker
-    - docker-install
-
-- name: Stop the docker service
-  command: "service docker stop"
-  # only if docker exists on the host and if docker needs upgrade
-  when: not which_docker.failed and
-        current_docker_version.stdout.find("Docker version") != -1 and
-        current_docker_version.stdout.find("Docker version {{ docker_version_to_use }},") == -1
-  sudo: yes
-  notify: restart docker
-  tags:
-    - packages
-    - docker
-    - docker-install
-    - docker-stop
-
-# We can remove this once everyone is on docker 1.8
-- name: Purge old docker packages
-  command: "apt-get -y purge lxc-docker*"
-  sudo: yes
-  tags:
-    - packages
-    - docker
-    - docker-install
-
-- name: Install docker
-  apt: name="docker-engine={{ docker_package_version }}" state=present
-  sudo: yes
-  notify: restart docker
-  tags:
-    - packages
-    - docker
-    - docker-install
-
-# Workaround for https://github.com/ansible/ansible-modules-core/issues/1170
-# Should work once client ansible is upgraded.
-- name: Remove docker non-upstart file FIX
-  file: path=/etc/init.d/docker state=absent
-  sudo: yes
-  tags:
-    - packages
-    - docker
-    - docker-install
-
-- name: Configure docker
-  template: src=docker_defaults.j2 dest=/etc/default/docker
-  sudo: yes
-  notify: restart docker
-  tags:
-   - docker
-   - configuration
 
 - name: Configure Mesos Slave commandline flags
   template: src=mesos-slave-flags/{{item}}.j2 dest={{mesos_slave_config_dir}}/{{item}} owner=root group=root mode=0644

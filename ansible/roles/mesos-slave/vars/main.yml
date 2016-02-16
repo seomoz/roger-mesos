@@ -31,6 +31,3 @@ mesos_slave_args_files:
 # used to tie VMs together.
 
 mesos_slave_config_dir: /etc/mesos-slave
-docker_rt_root_dir: "{{ base_data_dir }}/docker"
-docker_version_to_use: 1.8.2
-docker_package_version: "1.8.2-0~trusty"
