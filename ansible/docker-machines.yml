@@ -1,0 +1,7 @@
+---
+# Main task for installing docker on the docker group hosts.
+
+- hosts: docker_machines
+
+  roles:
+    - docker-machines
