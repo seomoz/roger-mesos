@@ -12,6 +12,9 @@ localmesos01 zk_id=1
 [slaves]
 localmesos01
 
+[docker_machines:children]
+slaves
+
 [marathon_servers]
 localmesos01
 

@@ -15,11 +15,14 @@ localmesos04 zk_id=3
 [slaves]
 localmesos[03:04]
 
+[docker_machines:children]
+slaves
+
 [marathon_servers]
 localmesos[02:04]
 
 [docker_registry]
-localmesos03
+localmesos02
 
 [localmesos:children]
 masters
