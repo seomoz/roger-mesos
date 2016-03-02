@@ -46,4 +46,4 @@ marathon_package_deps:
   - libvorbis0a
   - libvorbisenc2
 
-marathon_version: 0.11.1-1.0.432.ubuntu1404
+marathon_version: 0.15.3-1.0.463.ubuntu1404
