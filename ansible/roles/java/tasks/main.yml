@@ -32,9 +32,11 @@
   sudo: yes
   tags:
     - java
+    - java-install
 
 - name: Install Oracle Java defaults
   apt: name="oracle-java8-set-default={{ oracle_java_version }}" state=present
   sudo: yes
   tags:
     - java
+    - java-install
