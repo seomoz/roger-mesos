@@ -3,6 +3,9 @@
 [machines]
 localmesos[02:04] env=test base_data_dir=/data shared_mount=/vagrant
 
+[monitored:children]
+machines
+
 [masters]
 localmesos[02:04]
 
