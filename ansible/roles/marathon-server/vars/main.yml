@@ -12,6 +12,8 @@ marathon_args_files:
   - max_apps
   - task_launch_timeout
   - zk
+  - plugin_conf
+  - plugin_dir
 
 old_marathon_package_deps:
   - openjdk-7-jre-headless
@@ -47,3 +49,11 @@ marathon_package_deps:
   - libvorbisenc2
 
 marathon_version: 0.15.3-1.0.463.ubuntu1404
+
+marathon_auth_plugin_pkg: marathon_auth_plugin_0.1-alpha.tar.gz
+
+marathon_auth_plugin_url: https://github.com/seomoz/marathon-auth-plugin/releases/download/v0.1-alpha/{{marathon_auth_plugin_pkg}}
+
+marathon_auth_plugin_pkg_sha256: 7f26d8a1ffe47215d7ba4574852fa943efc0e34402f7d7bedd79e00cbe0e4156
+
+marathon_auth_plugin_location: "{{base_data_dir}}/marathon/plugins"

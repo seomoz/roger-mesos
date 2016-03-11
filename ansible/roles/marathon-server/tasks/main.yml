@@ -53,6 +53,39 @@
     tags:
       - packages
       - marathon
+ 
+  - name: Download auth plugin
+    get_url: url={{marathon_auth_plugin_url}} dest={{tmp_dir}}/{{marathon_auth_plugin_pkg}} sha256sum={{marathon_auth_plugin_pkg_sha256}}
+    tags:
+      - install
+      - plugin
+      - configuration
+
+  - name: Ensures {{marathon_auth_plugin_location}} dir exists
+    file: path={{marathon_auth_plugin_location}} state=directory
+    sudo: yes
+  
+  - name: Copy auth plugin jars
+    unarchive: copy=no dest={{marathon_auth_plugin_location}} src={{tmp_dir}}/{{marathon_auth_plugin_pkg}} 
+    sudo: yes
+    tags:
+      - install
+      - plugin
+      - configuration
+
+  - name: Copy marathon user-permissions.json file
+    template: src=user-permissions.json.j2 dest={{marathon_auth_plugin_location}}/user-permissions.json owner=root group=root mode=0644
+    sudo: yes
+    tags:
+      - configuration
+      - plugin  
+ 
+  - name: Copy marathon plugin configuration file
+    template: src=marathon-plugin.conf.j2 dest={{base_data_dir}}/marathon/marathon-plugin.conf owner=root group=root mode=0644
+    sudo: yes
+    tags:
+      - configuration
+      - plugin  
 
   - name: Configure marathon commandline flags
     template: src=marathon-flags/{{item}}.j2 dest=/etc/marathon/conf/{{item}} owner=root group=root mode=0644
