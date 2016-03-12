@@ -53,7 +53,7 @@
     tags:
       - packages
       - marathon
- 
+
   - name: Download auth plugin
     get_url: url={{marathon_auth_plugin_url}} dest={{tmp_dir}}/{{marathon_auth_plugin_pkg}} sha256sum={{marathon_auth_plugin_pkg_sha256}}
     tags:
@@ -64,28 +64,46 @@
   - name: Ensures {{marathon_auth_plugin_location}} dir exists
     file: path={{marathon_auth_plugin_location}} state=directory
     sudo: yes
-  
+
   - name: Copy auth plugin jars
-    unarchive: copy=no dest={{marathon_auth_plugin_location}} src={{tmp_dir}}/{{marathon_auth_plugin_pkg}} 
+    unarchive: copy=no dest={{marathon_auth_plugin_location}} src={{tmp_dir}}/{{marathon_auth_plugin_pkg}}
     sudo: yes
     tags:
       - install
       - plugin
       - configuration
 
-  - name: Copy marathon user-permissions.json file
+  - name: Sync permissions file from remote src when marathon_auth_permissions_remote_src_host (and path) is defined
+    when: marathon_auth_permissions_remote_src_host is defined and not(marathon_auth_permissions_remote_src_host | trim == '') and
+          marathon_auth_permissions_remote_src_path is defined and not(marathon_auth_permissions_remote_src_path | trim == '')
+    synchronize:
+      src: "{{ marathon_auth_permissions_remote_src_path }}"
+      dest: "{{marathon_auth_plugin_location}}/user-permissions.json"
+    delegate_to: "{{ marathon_auth_permissions_remote_src_host }}"
+    become_user: ankan
+    become: yes
+    register: remote_sync_task_result
+    tags:
+      - configuration
+      - plugin
+      - permissions
+      - permissions-sync
+
+  - name: Copy default marathon user-permissions.json file if remote sync didn't happen
+    when: remote_sync_task_result is not defined
     template: src=user-permissions.json.j2 dest={{marathon_auth_plugin_location}}/user-permissions.json owner=root group=root mode=0644
     sudo: yes
     tags:
       - configuration
-      - plugin  
- 
+      - plugin
+      - permissions
+
   - name: Copy marathon plugin configuration file
     template: src=marathon-plugin.conf.j2 dest={{base_data_dir}}/marathon/marathon-plugin.conf owner=root group=root mode=0644
     sudo: yes
     tags:
       - configuration
-      - plugin  
+      - plugin
 
   - name: Configure marathon commandline flags
     template: src=marathon-flags/{{item}}.j2 dest=/etc/marathon/conf/{{item}} owner=root group=root mode=0644
