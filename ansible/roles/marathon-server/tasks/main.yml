@@ -92,8 +92,6 @@
       src: "{{ marathon_auth_permissions_remote_src_path }}"
       dest: "{{ marathon_auth_plugin_location }}/user-permissions.json"
     delegate_to: "{{ marathon_auth_permissions_remote_src_host }}"
-    become_user: ankan
-    become: yes
     register: remote_sync_task_result
     tags:
       - configuration
