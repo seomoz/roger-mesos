@@ -91,6 +91,7 @@
     synchronize:
       src: "{{ marathon_auth_permissions_remote_src_path }}"
       dest: "{{ marathon_auth_plugin_location }}/user-permissions.json"
+      rsync_path: "sudo rsync"
     delegate_to: "{{ marathon_auth_permissions_remote_src_host }}"
     register: remote_sync_task_result
     tags:
