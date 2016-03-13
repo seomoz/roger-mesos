@@ -54,19 +54,30 @@
       - packages
       - marathon
 
+  - name: Configure marathon commandline flags
+    template: src=marathon-flags/{{item}}.j2 dest=/etc/marathon/conf/{{item}} owner=root group=root mode=0644
+    with_items: marathon_args_files
+    sudo: yes
+    notify: restart marathon
+    tags:
+      - marathon
+
   - name: Download auth plugin
+    when: marathon_auth_enable is defined and marathon_auth_enable
     get_url: url={{marathon_auth_plugin_url}} dest={{tmp_dir}}/{{marathon_auth_plugin_pkg}} sha256sum={{marathon_auth_plugin_pkg_sha256}}
     tags:
       - install
       - plugin
       - configuration
 
-  - name: Ensures {{marathon_auth_plugin_location}} dir exists
-    file: path={{marathon_auth_plugin_location}} state=directory
+  - name: Ensure "{{ marathon_auth_plugin_location }}" dir exists
+    when: marathon_auth_enable is defined and marathon_auth_enable
+    file: path="{{ marathon_auth_plugin_location }}" state=directory
     sudo: yes
 
   - name: Copy auth plugin jars
-    unarchive: copy=no dest={{marathon_auth_plugin_location}} src={{tmp_dir}}/{{marathon_auth_plugin_pkg}}
+    when: marathon_auth_enable is defined and marathon_auth_enable
+    unarchive: copy=no dest="{{ marathon_auth_plugin_location }}" src="{{ tmp_dir }}/{{ marathon_auth_plugin_pkg }}"
     sudo: yes
     tags:
       - install
@@ -74,11 +85,12 @@
       - configuration
 
   - name: Sync permissions file from remote src when marathon_auth_permissions_remote_src_host (and path) is defined
-    when: marathon_auth_permissions_remote_src_host is defined and not(marathon_auth_permissions_remote_src_host | trim == '') and
+    when: marathon_auth_enable is defined and marathon_auth_enable and
+          marathon_auth_permissions_remote_src_host is defined and not(marathon_auth_permissions_remote_src_host | trim == '') and
           marathon_auth_permissions_remote_src_path is defined and not(marathon_auth_permissions_remote_src_path | trim == '')
     synchronize:
       src: "{{ marathon_auth_permissions_remote_src_path }}"
-      dest: "{{marathon_auth_plugin_location}}/user-permissions.json"
+      dest: "{{ marathon_auth_plugin_location }}/user-permissions.json"
     delegate_to: "{{ marathon_auth_permissions_remote_src_host }}"
     become_user: ankan
     become: yes
@@ -90,8 +102,9 @@
       - permissions-sync
 
   - name: Copy default marathon user-permissions.json file if remote sync didn't happen
-    when: remote_sync_task_result is not defined
-    template: src=user-permissions.json.j2 dest={{marathon_auth_plugin_location}}/user-permissions.json owner=root group=root mode=0644
+    when: marathon_auth_enable is defined and marathon_auth_enable and
+          remote_sync_task_result is not defined
+    template: src=user-permissions.json.j2 dest="{{ marathon_auth_plugin_location }}/user-permissions.json" owner=root group=root mode=0644
     sudo: yes
     tags:
       - configuration
@@ -99,19 +112,22 @@
       - permissions
 
   - name: Copy marathon plugin configuration file
-    template: src=marathon-plugin.conf.j2 dest={{base_data_dir}}/marathon/marathon-plugin.conf owner=root group=root mode=0644
+    when: marathon_auth_enable is defined and marathon_auth_enable
+    template: src=marathon-plugin.conf.j2 dest="{{ base_data_dir }}/marathon/marathon-plugin.conf" owner=root group=root mode=0644
     sudo: yes
     tags:
       - configuration
       - plugin
 
-  - name: Configure marathon commandline flags
-    template: src=marathon-flags/{{item}}.j2 dest=/etc/marathon/conf/{{item}} owner=root group=root mode=0644
-    with_items: marathon_args_files
+  - name: Configure marathon auth commandline flags
+    template: src=marathon-auth-flags/{{item}}.j2 dest=/etc/marathon/conf/{{item}} owner=root group=root mode=0644
+    with_items: marathon_auth_args_files
     sudo: yes
     notify: restart marathon
     tags:
       - marathon
+      - plugin
+      - permissions
 
   - name: Configure marathon upstart job
     template: src=marathon.conf.j2 dest=/etc/init/marathon.conf owner=root group=root mode=0600
