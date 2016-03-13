@@ -100,9 +100,9 @@
       - permissions
       - permissions-sync
 
-  - name: Copy default marathon user-permissions.json file if remote sync didn't happen
+  - name: Copy default marathon user-permissions.json file if remote sync host is not defined
     when: marathon_auth_enable is defined and marathon_auth_enable|bool and
-          remote_sync_task_result is not defined
+          marathon_auth_permissions_remote_src_host is not defined
     template: src=user-permissions.json.j2 dest="{{ marathon_auth_plugin_location }}/user-permissions.json" owner=root group=root mode=0644
     sudo: yes
     tags:
