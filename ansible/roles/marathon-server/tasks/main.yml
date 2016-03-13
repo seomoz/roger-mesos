@@ -63,7 +63,7 @@
       - marathon
 
   - name: Download auth plugin
-    when: marathon_auth_enable is defined and marathon_auth_enable
+    when: marathon_auth_enable is defined and marathon_auth_enable|bool
     get_url: url={{marathon_auth_plugin_url}} dest={{tmp_dir}}/{{marathon_auth_plugin_pkg}} sha256sum={{marathon_auth_plugin_pkg_sha256}}
     tags:
       - install
@@ -71,12 +71,12 @@
       - configuration
 
   - name: Ensure "{{ marathon_auth_plugin_location }}" dir exists
-    when: marathon_auth_enable is defined and marathon_auth_enable
+    when: marathon_auth_enable is defined and marathon_auth_enable|bool
     file: path="{{ marathon_auth_plugin_location }}" state=directory
     sudo: yes
 
   - name: Copy auth plugin jars
-    when: marathon_auth_enable is defined and marathon_auth_enable
+    when: marathon_auth_enable is defined and marathon_auth_enable|bool
     unarchive: copy=no dest="{{ marathon_auth_plugin_location }}" src="{{ tmp_dir }}/{{ marathon_auth_plugin_pkg }}"
     sudo: yes
     tags:
@@ -85,7 +85,7 @@
       - configuration
 
   - name: Sync permissions file from remote src when marathon_auth_permissions_remote_src_host (and path) is defined
-    when: marathon_auth_enable is defined and marathon_auth_enable and
+    when: marathon_auth_enable is defined and marathon_auth_enable|bool and
           marathon_auth_permissions_remote_src_host is defined and not(marathon_auth_permissions_remote_src_host | trim == '') and
           marathon_auth_permissions_remote_src_path is defined and not(marathon_auth_permissions_remote_src_path | trim == '')
     synchronize:
@@ -102,7 +102,7 @@
       - permissions-sync
 
   - name: Copy default marathon user-permissions.json file if remote sync didn't happen
-    when: marathon_auth_enable is defined and marathon_auth_enable and
+    when: marathon_auth_enable is defined and marathon_auth_enable|bool and
           remote_sync_task_result is not defined
     template: src=user-permissions.json.j2 dest="{{ marathon_auth_plugin_location }}/user-permissions.json" owner=root group=root mode=0644
     sudo: yes
@@ -112,7 +112,7 @@
       - permissions
 
   - name: Copy marathon plugin configuration file
-    when: marathon_auth_enable is defined and marathon_auth_enable
+    when: marathon_auth_enable is defined and marathon_auth_enable|bool
     template: src=marathon-plugin.conf.j2 dest="{{ base_data_dir }}/marathon/marathon-plugin.conf" owner=root group=root mode=0644
     sudo: yes
     tags:
@@ -120,7 +120,19 @@
       - plugin
 
   - name: Configure marathon auth commandline flags
+    when: marathon_auth_enable is defined and marathon_auth_enable|bool
     template: src=marathon-auth-flags/{{item}}.j2 dest=/etc/marathon/conf/{{item}} owner=root group=root mode=0644
+    with_items: marathon_auth_args_files
+    sudo: yes
+    notify: restart marathon
+    tags:
+      - marathon
+      - plugin
+      - permissions
+
+  - name: Remove marathon auth commandline flags when marathon_auth_enable is false
+    when: marathon_auth_enable is not defined or not marathon_auth_enable|bool
+    file: path=/etc/marathon/conf/{{item}} state=absent
     with_items: marathon_auth_args_files
     sudo: yes
     notify: restart marathon
