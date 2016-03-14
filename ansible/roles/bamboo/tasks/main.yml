@@ -62,6 +62,7 @@
   notify: restart bamboo
   tags:
    - bamboo
+   - bamboo-config
 
 #- name: Copy Haproxy template
 #  command: "cp /opt/bamboo/config/haproxy_template.cfg '{{ bamboo_conf_dir }}/haproxy_template.cfg'"

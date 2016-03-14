@@ -1,0 +1,16 @@
+{
+  "plugins": [
+    {
+      "plugin": "mesosphere.marathon.plugin.auth.Authorizer",
+      "implementation": "mesosphere.marathon.example.plugin.javaauth.JavaAuthorizer"
+    },
+    {
+      "plugin": "mesosphere.marathon.plugin.auth.Authenticator",
+      "implementation": "mesosphere.marathon.example.plugin.javaauth.JavaAuthenticator",
+      "configuration": {
+        "permissions-conf-file": "{{marathon_auth_plugin_location}}/user-permissions.json",
+	"permissions-conf-file-check-interval-seconds" : 10
+      }
+    }
+  ]
+}

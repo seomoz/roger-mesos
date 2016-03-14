@@ -3,6 +3,19 @@
 
 - hosts: bamboo_servers
 
+  # To avoid these prompts supply the values from the command line using ansible playbook extra vars "-e". Example:
+  #     $ anisble-playbook -i /path/to/inventory -e "marathon_bamboo_user=username" -e "marathon_bamboo_pass=password" bamboo-nodes.yml
+  vars_prompt:
+    - name: "marathon_bamboo_user"
+      prompt: "Marathon user for bamboo (used only if marathon auth is enabled; read-only access required)?"
+      default: "bamboo"
+      private: no
+
+    - name: "marathon_bamboo_pass"
+      prompt: "Marathon password for bamboo (used only if marathon auth is enabled)?"
+      default: ""
+      private: yes
+
   roles:
     - common
     - bamboo
