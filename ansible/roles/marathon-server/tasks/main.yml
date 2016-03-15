@@ -93,7 +93,6 @@
       dest: "{{ marathon_auth_plugin_location }}/user-permissions.json"
       rsync_path: "sudo rsync"
     delegate_to: "{{ marathon_auth_permissions_remote_src_host }}"
-    register: remote_sync_task_result
     tags:
       - configuration
       - plugin
@@ -131,7 +130,7 @@
 
   - name: Remove marathon auth commandline flags when marathon_auth_enable is false
     when: marathon_auth_enable is not defined or not marathon_auth_enable|bool
-    file: path=/etc/marathon/conf/{{item}} state=absent
+    file: path="/etc/marathon/conf/{{item}}" state=absent
     with_items: marathon_auth_args_files
     sudo: yes
     notify: restart marathon
@@ -139,6 +138,15 @@
       - marathon
       - plugin
       - permissions
+
+  - name: Remove plugin  when marathon_auth_enable is false
+    when: marathon_auth_enable is not defined or not marathon_auth_enable|bool
+    file: path="{{ marathon_auth_plugin_location }}" state=absent  # WARNING: deleting the plugin directory.. should NOT do this if there are many plugins
+    sudo: yes
+    tags:
+      - install
+      - plugin
+      - configuration
 
   - name: Configure marathon upstart job
     template: src=marathon.conf.j2 dest=/etc/init/marathon.conf owner=root group=root mode=0600
