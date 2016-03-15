@@ -38,7 +38,7 @@ machines
 machines
 
 # Needed for https://github.com/seomoz/roger-monitoring
-[influxdb9_servers]
+[influxdb_servers]
 localmesos02 base_monitoring_dir=/data/monitoring
 localmesos03 base_monitoring_dir=/data/monitoring
 

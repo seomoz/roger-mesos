@@ -34,7 +34,7 @@ localmesos01
 localmesos01
 
 # Needed for https://github.com/seomoz/roger-monitoring
-[influxdb9_servers]
+[influxdb_servers]
 localmesos01 base_monitoring_dir=/data/monitoring
 
 # Needed for https://github.com/seomoz/roger-monitoring
