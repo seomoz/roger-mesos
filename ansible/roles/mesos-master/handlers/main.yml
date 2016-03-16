@@ -1,7 +1,7 @@
 - name: restart mesos-master
   when: inventory_hostname in groups.masters
   service: name=mesos-master state=restarted
-  sudo: yes
+  become: yes
   tags:
     - mesos-core
     - mesos-master

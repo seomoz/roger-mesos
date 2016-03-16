@@ -5,53 +5,53 @@
   file: path={{ item }} state=directory owner=root
   with_items: 
     - "{{ zk_log_dir }}"
-  sudo: yes
+  become: yes
   tags:
     - configuration
 
 - name: Install zk packages
   apt: name={{ item }} state=present
   with_items: zk_packages
-  sudo: yes
+  become: yes
   tags:
     - packages
 
 - name: Configure zk id file
   template: src=zk_id.j2 dest=/etc/zookeeper/conf/myid owner=root group=root mode=0644
   notify: restart zookeeper
-  sudo: yes
+  become: yes
   tags:
     - configuration
 
 - name: Point /var/lib/zookeeper/myid to the id file
   file: src=/etc/zookeeper/conf/myid dest=/var/lib/zookeeper/myid state=link
   notify: restart zookeeper
-  sudo: yes
+  become: yes
 
 - name: Configure zk settings file
   template: src=zoo_cfg.j2 dest=/etc/zookeeper/conf/zoo.cfg owner=root group=root mode=0644
   notify: restart zookeeper
-  sudo: yes
+  become: yes
   tags:
     - configuration
 
 - name: Configure zk log4j file
   template: src=log4j.properties.j2 dest=/etc/zookeeper/conf/log4j.properties
   notify: restart zookeeper
-  sudo: yes
+  become: yes
   tags:
     - configuration
 
 - name: Configure zk environment file
   template: src=environment.j2 dest=/etc/zookeeper/conf/environment
-  sudo: yes
+  become: yes
   notify: restart zookeeper
   tags:
     - configuration
 
 - name: Install cron job to clean zk snapshots.
   cron: name="zkCleanup" state="present" job="/usr/share/zookeeper/bin/zkCleanup.sh -n 3" special_time="daily"
-  sudo: yes
+  become: yes
   tags:
     - configuration
     - zkCleanup

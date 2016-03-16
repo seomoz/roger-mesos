@@ -1,6 +1,6 @@
 - name: restart zookeeper
   when: inventory_hostname in groups.zookeeper
   service: name=zookeeper state=restarted
-  sudo: yes
+  become: yes
   tags:
     - mesos-core

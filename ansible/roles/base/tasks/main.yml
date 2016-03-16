@@ -1,71 +1,71 @@
 ---
 - name: Update package repo cache
   apt: update_cache=yes
-  sudo: yes
+  become: yes
   tags:
     - update_cache
     - packages
 
 - name: Install Linux kernel image
   apt: name="linux-image-{{kernel_version}}" state=present
-  sudo: yes
+  become: yes
   tags:
     - kernel_install
 
 - name: Install Linux kernel image extras
   apt: name="linux-image-extra-{{kernel_version}}" state=present
-  sudo: yes
+  become: yes
   tags:
     - kernel_install
 
 - name: Install Linux kernel headers
   apt: name="linux-headers-{{kernel_version}}" state=present
-  sudo: yes
+  become: yes
   tags:
     - kernel_install
 
 - name: Install Linux common tools
   apt: name="linux-tools-common" state=present
-  sudo: yes
+  become: yes
   tags:
     - kernel_install
 
 - name: "Install Linux tools for {{kernel_version}}"
   apt: name="linux-tools-{{kernel_version}}" state=present
-  sudo: yes
+  become: yes
   tags:
     - kernel_install
 
 - name: "Install Linux cloud tools for {{kernel_version}}"
   apt: name="linux-cloud-tools-{{kernel_version}}" state=present
-  sudo: yes
+  become: yes
   tags:
     - kernel_install
 
 - name: Set swappiness to 1 in sysctl
   sysctl: name=vm.swappiness value=1 state=present
   notify: reload sysctl
-  sudo: yes
+  become: yes
   tags:
     - sysctl
 
 - name: Load nf_conntrack kernel module
   modprobe: name=nf_conntrack state=present
-  sudo: yes
+  become: yes
   tags:
     - nf_conntrack
 
 - name: Add nf_conntrack to /etc/modules
   lineinfile: state=present dest=/etc/modules backup=yes regexp="nf_conntrack$" line="nf_conntrack"
   notify: reload sysctl
-  sudo: yes
+  become: yes
   tags:
     - nf_conntrack
 
 - name: Set nf_conntrack_max in sysctl
   sysctl: name=net.netfilter.nf_conntrack_max value={{ ansible_memtotal_mb * 32|int }} state=present
   notify: reload sysctl
-  sudo: yes
+  become: yes
   tags:
     - nf_conntrack
 
@@ -74,7 +74,7 @@
       regexp='^GRUB_CMDLINE_LINUX_DEFAULT'
       line='GRUB_CMDLINE_LINUX_DEFAULT=\"cgroup_enable=memory swapaccount=1 transparent_hugepage=never\"'"
   notify: update grub
-  sudo: yes
+  become: yes
   tags:
     - kernel_parameters
     - grub
@@ -92,7 +92,7 @@
   async: 0
   poll: 0
   ignore_errors: true
-  sudo: yes
+  become: yes
   tags:
     - restart
 

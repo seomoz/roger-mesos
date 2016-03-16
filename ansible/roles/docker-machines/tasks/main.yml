@@ -2,27 +2,27 @@
   file: path={{ item }} state=directory owner=root
   with_items:
     - "{{ docker_rt_root_dir }}"
-  sudo: yes
+  become: yes
   tags:
     - docker
 
 - name: Add Docker repository key to local keychain
   apt_key: keyserver=p80.pool.sks-keyservers.net id=58118E89F3A912897C070ADBF76221572C52609D
-  sudo: yes
+  become: yes
   tags:
     - packages
     - docker
 
 - name: Add docker repository to apt sources list
   apt_repository: repo='deb https://apt.dockerproject.org/repo ubuntu-trusty main' update_cache=yes
-  sudo: yes
+  become: yes
   tags:
     - packages
     - docker
 
 - name: Update package repo cache
   apt: update_cache=yes
-  sudo: yes
+  become: yes
   tags:
     - docker
     - packages
@@ -69,7 +69,7 @@
         current_docker_version.stdout.find("Docker version") != -1 and
         current_docker_version.stdout.find("Docker version {{ docker_version_to_use }},") == -1
   ignore_errors: yes
-  sudo: yes
+  become: yes
   tags:
     - packages
     - docker
@@ -93,7 +93,7 @@
         current_docker_version.stdout.find("Docker version") != -1 and
         current_docker_version.stdout.find("Docker version {{ docker_version_to_use }},") == -1 and
         docker_containers_running.stdout != ""
-  sudo: yes
+  become: yes
   tags:
     - packages
     - docker
@@ -105,7 +105,7 @@
   when: not which_docker.failed and
         current_docker_version.stdout.find("Docker version") != -1 and
         current_docker_version.stdout.find("Docker version {{ docker_version_to_use }},") == -1
-  sudo: yes
+  become: yes
   notify: restart docker
   tags:
     - packages
@@ -116,7 +116,7 @@
 # We can remove this once everyone is on docker 1.8
 - name: Purge old docker packages
   command: "apt-get -y purge lxc-docker*"
-  sudo: yes
+  become: yes
   tags:
     - packages
     - docker
@@ -124,7 +124,7 @@
 
 - name: Install docker
   apt: name="docker-engine={{ docker_package_version }}" state=present
-  sudo: yes
+  become: yes
   notify: restart docker
   tags:
     - packages
@@ -135,7 +135,7 @@
 # Should work once client ansible is upgraded.
 - name: Remove docker non-upstart file FIX
   file: path=/etc/init.d/docker state=absent
-  sudo: yes
+  become: yes
   tags:
     - packages
     - docker
@@ -143,7 +143,7 @@
 
 - name: Configure docker
   template: src=docker_defaults.j2 dest=/etc/default/docker
-  sudo: yes
+  become: yes
   notify: restart docker
   tags:
    - docker

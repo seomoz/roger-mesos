@@ -6,59 +6,59 @@
     - "{{ bamboo_conf_dir }}"
     - "{{ bamboo_log_dir }}"
     - "{{ bamboo_tmp_dir }}"
-  sudo: yes
+  become: yes
   tags:
     - bamboo
 
 - name: Copy bamboo deb file
   copy: src="large_files/bamboo_{{ bamboo_version }}-1_all.deb" dest={{ bamboo_tmp_dir }}
-  sudo: yes
+  become: yes
   tags:
     - bamboo
 
 - name: Add Haproxy repo
   apt_repository: repo='ppa:vbernat/haproxy-1.5' state=present update_cache=yes
-  sudo: yes
+  become: yes
   tags:
     - bamboo
 
 - name: Update package repo cache
   apt: update_cache=yes
-  sudo: yes
+  become: yes
   tags:
     - bamboo
     - update_cache
 
 - name: Install HAproxy 1.5
   apt: name=haproxy=1.5* state=present
-  sudo: yes
+  become: yes
   notify: restart bamboo
   tags:
     - bamboo
 
 - name: Remove the Bamboo package if it exists
   apt: name=bamboo state=absent purge=yes
-  sudo: yes
+  become: yes
   tags:
     - bamboo
 
 - name: Install the Bamboo package - bamboo_{{ bamboo_version }}
   apt: deb="{{ bamboo_tmp_dir }}/bamboo_{{ bamboo_version }}-1_all.deb"
-  sudo: yes
+  become: yes
   notify: restart bamboo
   tags:
     - bamboo
 
 - name: Configure upstart
   template: src=upstart.j2 dest=/etc/init/bamboo-server.conf
-  sudo: yes
+  become: yes
   notify: restart bamboo
   tags:
    - bamboo
 
 - name: Configure production bamboo configs
   template: src=production.json.j2 dest="{{ bamboo_conf_file }}"
-  sudo: yes
+  become: yes
   notify: restart bamboo
   tags:
    - bamboo
@@ -66,14 +66,14 @@
 
 #- name: Copy Haproxy template
 #  command: "cp /opt/bamboo/config/haproxy_template.cfg '{{ bamboo_conf_dir }}/haproxy_template.cfg'"
-#  sudo: yes
+#  become: yes
 #  notify: restart bamboo
 #  tags:
 #   - bamboo
 
 - name: Copy Haproxy template
   copy: src="haproxy_template.cfg" dest={{ bamboo_conf_dir }}
-  sudo: yes
+  become: yes
   notify: restart bamboo
   tags:
    - bamboo
@@ -81,7 +81,7 @@
 - name: Add local HAProxy as 127.0.0.2 in /etc/hosts
   when: haproxy_local is defined
   lineinfile: dest=/etc/hosts regexp='.*{{ haproxy_local }}$' line="127.0.0.2 {{ haproxy_local }}" state=present
-  sudo: yes
+  become: yes
   tags:
     - bamboo
     - etc_hosts
@@ -90,14 +90,14 @@
   lineinfile: dest=/etc/hosts regexp='.*{{ item }}$' line="{{ hostvars[item]['cluster_ip'] }} {{ item }}" state=present
   when: hostvars[item]['cluster_ip'] is defined
   with_items: groups['machines']
-  sudo: yes
+  become: yes
   tags:
     - bamboo
     - etc_hosts
 
 - name: Enable bamboo service to start at boot
   service: name=bamboo-server enabled=yes
-  sudo: yes
+  become: yes
   notify: restart bamboo
   tags:
     - bamboo

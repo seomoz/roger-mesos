@@ -8,28 +8,28 @@
     - "{{ mesos_work_dir }}"
     - "{{ mesos_log_dir }}"
   ignore_errors: yes
-  sudo: yes
+  become: yes
   tags:
     - mesos-core
     - configuration
 
 - name: Add Mesosphere repository key to local keychain
   apt_key: keyserver=keyserver.ubuntu.com id=E56151BF
-  sudo: yes
+  become: yes
   tags:
     - packages
     - mesos-core
 
 - name: Add Mesosphere repository to apt sources list
   apt_repository: repo='deb http://repos.mesosphere.io/ubuntu trusty main' state=present update_cache=yes
-  sudo: yes
+  become: yes
   tags:
     - packages
     - mesos-core
 
 - name: Update package repo cache
   apt: update_cache=yes
-  sudo: yes
+  become: yes
   tags:
     - packages
     - update_cache
@@ -37,7 +37,7 @@
 - name: Install mesos dependencies
   apt: name={{ item }} state=present
   with_items: mesos_package_deps
-  sudo: yes
+  become: yes
   tags:
     - mesos-core
     - packages
@@ -45,7 +45,7 @@
 
 - name: Install the Mesos package
   apt: name="mesos={{ mesos_version }}" state=present
-  sudo: yes
+  become: yes
   tags:
     - mesos-core
     - packages
@@ -53,7 +53,7 @@
 
 - name: Configure mesos default settings file
   template: src=mesos_defaults.j2 dest=/etc/default/mesos owner=root group=root mode=0644
-  sudo: yes
+  become: yes
   tags:
     - mesos-core
     - configuration

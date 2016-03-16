@@ -2,7 +2,7 @@
   file: path={{item}} state=directory owner=root
   with_items: 
     - "{{ mesos_master_config_dir }}"
-  sudo: yes
+  become: yes
   tags:
     - mesos-core
     - mesos-master
@@ -11,7 +11,7 @@
 - name: Remove unused config files
   file: path={{item}} state=absent
   with_items: mesos_master_config_files_to_delete
-  sudo: yes
+  become: yes
   tags:
     - mesos-core
     - mesos-master
@@ -21,7 +21,7 @@
   template: src=mesos-master-flags/{{item}}.j2 dest={{mesos_master_config_dir}}/{{item}} owner=root group=root mode=0644
   with_items: mesos_master_args_files
   notify: restart mesos-master
-  sudo: yes
+  become: yes
   tags:
     - mesos-core
     - mesos-master
@@ -29,7 +29,7 @@
 
 - name: Remove /etc/mesos/zk file
   file: path=/etc/mesos/zk state=absent
-  sudo: yes
+  become: yes
   tags:
     - mesos-core
     - mesos-master
@@ -38,7 +38,7 @@
 - name: Disable mesos slave
   when: inventory_hostname not in groups.slaves
   service: name=mesos-slave state=stopped
-  sudo: yes
+  become: yes
   tags:
     - mesos-core
     - mesos-master
@@ -47,7 +47,7 @@
 - name: Prevent mesos slave daemon from starting at system startup
   when: inventory_hostname not in groups.slaves
   template: src=mesos_slave_override.j2 dest=/etc/init/mesos-slave.override owner=root group=root mode=0644
-  sudo: yes
+  become: yes
   tags:
     - mesos-core
     - mesos-master
