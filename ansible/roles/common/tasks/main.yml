@@ -12,14 +12,14 @@
 
 - name: Update package repo cache
   apt: update_cache=yes
-  sudo: yes
+  become: yes
   tags:
     - update_cache
     - packages
 
 - name: Install unzip
   apt: name=unzip state=present
-  sudo: yes
+  become: yes
   tags:
     - packages
 
@@ -28,7 +28,7 @@
   with_flattened:
     - group_dirs_to_create
     - host_dirs_to_create
-  sudo: yes
+  become: yes
   ignore_errors: yes
   tags:
     - configuration

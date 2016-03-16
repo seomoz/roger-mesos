@@ -1,7 +1,7 @@
 - name: restart mesos-slave
   when: inventory_hostname in groups.slaves
   service: name=mesos-slave state=restarted
-  sudo: yes
+  become: yes
   tags:
     - mesos-core
     - mesos-slave

@@ -1,7 +1,7 @@
 # Note: Had to switch to command module as using the service module to restart rsyslog is failing (unclear why, even -vvvv didn't provide any helpful info).
 - name: restart rsyslog
   command: "service rsyslog restart"
-  sudo: yes
+  become: yes
   tags:
    - rsyslog
    - mozstash

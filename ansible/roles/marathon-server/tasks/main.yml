@@ -4,27 +4,27 @@
     file: path={{item}} state=directory owner=root
     with_items:
       - /etc/marathon/conf
-    sudo: yes
+    become: yes
     tags:
       - marathon
 
   - name: Add Mesosphere repository key to local keychain
     apt_key: keyserver=keyserver.ubuntu.com id=E56151BF
-    sudo: yes
+    become: yes
     tags:
       - packages
       - marathon
 
   - name: Add Mesosphere repository to apt sources list
     apt_repository: repo='deb http://repos.mesosphere.io/ubuntu trusty main' state=present update_cache=yes
-    sudo: yes
+    become: yes
     tags:
       - packages
       - marathon
 
   - name: Update package repo cache
     apt: update_cache=yes
-    sudo: yes
+    become: yes
     tags:
       - marathon
       - packages
@@ -33,14 +33,14 @@
   - name: Install marathon dependencies
     apt: name={{ item }} state=present
     with_items: marathon_package_deps
-    sudo: yes
+    become: yes
     tags:
       - packages
       - marathon
 
   - name: Install the Marathon package
     apt: name="marathon={{ marathon_version }}" state=present
-    sudo: yes
+    become: yes
     notify: restart marathon
     tags:
       - packages
@@ -49,7 +49,7 @@
   - name: Remove old marathon dependencies
     apt: name={{ item }} state=absent
     with_items: old_marathon_package_deps
-    sudo: yes
+    become: yes
     tags:
       - packages
       - marathon
@@ -57,7 +57,7 @@
   - name: Configure marathon commandline flags
     template: src=marathon-flags/{{item}}.j2 dest=/etc/marathon/conf/{{item}} owner=root group=root mode=0644
     with_items: marathon_args_files
-    sudo: yes
+    become: yes
     notify: restart marathon
     tags:
       - marathon
@@ -73,12 +73,12 @@
   - name: Ensure "{{ marathon_auth_plugin_location }}" dir exists
     when: marathon_auth_enable is defined and marathon_auth_enable|bool
     file: path="{{ marathon_auth_plugin_location }}" state=directory
-    sudo: yes
+    become: yes
 
   - name: Copy auth plugin jars
     when: marathon_auth_enable is defined and marathon_auth_enable|bool
     unarchive: copy=no dest="{{ marathon_auth_plugin_location }}" src="{{ tmp_dir }}/{{ marathon_auth_plugin_pkg }}"
-    sudo: yes
+    become: yes
     tags:
       - install
       - plugin
@@ -103,7 +103,7 @@
     when: marathon_auth_enable is defined and marathon_auth_enable|bool and
           marathon_auth_permissions_remote_src_host is not defined
     template: src=user-permissions.json.j2 dest="{{ marathon_auth_plugin_location }}/user-permissions.json" owner=root group=root mode=0644
-    sudo: yes
+    become: yes
     tags:
       - configuration
       - plugin
@@ -112,7 +112,7 @@
   - name: Copy marathon plugin configuration file
     when: marathon_auth_enable is defined and marathon_auth_enable|bool
     template: src=marathon-plugin.conf.j2 dest="{{ base_data_dir }}/marathon/marathon-plugin.conf" owner=root group=root mode=0644
-    sudo: yes
+    become: yes
     tags:
       - configuration
       - plugin
@@ -121,7 +121,7 @@
     when: marathon_auth_enable is defined and marathon_auth_enable|bool
     template: src=marathon-auth-flags/{{item}}.j2 dest=/etc/marathon/conf/{{item}} owner=root group=root mode=0644
     with_items: marathon_auth_args_files
-    sudo: yes
+    become: yes
     notify: restart marathon
     tags:
       - marathon
@@ -132,7 +132,7 @@
     when: marathon_auth_enable is not defined or not marathon_auth_enable|bool
     file: path="/etc/marathon/conf/{{item}}" state=absent
     with_items: marathon_auth_args_files
-    sudo: yes
+    become: yes
     notify: restart marathon
     tags:
       - marathon
@@ -142,7 +142,7 @@
   - name: Remove plugin  when marathon_auth_enable is false
     when: marathon_auth_enable is not defined or not marathon_auth_enable|bool
     file: path="{{ marathon_auth_plugin_location }}" state=absent  # WARNING: deleting the plugin directory.. should NOT do this if there are many plugins
-    sudo: yes
+    become: yes
     tags:
       - install
       - plugin
@@ -150,7 +150,7 @@
 
   - name: Configure marathon upstart job
     template: src=marathon.conf.j2 dest=/etc/init/marathon.conf owner=root group=root mode=0600
-    sudo: yes
+    become: yes
     notify: restart marathon
     tags:
       - marathon

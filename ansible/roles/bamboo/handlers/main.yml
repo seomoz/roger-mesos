@@ -1,5 +1,5 @@
 - name: restart bamboo
   service: name=bamboo-server state=restarted
-  sudo: yes
+  become: yes
   tags:
    - bamboo

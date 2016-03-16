@@ -1,5 +1,5 @@
 - name: restart chronos
   service: name=chronos state=restarted
-  sudo: yes
+  become: yes
   tags:
     - chronos

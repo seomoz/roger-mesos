@@ -7,14 +7,14 @@
   file: path={{item}} state=directory owner=root
   with_items:
     - "{{ mesos_slave_config_dir }}"
-  sudo: yes
+  become: yes
   tags:
     - mesos-core
     - configuration
 
 - name: Create link to shared mount (if defined)
   file: src={{ shared_mount }} dest={{ common_mount_dir }} state=link
-  sudo: yes
+  become: yes
   when: shared_mount is defined and common_mount_dir is defined
   tags:
     - shared-link
@@ -22,7 +22,7 @@
 - name: Disable mesos master
   when: inventory_hostname not in groups.masters
   service: name=mesos-master state=stopped
-  sudo: yes
+  become: yes
   tags:
     - mesos-core
     - configuration
@@ -30,7 +30,7 @@
 - name: Prevent mesos master daemon from starting at system startup
   when: inventory_hostname not in groups.masters
   template: src=service_override.j2 dest=/etc/init/mesos-master.override owner=root group=root mode=0644
-  sudo: yes
+  become: yes
   tags:
     - mesos-core
     - configuration
@@ -38,14 +38,14 @@
 - name: Remove unused config files
   file: path={{item}} state=absent
   with_items: mesos_slave_config_files_to_delete
-  sudo: yes
+  become: yes
   tags:
     - mesos-core
     - configuration
 
 - name: Update package repo cache
   apt: update_cache=yes
-  sudo: yes
+  become: yes
   tags:
     - packages
     - update_cache
@@ -59,7 +59,7 @@
         current_docker_version.stdout.find("Docker version") != -1 and
         current_docker_version.stdout.find("Docker version {{ docker_version_to_use }},") == -1
   shell: "pkill -USR1 mesos-slave || true"
-  sudo: yes
+  become: yes
   tags:
     - mesos-core
 
@@ -70,14 +70,14 @@
         current_docker_version.stdout.find("Docker version {{ docker_version_to_use }},") == -1
   service: name=mesos-slave state=stopped
   notify: restart mesos-slave
-  sudo: yes
+  become: yes
   tags:
     - mesos-core
 
 - name: Configure Mesos Slave commandline flags
   template: src=mesos-slave-flags/{{item}}.j2 dest={{mesos_slave_config_dir}}/{{item}} owner=root group=root mode=0644
   with_items: mesos_slave_args_files
-  sudo: yes
+  become: yes
   notify: restart mesos-slave
   tags:
     - configuration

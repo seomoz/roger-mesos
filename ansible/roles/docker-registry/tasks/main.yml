@@ -3,23 +3,23 @@
 
 - name: Update package repo cache
   apt: update_cache=yes
-  sudo: yes
+  become: yes
   tags:
     - update_cache
 
 - name: Ensure docker registry dir exists
   file: path={{ docker_registry_dir }} state=directory owner=root
-  sudo: yes
+  become: yes
 
 - name: Backup registry to docker_backup_dir (if defined) using rsync and cron
   cron: name="backupdockerregistry" state="present" job="rsync -a {{ docker_registry_dir }}/ {{ docker_backup_dir }}/docker-registry" special_time="daily"
-  sudo: yes
+  become: yes
   when: docker_backup_dir is defined
 
 - name: Start docker (if needed)
   service: name=docker state=started
-  sudo: yes
+  become: yes
 
 - name: Start docker-registry
   command: docker run --restart=always -d -p 5000:5000 -v {{ docker_registry_dir }}:/registry -e STORAGE_PATH=/registry -e SEARCH_BACKEND=sqlalchemy registry
-  sudo: yes
+  become: yes
