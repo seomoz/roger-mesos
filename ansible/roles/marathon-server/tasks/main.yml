@@ -87,7 +87,7 @@
   - name: Copy permissions file from local src when marathon_auth_permissions_local_path is defined
     when: marathon_auth_enable is defined and marathon_auth_enable|bool and
           marathon_auth_permissions_local_path is defined and not(marathon_auth_permissions_local_path | trim == '')
-    copy:  src="{{ marathon_auth_permissions_local_path }}"  dest="{{ marathon_auth_plugin_location }}/user-permissions.json"
+    copy:  src="{{ marathon_auth_permissions_local_path }}"  dest="{{ marathon_auth_plugin_location }}/user-permissions.json" owner=root group=root mode=0644
     become: yes
     tags:
       - configuration
@@ -112,11 +112,12 @@
       - permissions
       - permissions-sync
 
-  - name: Copy default marathon user-permissions.json file if remote sync host is not defined
+  - name: Copy default marathon user-permissions.json file if neither local path nor remote path are not defined, and there isn't already a permissions file
     when: marathon_auth_enable is defined and marathon_auth_enable|bool and
           marathon_auth_permissions_local_path is not defined and
           marathon_auth_permissions_remote_src_host is not defined
-    template: src=user-permissions.json.j2 dest="{{ marathon_auth_plugin_location }}/user-permissions.json" owner=root group=root mode=0644
+    copy: src=user-permissions.json.j2 dest="{{ marathon_auth_plugin_location }}/user-permissions.json" owner=root group=root mode=0644
+          force=no # ensure that this file doesn't overwrite any existing permissions file
     become: yes
     tags:
       - configuration
