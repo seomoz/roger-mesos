@@ -115,7 +115,10 @@
 
 # We can remove this once everyone is on docker 1.8
 - name: Purge old docker packages
-  command: "apt-get -y purge lxc-docker*"
+  apt: name="{{ item }}" state=absent purge=yes
+  with_items:
+    - lxc-docker
+    - lxc-docker-virtual-package
   become: yes
   tags:
     - packages
