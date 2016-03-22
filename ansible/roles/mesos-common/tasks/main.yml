@@ -36,7 +36,7 @@
 
 - name: Install mesos dependencies
   apt: name={{ item }} state=present
-  with_items: mesos_package_deps
+  with_items: '{{ mesos_package_deps }}'
   become: yes
   tags:
     - mesos-core
