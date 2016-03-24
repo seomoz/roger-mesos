@@ -161,27 +161,10 @@
       - permissions
       - permissions-sync
 
-  - name: Sync permissions file from remote src when marathon_auth_permissions_remote_src_host (and path) is defined and local path is not defined
+  - name: Copy default marathon user-permissions.json file if neither local path nor marathon_auth_permissions_gspreadsheets are defined, and there isn't already a permissions file
     when: marathon_auth_enable is defined and marathon_auth_enable|bool and
           marathon_auth_permissions_local_path is not defined and
-          marathon_auth_permissions_remote_src_host is defined and not(marathon_auth_permissions_remote_src_host | trim == '') and
-          marathon_auth_permissions_remote_src_path is defined and not(marathon_auth_permissions_remote_src_path | trim == '')
-    synchronize:
-      src: "{{ marathon_auth_permissions_remote_src_path }}"
-      dest: "{{ marathon_auth_plugin_location }}/user-permissions.json"
-      rsync_path: "sudo rsync"
-    delegate_to: "{{ marathon_auth_permissions_remote_src_host }}"
-    become: yes
-    tags:
-      - configuration
-      - plugin
-      - permissions
-      - permissions-sync
-
-  - name: Copy default marathon user-permissions.json file if neither local path nor remote path are not defined, and there isn't already a permissions file
-    when: marathon_auth_enable is defined and marathon_auth_enable|bool and
-          marathon_auth_permissions_local_path is not defined and
-          marathon_auth_permissions_remote_src_host is not defined
+          marathon_auth_permissions_gspreadsheets is not defined
     copy: src=user-permissions.json.j2 dest="{{ marathon_auth_plugin_location }}/user-permissions.json" owner=root group=root mode=0644
           force=no # ensure that this file doesn't overwrite any existing permissions file
     become: yes
