@@ -143,6 +143,7 @@
     when: marathon_auth_enable is defined and marathon_auth_enable|bool and
           marathon_auth_permissions_gspreadsheets is defined and not(marathon_auth_permissions_gspreadsheets | trim == '')
     copy: src="{{ mktemp.stdout }}/permissions.json" dest="{{ marathon_auth_plugin_location }}/user-permissions.json" owner=root group=root mode=0644
+    become: yes
     tags:
       - configuration
       - plugin
