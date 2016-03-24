@@ -84,6 +84,72 @@
       - plugin
       - configuration
 
+  - name: Create a temp dir for local permissions file and oauth file when marathon_auth_permissions_gspreadsheets is true
+    when: marathon_auth_enable is defined and marathon_auth_enable|bool and
+          marathon_auth_permissions_gspreadsheets is defined and not(marathon_auth_permissions_gspreadsheets | trim == '')
+    local_action: shell mktemp -d
+    always_run: yes # run during check mode
+    run_once: yes
+    register: mktemp
+    notify: clean mktemp
+    tags:
+      - configuration
+      - plugin
+      - permissions
+      - permissions-sync
+      - permissions-gen
+
+  - debug: msg="Created a temp dir. If the playbook fails, please delete this directory using -> rm -r {{ mktemp.stdout }}"
+    when: marathon_auth_enable is defined and marathon_auth_enable|bool and
+          marathon_auth_permissions_gspreadsheets is defined and not(marathon_auth_permissions_gspreadsheets | trim == '')
+    always_run: yes # run during check mode
+    run_once: yes
+    tags:
+      - configuration
+      - plugin
+      - permissions
+      - permissions-sync
+      - permissions-gen
+
+  - name: Generate oauth file from template when marathon_auth_permissions_gspreadsheets is true
+    when: marathon_auth_enable is defined and marathon_auth_enable|bool and
+          marathon_auth_permissions_gspreadsheets is defined and not(marathon_auth_permissions_gspreadsheets | trim == '')
+    local_action: template src=oauth.j2 dest="{{ mktemp.stdout }}/oauth" mode=0600
+    always_run: yes # run during check mode
+    run_once: yes
+    notify: clean mktemp
+    tags:
+      - configuration
+      - plugin
+      - permissions
+      - permissions-sync
+      - permissions-gen
+
+  - name: Generate permissions file from google spreadsheets when marathon_auth_permissions_gspreadsheets is true
+    when: marathon_auth_enable is defined and marathon_auth_enable|bool and
+          marathon_auth_permissions_gspreadsheets is defined and not(marathon_auth_permissions_gspreadsheets | trim == '')
+    local_action: shell python {{ role_path }}/files/generate_user_permissions.py -f "{{ mktemp.stdout }}/oauth" -p {{ marathon_auth_password_column }} -o "{{ mktemp.stdout }}/permissions.json"
+        {%- for sheet in marathon_auth_permissions_gspreadsheets.split(';') %} -ss "{{ sheet }}" {% endfor -%}
+    always_run: yes # run during check mode
+    run_once: yes
+    tags:
+      - configuration
+      - plugin
+      - permissions
+      - permissions-sync
+      - permissions-gen
+
+  - name: Copy generated permissions file from google spreadsheets when marathon_auth_permissions_gspreadsheets is true
+    when: marathon_auth_enable is defined and marathon_auth_enable|bool and
+          marathon_auth_permissions_gspreadsheets is defined and not(marathon_auth_permissions_gspreadsheets | trim == '')
+    copy: src="{{ mktemp.stdout }}/permissions.json" dest="{{ marathon_auth_plugin_location }}/user-permissions.json" owner=root group=root mode=0644
+    tags:
+      - configuration
+      - plugin
+      - permissions
+      - permissions-sync
+      - permissions-gen
+
   - name: Copy permissions file from local src when marathon_auth_permissions_local_path is defined
     when: marathon_auth_enable is defined and marathon_auth_enable|bool and
           marathon_auth_permissions_local_path is defined and not(marathon_auth_permissions_local_path | trim == '')
@@ -95,27 +161,10 @@
       - permissions
       - permissions-sync
 
-  - name: Sync permissions file from remote src when marathon_auth_permissions_remote_src_host (and path) is defined and local path is not defined
+  - name: Copy default marathon user-permissions.json file if neither local path nor marathon_auth_permissions_gspreadsheets are defined, and there isn't already a permissions file
     when: marathon_auth_enable is defined and marathon_auth_enable|bool and
           marathon_auth_permissions_local_path is not defined and
-          marathon_auth_permissions_remote_src_host is defined and not(marathon_auth_permissions_remote_src_host | trim == '') and
-          marathon_auth_permissions_remote_src_path is defined and not(marathon_auth_permissions_remote_src_path | trim == '')
-    synchronize:
-      src: "{{ marathon_auth_permissions_remote_src_path }}"
-      dest: "{{ marathon_auth_plugin_location }}/user-permissions.json"
-      rsync_path: "sudo rsync"
-    delegate_to: "{{ marathon_auth_permissions_remote_src_host }}"
-    become: yes
-    tags:
-      - configuration
-      - plugin
-      - permissions
-      - permissions-sync
-
-  - name: Copy default marathon user-permissions.json file if neither local path nor remote path are not defined, and there isn't already a permissions file
-    when: marathon_auth_enable is defined and marathon_auth_enable|bool and
-          marathon_auth_permissions_local_path is not defined and
-          marathon_auth_permissions_remote_src_host is not defined
+          marathon_auth_permissions_gspreadsheets is not defined
     copy: src=user-permissions.json.j2 dest="{{ marathon_auth_plugin_location }}/user-permissions.json" owner=root group=root mode=0644
           force=no # ensure that this file doesn't overwrite any existing permissions file
     become: yes

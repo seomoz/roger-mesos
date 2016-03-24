@@ -45,3 +45,7 @@ $ ansible-playbook -i <path-to-hosts-file> --user=<user> --ask-pass --ask-sudo-p
 $ ansible zookeeper -i <path/to/hosts/file> --user=<user> --ask-pass --ask-sudo-pass -m service -a "name=zookeeper state=restarted" -s
 $ ansible marathon_servers -i <path/to/hosts/file> --user=<user> --ask-pass --ask-sudo-pass -m service -a "name=marathon state=restarted" -s
 ```
+* For marathon generate permissions the various variables are required to be available. Using ansible vault is one way to do this. Example -
+```
+$ ansible-playbook -i /path/to/inventory/file ansible/marathon-nodes.yml -e @$HOME/my-ansible-secrets.yml.encrypted --vault-password-file ~/.my-ansible-secrets-vault-pass
+```
