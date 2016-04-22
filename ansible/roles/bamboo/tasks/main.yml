@@ -86,6 +86,14 @@
     - bamboo
     - etc_hosts
 
+- name: Add local HAProxy as 127.0.0.3 in /etc/hosts
+  when: haproxy_local_addl is defined
+  lineinfile: dest=/etc/hosts regexp='.*{{ haproxy_local_addl }}$' line="127.0.0.3 {{ haproxy_local_addl }}" state=present
+  become: yes
+  tags:
+    - bamboo
+    - etc_hosts
+
 - name: Add cluster peers to /etc/hosts
   lineinfile: dest=/etc/hosts regexp='.*{{ item }}$' line="{{ hostvars[item]['cluster_ip'] }} {{ item }}" state=present
   when: hostvars[item]['cluster_ip'] is defined
