@@ -71,12 +71,21 @@
 #  tags:
 #   - bamboo
 
+#- name: Copy Haproxy template
+#  copy: src="haproxy_template.cfg" dest={{ bamboo_conf_dir }}
+#  become: yes
+#  notify: restart bamboo
+#  tags:
+#   - bamboo
+#   - haproxy-template
+
 - name: Copy Haproxy template
-  copy: src="haproxy_template.cfg" dest={{ bamboo_conf_dir }}
+  template: src="haproxy_template.cfg.j2" dest={{ bamboo_conf_dir }}/haproxy_template.cfg
   become: yes
   notify: restart bamboo
   tags:
    - bamboo
+   - haproxy-template
 
 - name: Add local HAProxy as 127.0.0.2 in /etc/hosts
   when: haproxy_local is defined
