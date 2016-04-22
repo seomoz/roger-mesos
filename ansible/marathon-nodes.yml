@@ -28,3 +28,4 @@
     - common
     - java # Java must come before marathon-server
     - marathon-server
+    - { role : nginx, when : enable_nginx_auth_proxy is defined }

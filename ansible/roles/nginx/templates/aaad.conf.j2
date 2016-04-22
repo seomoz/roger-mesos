@@ -1,0 +1,9 @@
+description "RogerOS - Authentication, Authorization and Auditing"
+author  "Vinit Mahedia <vinit@moz.com>"
+
+start on runlevel [234]
+stop on runlevel [0156]
+
+chdir {{nginx_conf_dir}}/aaad
+exec python {{nginx_conf_dir}}/aaad/aaad.py
+respawn
