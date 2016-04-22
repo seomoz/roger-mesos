@@ -39,8 +39,7 @@ defaults
 # Template Customization
 frontend http-in
         bind *:80
-        
-{% endraw %}
+
         acl host_mesos hdr_beg(host) -i mesos.
         use_backend mesos if host_mesos
 
@@ -49,31 +48,11 @@ frontend http-in
 
         acl host_chronos hdr_beg(host) -i chronos.
         use_backend chronos if host_chronos
-
-        {% if mesos_redirect_url is defined -%}
-        # Redirect mesos
-        acl ::mesos-aclrule path_beg -i /mesos
-        redirect {{ mesos_redirect_url }} if ::mesos-aclrule
-        {%- endif %}
-
-        {% if marathon_redirect_url is defined -%}
-        # Redirect marathon
-        acl ::marathon-aclrule path_beg -i /marathon
-        redirect {{ marathon_redirect_url }} if ::marathon-aclrule
-        {%- endif %}
-
-        {% if chronos_redirect_url is defined -%}
-        # Redirect chronos
-        acl ::chronos-aclrule path_beg -i /chronos
-        redirect {{ chronos_redirect_url }} if ::chronos-aclrule
-        {%- endif %}
-{% raw %}
         {{ $services := .Services }}
         {{ range $index, $app := .Apps }} {{ if hasKey $services $app.Id }} {{ $service := getService $services $app.Id }}
         acl {{ $app.EscapedId }}-aclrule {{ $service.Acl}}
         use_backend {{ $app.EscapedId }}-cluster if {{ $app.EscapedId }}-aclrule
         {{ else }}
-
         # This is the default proxy criteria
         acl {{ $app.EscapedId }}-aclrule path_beg -i {{ if $app.Env.HTTP_PREFIX }}{{ $app.Env.HTTP_PREFIX }}{{ else }}{{ $app.Id }}{{ end }}
         use_backend {{ $app.EscapedId }}-cluster if {{ $app.EscapedId }}-aclrule
