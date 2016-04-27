@@ -33,6 +33,9 @@ localmesos01
 [haproxy]
 localmesos01
 
+[chronos_servers]
+localmesos01
+
 # Needed for https://github.com/seomoz/roger-monitoring
 [influxdb_servers]
 localmesos01 base_monitoring_dir=/data/monitoring
