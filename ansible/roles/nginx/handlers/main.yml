@@ -1,5 +1,5 @@
 - name: clean mktemp
-  local_action: file name="{{ mktemp.stdout }}" state=absent
+  local_action: file name="{{ creds_dir }}" state=absent
   always_run: yes # run during check mode
   run_once: yes
   tags:
