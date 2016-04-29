@@ -1,7 +1,5 @@
 import utils
 
-
-
 # todo: needs a lot of improvement File name should not have to be passed on
 # todo: every call, make it configurable at the start for both classes
 class FileAuthenticator:
@@ -25,6 +23,3 @@ class FileAuthenticator:
             FileAuthenticator.instance = FileAuthenticator.__Singleton(file)
         else:
             print "Singleton instance is already instantiated"
-
-
-

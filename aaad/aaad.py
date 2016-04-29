@@ -15,47 +15,76 @@ class AuthHTTPServer(ThreadingMixIn, HTTPServer, ):
 class AuthHandler(BaseHTTPRequestHandler):
     ctx = {}
     authenticator = None
+    method_to_action = { "GET" : "view" , "POST" : "create" , "PUT" : "update" , "DELETE" : "delete" }
 
     # Return True if request is processed and response sent, otherwise False
     # Set ctx['user'] and ctx['pass'] for authentication
     def do_GET(self):
-        
+
         ctx = self.ctx
         ctx['action'] = 'getting basic http authorization header'
         auth_header = self.headers.get('Authorization')
-
-        # This is just to get end to end working, need a lot of work here.
-        print "**************************************************"
+        resource = self.headers.get('URI')
+        action = self.method_to_action[self.headers.get('method')]
+ 
         print self.headers
-        print "**************************************************"
-        self.send_response(200)
-        self.end_headers()
-        return # for now just ensure that the request is coming here. nothing else
+
+        # Carry out Basic Authentication
         if auth_header is None or not auth_header.lower().startswith('basic '):
             self.send_response(401)
-            self.send_header('WWW-Authenticate', 'Basic realm=' + ctx['realm'])
             self.end_headers()
-            return True
-        ctx['action'] = 'decoding credentials'
+            return False
+        # Extract username and password
+        auth_decoded = base64.b64decode(auth_header[6:])
+        user, password = auth_decoded.split(':', 2)
+        ctx['user'] = user
+        ctx['pass'] = password
 
+        if self.headers.get('act_as_user') is not None:
+            act_as_user = self.headers.get('act_as_user')
+        else:
+            act_as_user = user
+
+        # Invoke the Authenticator
+        if not self.authenticate_request(user, password):
+            self.send_response(401)
+            self.end_headers()
+            return False
+        # Invoke the Authorizer
+        if not self.authorize_request(user, act_as_user, action, resource):
+            self.send_response(403)
+            self.end_headers()
+            return False
+
+        self.log_message(ctx['action'])  # Continue request processing
+
+        self.send_response(200)
+        self.end_headers()
+        return True
+
+    def authenticate_request(self, user, password):
+        ctx = self.ctx
         try:
-            auth_decoded = base64.b64decode(auth_header[6:])
-            #auth_decoded = auth_header[6:]
-            user, passwd = auth_decoded.split(':', 2)
-            ctx['user'] = user
-            ctx['pass'] = passwd
-
-            if not FileAuthenticator(permissions_file).instance.authenticate(user, passwd):
+            if not FileAuthenticator(permissions_file).instance.authenticate(user, password):
                 raise Exception("Authentication Failed")
-            if not FileAuthorizer(permissions_file).instance.authorize(user, self.path, "view"):
+        except:
+            self.auth_failed(ctx)
+            return False
+        return True
+
+    def authorize_request(self, user, act_as_user, action, path):
+        
+        ctx = self.ctx
+        try:
+            if not FileAuthorizer(permissions_file).instance.authorize_act_as_user(user, act_as_user):
+                raise Exception("Authorization Failed: {} cannot act as {}".format(user, act_as_user))
+
+            if not FileAuthorizer(permissions_file).instance.authorize(act_as_user, path, action):
                 raise Exception("Authorization Failed")
         except:
             self.auth_failed(ctx)
-            return True
-
-        self.log_message(ctx['action'])  # Continue request processing
-        return False  # Log the error and complete the request with appropriate status
-
+            return False
+        return True
 
     def auth_failed(self, ctx, errmsg=None):
         msg = 'Error while ' + ctx['action']
@@ -109,20 +138,12 @@ def exit_handler(signal, frame):
 
 
 if __name__ == '__main__':
-    # this is a very dirty way to initialize but will change it later
-    # for now we disabled the permission files check for authorization
-#     if len(sys.argv) < 1:
-#         sys.exit("Usage: %s <permissions_file> " % sys.argv[0])
 
-#     if not os.path.exists(sys.argv[1]):
-#         sys.exit("Permissions file - %s does not exist" % sys.argv[1])
-#     global permissions_file
-#     permissions_file = sys.argv[1];
+    if len(sys.argv) < 1:
+         sys.exit("Usage: %s <permissions_file> " % sys.argv[0])
+    if not os.path.exists(sys.argv[1]):
+         sys.exit("Permissions file - %s does not exist" % sys.argv[1])
+    permissions_file = sys.argv[1];
     server = AuthHTTPServer(Listen, AuthHandler)
     signal.signal(signal.SIGINT, exit_handler)
     server.serve_forever()
-
-
-
-
-
