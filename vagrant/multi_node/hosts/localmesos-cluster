@@ -37,6 +37,9 @@ machines
 [haproxy:children]
 machines
 
+[chronos_servers:children]
+machines
+
 # Needed for https://github.com/seomoz/roger-monitoring
 [influxdb_servers]
 localmesos02 base_monitoring_dir=/data/monitoring
