@@ -5,6 +5,6 @@ start on runlevel [234]
 stop on runlevel [0156]
 
 chdir {{nginx_conf_dir}}/aaad
-exec python {{nginx_conf_dir}}/aaad/aaad.py
+exec python {{nginx_conf_dir}}/aaad/aaad.py {{nginx_conf_dir}}/user-permissions.json
 respawn
 

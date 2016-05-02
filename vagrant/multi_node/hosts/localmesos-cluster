@@ -24,6 +24,9 @@ slaves
 [marathon_servers]
 localmesos[02:04]
 
+[nginx_servers]
+localmesos[02:04]
+
 [docker_registry]
 localmesos02
 

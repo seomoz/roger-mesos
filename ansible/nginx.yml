@@ -1,0 +1,7 @@
+---
+# Main task for setting up Nginx and AAA daemon.
+
+- hosts: nginx_servers
+
+  roles:
+    - nginx
