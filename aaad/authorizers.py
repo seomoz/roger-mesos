@@ -1,13 +1,13 @@
 import utils
 
 class FileAuthorizer:
-    class __Singleton:
-        data = None
+    class __FileAuthorizer:
 
-        def __init__(self, file):
-            self.file = file
-            self.data = utils.parse_permissions_file(file)
+        def __init__(self, filename):
+            self.filename = filename
+            self.data = utils.parse_permissions_file(filename)
 
+        #This needs to be implemented after the permissions file is updated.
         def authorize_act_as_user(self, user, act_as_user):
             return True
 
@@ -17,14 +17,15 @@ class FileAuthorizer:
             else:
                 for user in self.data["users"]:
                     if username == user["user"]:
-                        for permission in user["user"]["permissions"]:
-                            if resource.startsWith(permission["on"]) and permission["allowed"] == action:
+                        for permission in user["permissions"]:
+                            if resource.startswith(permission["on"]) and permission["allowed"] == action:
                                 return True
             return False
 
     instance = None
-    def __init__(self, file):
+    def __init__(self, filename):
         if not FileAuthorizer.instance:
-            FileAuthorizer.instance = FileAuthorizer.__Singleton(file)
+            FileAuthorizer.instance = FileAuthorizer.__FileAuthorizer(filename)
         else:
-            print "Singleton instance is already instantiated"
+            FileAuthorizer.instance.filename = filename
+
