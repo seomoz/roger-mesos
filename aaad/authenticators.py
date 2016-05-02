@@ -1,15 +1,10 @@
 import utils
 
-
-
-# todo: needs a lot of improvement File name should not have to be passed on
-# todo: every call, make it configurable at the start for both classes
 class FileAuthenticator:
-    class __Singleton:
-        data = None
-        def __init__(self, file):
-            self.file = file
-            self.data = utils.parse_permissions_file(file)
+    class __FileAuthenticator:
+        def __init__(self, filename):
+            self.filename = filename
+            self.data = utils.parse_permissions_file(filename)
 
         def authenticate(self, username, password):
             if not username or not password:
@@ -19,12 +14,11 @@ class FileAuthenticator:
                     if username == user["user"] and password == user["password"]:
                         return True
             return False
+
     instance = None
-    def __init__(self, file):
+    def __init__(self, filename):
         if not FileAuthenticator.instance:
-            FileAuthenticator.instance = FileAuthenticator.__Singleton(file)
+            FileAuthenticator.instance = FileAuthenticator.__FileAuthenticator(filename)
         else:
-            print "Singleton instance is already instantiated"
-
-
+            FileAuthenticator.instance.filename = filename
 
