@@ -21,6 +21,9 @@ slaves
 [marathon_servers]
 localmesos01
 
+[nginx_servers]
+localmesos01
+
 [docker_registry]
 localmesos01
 

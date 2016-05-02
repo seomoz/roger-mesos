@@ -91,6 +91,13 @@
       - install
       - nginx 
 
+  - name: Copy user permissions file to the nginx conf
+    copy: src={{permissions_file_local_path}} dest="{{nginx_conf_dir}}/user-permissions.json"  mode=0644
+    become: yes
+    tags:
+      - install
+      - nginx
+
   - name: Copy AAA daemon to nginx conf directory for now
     copy: src=../../../../aaad dest={{nginx_conf_dir}}  mode=0655
     become: yes
