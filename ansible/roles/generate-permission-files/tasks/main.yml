@@ -57,49 +57,31 @@
       - nginx
 
   - name: Install pip package locally
-    local_action: command sudo easy_install pip
-    tags:
-      - install
-      - plugin
-      - permissions
-      - permissions-sync
-      - permissions-gen
-      - nginx
+    easy_install: name=pip
+    become: yes
+    always_run: yes # run during check mode
+    delegate_to: 127.0.0.1
 
-  - name: Install python package htpasswd using pip locally
-    local_action: command sudo pip install htpasswd
-    tags:
-      - install
-      - plugin
-      - permissions
-      - permissions-sync
-      - permissions-gen
-      - nginx
+  - name: install virtualenv using pip locally
+    pip: name=virtualenv
+    become: yes
+    always_run: yes # run during check mode
+    delegate_to: 127.0.0.1
 
-  - name: Install python package gspread using pip locally
-    local_action: command sudo pip install gspread
-    tags:
-      - install
-      - plugin
-      - permissions
-      - permissions-sync
-      - permissions-gen
-      - nginx
-
-  - name: Install python package oauth2client using pip locally
-    local_action: command sudo pip install oauth2client
-    tags:
-      - install
-      - plugin
-      - permissions
-      - permissions-sync
-      - permissions-gen
-      - nginx
+  - name: install python packages using pip locally
+    pip: name={{ item }} virtualenv={{ creds_dir }}/venv
+    always_run: yes # run during check mode
+    with_items:
+       - htpasswd
+       - gspread
+       - oauth2client
+    delegate_to: 127.0.0.1
 
   - name: Generate permissions file from google spreadsheets when auth_permissions_gspreadsheets is true
     when: auth_permissions_gspreadsheets is defined and not(auth_permissions_gspreadsheets | trim == '')
-    local_action: shell python {{ role_path }}/files/generate_user_permissions.py -f "{{ creds_dir }}/oauth" -p {{ marathon_auth_password_column }} -o "{{ creds_dir }}/permissions.json"
-        {%- for sheet in auth_permissions_gspreadsheets.split(';') %} -ss "{{ sheet }}" {% endfor -%}
+    shell: "{{ creds_dir }}/venv/bin/python {{ role_path }}/files/generate_user_permissions.py -f \"{{ creds_dir }}/oauth\" -p {{ marathon_auth_password_column }} -o \"{{ creds_dir }}/permissions.json\"
+        {%- for sheet in auth_permissions_gspreadsheets.split(';') %} -ss \"{{ sheet }}\" {% endfor -%}"
+    delegate_to: 127.0.0.1
     always_run: yes # run during check mode
     run_once: yes
     tags:
@@ -111,9 +93,10 @@
       - nginx
 
   - name: Generate nginx basic auth file if nginx_proxy_enable is set && it requires permissions file locally
-    local_action: shell python {{ role_path }}/files/generate_nginx_basic_auth_file.py {{ creds_dir }}/permissions.json {{ creds_dir }}/{{nginx_basic_auth_file_name}}
     when: auth_permissions_gspreadsheets is defined and not(auth_permissions_gspreadsheets | trim == '') and 
           generate_basic_auth_file is defined and generate_basic_auth_file|bool
+    shell: "{{ creds_dir }}/venv/bin/python {{ role_path }}/files/generate_nginx_basic_auth_file.py {{ creds_dir }}/permissions.json {{ creds_dir }}/{{nginx_basic_auth_file_name}}"
+    delegate_to: 127.0.0.1
     always_run: yes # run during check mode
     run_once: yes
     tags:
