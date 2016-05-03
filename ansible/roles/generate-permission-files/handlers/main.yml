@@ -4,4 +4,9 @@
   run_once: yes
   tags:
     - nginx
+    - configuration
+    - plugin
+    - permissions
+    - permissions-sync
+    - permissions-gen
 
