@@ -79,7 +79,7 @@
 
   - name: Generate permissions file from google spreadsheets when auth_permissions_gspreadsheets is true
     when: auth_permissions_gspreadsheets is defined and not(auth_permissions_gspreadsheets | trim == '')
-    shell: "{{ creds_dir }}/venv/bin/python {{ role_path }}/files/generate_user_permissions.py -f \"{{ creds_dir }}/oauth\" -p {{ marathon_auth_password_column }} -o \"{{ creds_dir }}/permissions.json\"
+    shell: "{{ creds_dir }}/venv/bin/python {{ role_path }}/files/generate_user_permissions.py -f \"{{ creds_dir }}/oauth\" -p {{ auth_password_column }} -o \"{{ creds_dir }}/permissions.json\"
         {%- for sheet in auth_permissions_gspreadsheets.split(';') %} -ss \"{{ sheet }}\" {% endfor -%}"
     delegate_to: 127.0.0.1
     always_run: yes # run during check mode
