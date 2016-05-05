@@ -1,0 +1,16 @@
+{
+  "id": "test-app",
+  "cmd": "sleep 10",
+  "cpus": 0.8,
+  "mem": 34.0,
+  "container": {
+    "type": "DOCKER",
+    "docker": {
+      "image": "python:3",
+      "network": "BRIDGE",
+      "portMappings": [
+        { "containerPort": 8080, "hostPort": 0 }
+      ]
+    }
+  }
+}
