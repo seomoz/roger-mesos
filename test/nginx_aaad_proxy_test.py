@@ -9,78 +9,86 @@ import requests
 import base64
 import time
 
+
 def post_data(url, headers, payload):
     result = requests.post(url, data=json.dumps(payload), headers=headers)
     return (result.status_code)
 
+
 def get_data(url, headers, payload=''):
-    result = requests.get(url,data=payload,headers=headers)
+    result = requests.get(url, data=payload, headers=headers)
     return result.status_code
+
 
 def put_data(url, headers, payload):
     result = requests.put(url, data=json.dumps(payload), headers=headers)
     return (result.status_code)
 
-def delete_data(url,headers,payload):
+
+def delete_data(url, headers, payload):
     result = requests.delete(url, data=json.dumps(payload), headers=headers)
     return (result.status_code)
+
 
 def test_proxy_unauthorized_user(environment):
 
     # Provide garbage username and password
     encoded = base64.b64encode(b'garbage:garbage')
     encoded = "Basic " + encoded
-    headers = { "Content-Type": "application/json", "Authorization" : encoded }
+    headers = {"Content-Type": "application/json", "Authorization": encoded}
 
     # Create App
     headers['URI'] = "/moz-content/"
-    app_url = 'http://'+environment+':4080/marathon/v2/apps'
-    with open(parent_dir+"/sample_data.json") as json_file:
-         json_data = json.load(json_file)
-    result_code = post_data(app_url,headers,json_data)
+    app_url = 'http://' + environment + ':4080/marathon/v2/apps'
+    with open(parent_dir + "/sample_data.json") as json_file:
+        json_data = json.load(json_file)
+    result_code = post_data(app_url, headers, json_data)
     assert(result_code == 401)
     print("Create Failed: Unauthorized User")
 
     # Read App
-    result_code = get_data(app_url,headers)
+    result_code = get_data(app_url, headers)
     assert(result_code == 401)
     print("Read Failed: Unauthorized User")
 
     # Update App
-    app_url = 'http://'+environment+':4080/marathon/v2/apps/test-app'
-    with open(parent_dir+"/update.json") as json_file:
-         json_data = json.load(json_file)
-    result_code = put_data(app_url,headers,json_data)
+    app_url = 'http://' + environment + ':4080/marathon/v2/apps/test-app'
+    with open(parent_dir + "/update.json") as json_file:
+        json_data = json.load(json_file)
+    result_code = put_data(app_url, headers, json_data)
     assert(result_code == 401)
     print("Update Failed: Unauthorized User")
 
     # Delete App
-    app_url = 'http://'+environment+':4080/marathon/v2/apps/test-app'
-    result_code = delete_data(app_url,headers,json_data)
+    app_url = 'http://' + environment + ':4080/marathon/v2/apps/test-app'
+    result_code = delete_data(app_url, headers, json_data)
     assert(result_code == 401)
     print("Delete Failed: Unauthorized User\n")
+
 
 def test_proxy_valid_user(environment):
 
     try:
 
-        app_url = 'http://'+environment+':4080/marathon/v2/apps/'
+        app_url = 'http://' + environment + ':4080/marathon/v2/apps/'
 
-        # Creating Authorization for header using Base64 encoding (username:password)
+        # Creating Authorization for header using Base64 encoding
+        # (username:password)
         encoded = base64.b64encode(b'admin:admin')
         encoded = "Basic " + encoded
-        headers = { "Content-Type": "application/json", "Authorization" : encoded }
+        headers = {"Content-Type": "application/json",
+                   "Authorization": encoded}
 
         # Create App
-        with open(parent_dir+"/sample_data.json") as json_file:
-             json_data = json.load(json_file)
+        with open(parent_dir + "/sample_data.json") as json_file:
+            json_data = json.load(json_file)
 
-        result_code = post_data(app_url,headers,json_data)
+        result_code = post_data(app_url, headers, json_data)
         assert(result_code == 201)
         print("Create Test: Pass")
 
         # Read App
-        result_code = get_data(app_url,headers)
+        result_code = get_data(app_url, headers)
         assert(result_code == 200)
         print("Read Test:   Pass")
 
@@ -88,21 +96,22 @@ def test_proxy_valid_user(environment):
         time.sleep(5)
 
         # Update App
-        app_url = 'http://'+environment+':4080/marathon/v2/apps/test-app'
-        with open(parent_dir+"/update.json") as json_file:
-             json_data = json.load(json_file)
-        result_code = put_data(app_url,headers,json_data)
+        app_url = 'http://' + environment + ':4080/marathon/v2/apps/test-app'
+        with open(parent_dir + "/update.json") as json_file:
+            json_data = json.load(json_file)
+        result_code = put_data(app_url, headers, json_data)
         assert(result_code == 200)
         print("Update Test: Pass")
 
         # Delete App
-        app_url = 'http://'+environment+':4080/marathon/v2/apps/test-app'
-        result_code = delete_data(app_url,headers,json_data)
+        app_url = 'http://' + environment + ':4080/marathon/v2/apps/test-app'
+        result_code = delete_data(app_url, headers, json_data)
         assert(result_code == 200)
         print("Delete Test: Pass\n")
 
     except:
         print("\nTest Case Failed")
+
 
 def main(args):
 
@@ -110,7 +119,7 @@ def main(args):
         print("Please provide environment, then retry.\nExiting...")
         sys.exit(0)
 
-    machine = args[(len(args)-1)]
+    machine = args[(len(args) - 1)]
 
     # Check if the environment is up and reachable
     port = 4080
@@ -131,5 +140,5 @@ def main(args):
 
 if __name__ == "__main__":
     parent_dir = os.path.abspath(os.path.join(
-                 os.path.dirname(os.path.realpath(__file__)), os.pardir, "test"))
+        os.path.dirname(os.path.realpath(__file__)), os.pardir, "test"))
     main(sys.argv)
