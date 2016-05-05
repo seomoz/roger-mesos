@@ -70,14 +70,8 @@
       - install
       - nginx
 
-  - name: Install pip package locally
-    local_action: command sudo pip install virtualenvwrapper --ignore-installed six 
-    tags:
-      - install
-      - nginx
-
   - name: Install python package htpasswd using pip locally
-    local_action: command sudo pip install htpasswd --ignore-installed six 
+    local_action: command sudo pip install htpasswd
     tags:
       - install
       - nginx
