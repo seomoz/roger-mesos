@@ -1,0 +1,3 @@
+---
+dependencies:
+  - { role: generate-permission-files, when : marathon_auth_enable is defined and marathon_auth_enable|bool }

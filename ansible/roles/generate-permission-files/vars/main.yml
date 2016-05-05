@@ -1,0 +1,1 @@
+marathon_auth_plugin_location: "{{base_data_dir}}/marathon/plugins"
