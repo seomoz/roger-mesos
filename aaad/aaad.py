@@ -71,9 +71,6 @@ class AuthHandler(BaseHTTPRequestHandler):
         ctx = self.ctx
         file_authorizer = FileAuthorizer(permissions_file).instance
         try:
-            #if not file_authorizer.authorize_act_as_user(user, act_as_user):
-            #    raise Exception("Authorization Failed: {} cannot act as {}".format(user, act_as_user))
-
             if not file_authorizer.authorize(user, act_as_user, path, action):
                 return False
 
