@@ -1,41 +1,47 @@
-users:
-- can_act_as:
+admin:
+  action:
+    DELETE:
+    - /marathon/v2/.*
+    - /chronos/jobs/.*
+    GET:
+    - /marathon/v2/.*
+    - /chronos/jobs/.*
+    POST:
+    - /marathon/v2/.*
+    - /chronos/jobs/.*
+    PUT:
+    - /marathon/v2/.*
+    - /chronos/jobs/.
+  can_act_as:
+  - basic_user
+basic_user:
+  action:
+    GET:
+    - /marathon/v2/{apps|groups}
+    - /marathon/v2/tasks
+    - /marathon/v2/deployments
+    - /chronos/jobs
+    POST:
+    - /marathon/v2/eventSubscriptions
+foo.bob:
+  action:
+  can_act_as:
   - teamA
-  - all_users
-  user: foo.bob
-- can_act_as:
-  - all_users
-  permissions:
-  - action:
-      DELETE:
-      - /marathon/v2/{apps|groups}/teamA/.*
-      GET:
-      - /marathon/v2/{apps|groups}/teamA/.*
-      - /chronos/jobs/teamA/.*
-      POST:
-      - /marathon/v2/{apps|groups}/teamA/.*
-      PUT:
-      - /marathon/v2/{apps|groups}/teamA/.*
-  user: teamA
-- can_act_as:
-  - all_users
-  permissions:
-  - action:
-      DELETE:
-      - /marathon/v2/.*
-      - /chronos/jobs/.*
-      GET:
-      - /marathon/v2/.*
-      - /chronos/jobs/.*
-      POST:
-      - /marathon/v2/.*
-      - /chronos/jobs/.*
-  user: admin
-- permissions:
-  - action:
-      GET:
-      - /marathon/v2/{apps|groups}
-      - /chronos/jobs
-      POST:
-      - /marathon/v2/eventSubscriptions
-  user: all_users
+  - basic_user
+teamA:
+  action:
+    DELETE:
+    - /marathon/v2/{apps|groups}/teamA/.*
+    - /chronos/jobs/teamA/.*
+    GET:
+    - /marathon/v2/{apps|groups}/teamA/.*
+    - /chronos/jobs/teamA/.*
+    POST:
+    - /marathon/v2/{apps|groups}/teamA/.*
+    - /chronos/jobs/teamA/.*
+    PUT:
+    - /marathon/v2/{apps|groups}/teamA/.*
+    - /chronos/jobs/teamA/.*
+  can_act_as:
+  - basic_user
+

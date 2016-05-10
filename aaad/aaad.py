@@ -15,7 +15,6 @@ class AuthHTTPServer(ThreadingMixIn, HTTPServer, ):
 class AuthHandler(BaseHTTPRequestHandler):
     ctx = {}
     authenticator = None
-    method_to_action = { "GET" : "view" , "POST" : "create" , "PUT" : "update" , "DELETE" : "delete" }
 
     def do_GET(self):
 
@@ -23,7 +22,7 @@ class AuthHandler(BaseHTTPRequestHandler):
         ctx['action'] = 'getting basic http authorization header'
         auth_header = self.headers.get('Authorization')
         resource = self.headers.get('URI')
-        action = self.method_to_action[self.headers.get('method')]
+        action = self.headers.get('method')
  
         print self.headers
         # Carry out Basic Authentication
@@ -61,7 +60,7 @@ class AuthHandler(BaseHTTPRequestHandler):
         ctx = self.ctx
         try:
             if not FileAuthenticator(permissions_file).instance.authenticate(user, password):
-                raise Exception("Authentication Failed")
+                return False
         except:
             self.auth_failed(ctx)
             return False
@@ -72,11 +71,11 @@ class AuthHandler(BaseHTTPRequestHandler):
         ctx = self.ctx
         file_authorizer = FileAuthorizer(permissions_file).instance
         try:
-            if not file_authorizer.authorize_act_as_user(user, act_as_user):
-                raise Exception("Authorization Failed: {} cannot act as {}".format(user, act_as_user))
+            #if not file_authorizer.authorize_act_as_user(user, act_as_user):
+            #    raise Exception("Authorization Failed: {} cannot act as {}".format(user, act_as_user))
 
-            if not file_authorizer.authorize(act_as_user, path, action):
-                raise Exception("Authorization Failed")
+            if not file_authorizer.authorize(user, act_as_user, path, action):
+                return False
 
         except:
             self.auth_failed(ctx)
