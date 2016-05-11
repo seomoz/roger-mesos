@@ -163,7 +163,7 @@
     when: enable_nginx_auth_proxy is defined and enable_nginx_auth_proxy|bool and
           nginx_auth_permissions_local_path is not defined and
           auth_permissions_gspreadsheets is not defined
-    template: src={{ role_path }}/files/user-permissions.yml dest="{{nginx_conf_dir}}/user-permissions.yml" owner=root group=root mode=0644
+    copy: src={{ role_path }}/files/user-permissions.yml dest="{{nginx_conf_dir}}/user-permissions.yml" owner=root group=root mode=0644
           force=no # ensure that this file doesn't overwrite any existing permissions file
     become: yes
     tags:
