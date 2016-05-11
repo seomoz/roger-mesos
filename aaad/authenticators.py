@@ -7,13 +7,8 @@ class FileAuthenticator:
             self.data = utils.parse_permissions_file(filename)
 
         def authenticate(self, username, password):
-            if not username or not password:
-                return False
-            else:
-                for user in self.data["users"]:
-                    if username == user["user"] and password == user["password"]:
-                        return True
-            return False
+            # Needs to be implemented to authenticate via a server like LDAP, etc 
+            return True
 
     instance = None
     def __init__(self, filename):

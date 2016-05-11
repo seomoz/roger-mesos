@@ -153,7 +153,7 @@
   - name: Copy permissions file from local src to nginx conf when nginx_auth_permissions_local_path is defined
     when: enable_nginx_auth_proxy is defined and enable_nginx_auth_proxy|bool and 
           nginx_auth_permissions_local_path is defined and not(nginx_auth_permissions_local_path | trim == '')
-    copy:  src="{{ nginx_auth_permissions_local_path }}"  dest="{{nginx_conf_dir}}/user-permissions.json" owner=root group=root mode=0644
+    copy:  src="{{ nginx_auth_permissions_local_path }}"  dest="{{nginx_conf_dir}}/user-permissions.yml" owner=root group=root mode=0644
     become: yes
     tags:
       - install
@@ -163,7 +163,7 @@
     when: enable_nginx_auth_proxy is defined and enable_nginx_auth_proxy|bool and
           nginx_auth_permissions_local_path is not defined and
           auth_permissions_gspreadsheets is not defined
-    template: src=user-permissions.json.j2 dest="{{nginx_conf_dir}}/user-permissions.json" owner=root group=root mode=0644
+    copy: src={{ role_path }}/files/user-permissions.yml dest="{{nginx_conf_dir}}/user-permissions.yml" owner=root group=root mode=0644
           force=no # ensure that this file doesn't overwrite any existing permissions file
     become: yes
     tags:
