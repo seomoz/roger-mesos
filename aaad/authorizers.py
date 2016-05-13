@@ -12,8 +12,8 @@ class FileAuthorizer:
             if user in allowed_users:
                 return
             allowed_users.append(user)
-            if action != '':
-                if action in data[user]['action'].keys():
+            if action != '' and 'action' in data[user]:
+                if data[user]['action'] != None and action in data[user]['action']:
                     temp_list = list(set(data[user]['action'][action]) - set(allowed_actions))
                     for item in temp_list:
                         allowed_actions.append(item)            
@@ -54,7 +54,9 @@ class FileAuthorizer:
                 return False
 
             allowed_users_list = []
-            allowed_actions = self.data[act_as]['action'][action]
+            allowed_actions = []
+            if 'action' in self.data[act_as] and self.data[act_as]['action'] != None:
+                allowed_actions = self.data[act_as]['action'][action]
             self.get_merged_data(act_as, allowed_users_list, allowed_actions, self.data, action)
          
             result = self.resource_check(resource, allowed_actions)
