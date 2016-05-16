@@ -69,6 +69,18 @@
       - permissions-gen
       - nginx
 
+  - name: Install python-pip package
+    apt: name=python-pip state=present
+    become: yes
+    always_run: yes # run during check mode
+
+  - name: install python packages
+    pip: name={{ item }} state=present
+    become: yes
+    always_run: yes # run during check mode
+    with_items:
+       - pyyaml
+
   - name: Install pip package locally
     easy_install: name=pip
     become: yes
