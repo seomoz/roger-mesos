@@ -42,6 +42,19 @@
       - permissions-gen
       - nginx
 
+  - name: Create directories which need to exist if necessary
+    file: path={{ item }} state=directory owner=root
+    with_items:
+    - "{{ nginx_conf_dir }}"
+    become: yes
+    tags:
+      - configuration
+      - plugin
+      - permissions
+      - permissions-sync
+      - permissions-gen
+      - nginx
+
   - name: Generate oauth file from template when auth_permissions_gspreadsheets is true
     when: auth_permissions_gspreadsheets is defined and not(auth_permissions_gspreadsheets | trim == '')
     local_action: template src=oauth.j2 dest="{{ creds_dir }}/oauth" mode=0600
