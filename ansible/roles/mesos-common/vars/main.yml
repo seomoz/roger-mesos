@@ -6,7 +6,7 @@ mesos_package_deps:
   - libcurl3
   - libsvn1
 
-mesos_version: "0.27.2-2.0.15.ubuntu1404"
+mesos_version: "0.28.1-2.0.20.ubuntu1404"
 mesos_tmp_dir: "{{ base_data_dir }}/mesos/tmp"
 mesos_work_dir: "{{ base_data_dir }}/mesos/work"
 mesos_log_dir: "{{ base_data_dir }}/mesos/logs"
