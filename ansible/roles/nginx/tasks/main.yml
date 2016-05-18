@@ -1,29 +1,5 @@
 ---
 
-  - name: Fail if nginx proxy is enabled but permissions file path is not defined
-    fail: msg="basic auth file for nginx can't be generated without permissions file locally, define - permissions_file_local_path"
-    when: permissions_file_local_path is not defined or permissions_file_local_path | trim == ''
-
-  # If creds_dir var is passed, then we don't need to create a temp dir
-  - name: Create a temp dir for nginx basic auth credentials file generation
-    local_action: shell mktemp -d
-    always_run: yes # run during check mode
-    when: (creds_dir is not defined) or (creds_dir | trim == '')
-    run_once: yes
-    register: mktemp
-    notify: clean mktemp
-    tags:
-      - nginx
-
-  - name: Assign credentials temp dir if not passed through 
-    set_fact:
-      creds_dir: "{{ mktemp.stdout }}"
-    when: (creds_dir is not defined) or (creds_dir | trim == '')
-    become: yes
-    tags:
-      - install
-      - nginx
-
   - name: Download nginx release
     get_url: url="{{nginx_release_url}}" dest="{{tmp_dir}}"
     become: yes
@@ -64,39 +40,14 @@
       - install
       - nginx 
 
-  - name: Install pip package locally
-    local_action: command sudo easy_install pip
-    tags:
-      - install
-      - nginx
-
-  - name: Install python package htpasswd using pip locally
-    local_action: command sudo pip install htpasswd
-    tags:
-      - install
-      - nginx
-
-  - name: Generate nginx basic auth file if nginx_proxy_enable is set && it requires permissions file locally
-    local_action: shell python {{ role_path }}/files/generate_nginx_basic_auth_file.py {{permissions_file_local_path}} {{ creds_dir }}/{{nginx_basic_auth_file_name}}
-    always_run: yes # run during check mode
-    run_once: yes
-    tags:
-      - configuration
-      - nginx 
-
   - name: Copy basic auth credentials file to the nginx conf
     copy: src={{ creds_dir }}/{{nginx_basic_auth_file_name}} dest="{{nginx_conf_dir}}/{{nginx_basic_auth_file_name}}"  mode=0644
+    when: auth_permissions_gspreadsheets is defined and not(auth_permissions_gspreadsheets | trim == '') and 
+          generate_basic_auth_file is defined and generate_basic_auth_file|bool
     become: yes
     tags:
       - install
       - nginx 
-
-  - name: Copy user permissions file to the nginx conf
-    copy: src={{permissions_file_local_path}} dest="{{nginx_conf_dir}}/user-permissions.json"  mode=0644
-    become: yes
-    tags:
-      - install
-      - nginx
 
   - name: Copy AAA daemon to nginx conf directory for now
     copy: src=../../../../aaad dest={{nginx_conf_dir}}  mode=0655
@@ -106,7 +57,7 @@
       - nginx 
 
   - name: Configure aaad upstart job
-    template: src=aaad.conf.j2 dest=/etc/init/aaad.conf owner=root group=root mode=0600
+    template: src=aaad.conf.j2 dest=/etc/init/aaad.conf owner=root group=root mode=0644
     become: yes
     tags:
       - nginx

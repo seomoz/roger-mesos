@@ -1,0 +1,7 @@
+---
+# Main task for generating permission files for Nginx and marathon servers.
+
+- hosts: nginx_servers
+
+  roles:
+    - generate-permission-files 

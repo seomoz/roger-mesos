@@ -1,5 +1,5 @@
 ---
-kernel_version: 3.19.0-21-generic
+kernel_version: 3.19.0-59-generic
 
 # can be overriden from the command line by -e "restart_machine=true"
 restart_machine: "false"

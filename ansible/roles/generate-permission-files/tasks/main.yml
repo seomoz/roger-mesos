@@ -1,0 +1,188 @@
+---
+
+  # If creds_dir var is passed, then we don't need to create a temp dir
+  - name: Create a temp dir for local permissions file
+    local_action: shell mktemp -d
+    always_run: yes # run during check mode
+    when: (creds_dir is not defined) or (creds_dir | trim == '')
+    run_once: yes
+    register: mktemp
+    notify: clean mktemp
+    tags:
+      - nginx
+      - configuration
+      - plugin
+      - permissions
+      - permissions-sync
+      - permissions-gen
+
+  - name: Assign credentials temp dir if not passed through
+    set_fact:
+      creds_dir: "{{ mktemp.stdout }}"
+    when: (creds_dir is not defined) or (creds_dir | trim == '')
+    become: yes
+    tags:
+      - install
+      - nginx
+      - configuration
+      - plugin
+      - permissions
+      - permissions-sync
+      - permissions-gen
+
+  - debug: msg="Created a temp dir. If the playbook fails, please delete this directory using -> rm -r {{ creds_dir }}"
+    when: auth_permissions_gspreadsheets is defined and not(auth_permissions_gspreadsheets | trim == '')
+    always_run: yes # run during check mode
+    run_once: yes
+    tags:
+      - configuration
+      - plugin
+      - permissions
+      - permissions-sync
+      - permissions-gen
+      - nginx
+
+  - name: Create directories which need to exist if necessary
+    file: path={{ item }} state=directory owner=root
+    with_items:
+    - "{{ nginx_conf_dir }}"
+    become: yes
+    tags:
+      - configuration
+      - plugin
+      - permissions
+      - permissions-sync
+      - permissions-gen
+      - nginx
+
+  - name: Generate oauth file from template when auth_permissions_gspreadsheets is true
+    when: auth_permissions_gspreadsheets is defined and not(auth_permissions_gspreadsheets | trim == '')
+    local_action: template src=oauth.j2 dest="{{ creds_dir }}/oauth" mode=0600
+    always_run: yes # run during check mode
+    run_once: yes
+    notify: clean mktemp
+    tags:
+      - configuration
+      - plugin
+      - permissions
+      - permissions-sync
+      - permissions-gen
+      - nginx
+
+  - name: Install python-pip package
+    apt: name=python-pip state=present
+    become: yes
+    always_run: yes # run during check mode
+
+  - name: install python packages
+    pip: name={{ item }} state=present
+    become: yes
+    always_run: yes # run during check mode
+    with_items:
+       - pyyaml
+
+  - name: Install pip package locally
+    easy_install: name=pip
+    become: yes
+    always_run: yes # run during check mode
+    delegate_to: 127.0.0.1
+
+  - name: install virtualenv using pip locally
+    pip: name=virtualenv
+    become: yes
+    always_run: yes # run during check mode
+    delegate_to: 127.0.0.1
+
+  - name: install python packages using pip locally
+    pip: name={{ item }} virtualenv={{ creds_dir }}/venv
+    always_run: yes # run during check mode
+    with_items:
+       - htpasswd
+       - gspread
+       - oauth2client
+    delegate_to: 127.0.0.1
+
+  - name: Generate permissions file from google spreadsheets when auth_permissions_gspreadsheets is true
+    when: auth_permissions_gspreadsheets is defined and not(auth_permissions_gspreadsheets | trim == '')
+    shell: "{{ creds_dir }}/venv/bin/python {{ role_path }}/files/generate_user_permissions.py -f \"{{ creds_dir }}/oauth\" -p {{ auth_password_column }} -o \"{{ creds_dir }}/permissions.json\"
+        {%- for sheet in auth_permissions_gspreadsheets.split(';') %} -ss \"{{ sheet }}\" {% endfor -%}"
+    delegate_to: 127.0.0.1
+    always_run: yes # run during check mode
+    run_once: yes
+    tags:
+      - configuration
+      - plugin
+      - permissions
+      - permissions-sync
+      - permissions-gen
+      - nginx
+
+  - name: Generate nginx basic auth file if nginx_proxy_enable is set && it requires permissions file locally
+    when: auth_permissions_gspreadsheets is defined and not(auth_permissions_gspreadsheets | trim == '') and 
+          generate_basic_auth_file is defined and generate_basic_auth_file|bool
+    shell: "{{ creds_dir }}/venv/bin/python {{ role_path }}/files/generate_nginx_basic_auth_file.py {{ creds_dir }}/permissions.json {{ creds_dir }}/{{nginx_basic_auth_file_name}}"
+    delegate_to: 127.0.0.1
+    always_run: yes # run during check mode
+    run_once: yes
+    tags:
+      - configuration
+      - permissions
+      - permissions-sync
+      - permissions-gen
+      - nginx
+
+  - name: Copy generated permissions file from google spreadsheets when auth_permissions_gspreadsheets is true
+    when: marathon_auth_enable is defined and marathon_auth_enable|bool and
+          auth_permissions_gspreadsheets is defined and not(auth_permissions_gspreadsheets | trim == '')
+    copy: src="{{ creds_dir }}/permissions.json" dest="{{ marathon_auth_plugin_location }}/user-permissions.json" owner=root group=root mode=0644
+    become: yes
+    tags:
+      - configuration
+      - plugin
+      - permissions
+      - permissions-sync
+      - permissions-gen
+
+  - name: Copy permissions file from local src when marathon_auth_permissions_local_path is defined
+    when: marathon_auth_enable is defined and marathon_auth_enable|bool and
+          marathon_auth_permissions_local_path is defined and not(marathon_auth_permissions_local_path | trim == '')
+    copy:  src="{{ marathon_auth_permissions_local_path }}"  dest="{{ marathon_auth_plugin_location }}/user-permissions.json" owner=root group=root mode=0644
+    become: yes
+    tags:
+      - configuration
+      - plugin
+      - permissions
+      - permissions-sync
+
+  - name: Copy default marathon user-permissions.json file if neither marathon_auth_permissions_local_path nor auth_permissions_gspreadsheets are defined, and there isn't already a permissions file
+    when: marathon_auth_enable is defined and marathon_auth_enable|bool and
+          marathon_auth_permissions_local_path is not defined and
+          auth_permissions_gspreadsheets is not defined
+    template: src=user-permissions.json.j2 dest="{{ marathon_auth_plugin_location }}/user-permissions.json" owner=root group=root mode=0644
+          force=no # ensure that this file doesn't overwrite any existing permissions file
+    become: yes
+    tags:
+      - configuration
+      - plugin
+      - permissions
+
+  - name: Copy permissions file from local src to nginx conf when nginx_auth_permissions_local_path is defined
+    when: enable_nginx_auth_proxy is defined and enable_nginx_auth_proxy|bool and 
+          nginx_auth_permissions_local_path is defined and not(nginx_auth_permissions_local_path | trim == '')
+    copy:  src="{{ nginx_auth_permissions_local_path }}"  dest="{{nginx_conf_dir}}/permissions.yml" owner=root group=root mode=0644
+    become: yes
+    tags:
+      - install
+      - nginx
+
+  - name: Copy default nginx user-permissions.json file if neither nginx_auth_permissions_local_path nor auth_permissions_gspreadsheets are defined, and there isn't already a permissions file
+    when: enable_nginx_auth_proxy is defined and enable_nginx_auth_proxy|bool and
+          nginx_auth_permissions_local_path is not defined and
+          auth_permissions_gspreadsheets is not defined
+    copy: src={{ role_path }}/files/permissions.yml dest="{{nginx_conf_dir}}/permissions.yml" owner=root group=root mode=0644
+          force=no # ensure that this file doesn't overwrite any existing permissions file
+    become: yes
+    tags:
+      - install
+      - nginx
+
