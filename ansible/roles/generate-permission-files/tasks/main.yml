@@ -2,7 +2,8 @@
 
   # If creds_dir var is passed, then we don't need to create a temp dir
   - name: Create a temp dir for local permissions file
-    local_action: shell mktemp -d
+    shell: mktemp -d
+    delegate_to: 127.0.0.1
     always_run: yes # run during check mode
     when: (creds_dir is not defined) or (creds_dir | trim == '')
     run_once: yes
@@ -57,7 +58,8 @@
 
   - name: Generate oauth file from template when auth_permissions_gspreadsheets is true
     when: auth_permissions_gspreadsheets is defined and not(auth_permissions_gspreadsheets | trim == '')
-    local_action: template src=oauth.j2 dest="{{ creds_dir }}/oauth" mode=0600
+    template: src=oauth.j2 dest="{{ creds_dir }}/oauth" mode=0644
+    delegate_to: 127.0.0.1
     always_run: yes # run during check mode
     run_once: yes
     notify: clean mktemp
@@ -73,6 +75,13 @@
     apt: name=python-pip state=present
     become: yes
     always_run: yes # run during check mode
+    tags:
+      - configuration
+      - plugin
+      - permissions
+      - permissions-sync
+      - permissions-gen
+      - nginx
 
   - name: install python packages
     pip: name={{ item }} state=present
@@ -80,18 +89,13 @@
     always_run: yes # run during check mode
     with_items:
        - pyyaml
-
-  - name: Install pip package locally
-    easy_install: name=pip
-    become: yes
-    always_run: yes # run during check mode
-    delegate_to: 127.0.0.1
-
-  - name: install virtualenv using pip locally
-    pip: name=virtualenv
-    become: yes
-    always_run: yes # run during check mode
-    delegate_to: 127.0.0.1
+    tags:
+      - configuration
+      - plugin
+      - permissions
+      - permissions-sync
+      - permissions-gen
+      - nginx
 
   - name: install python packages using pip locally
     pip: name={{ item }} virtualenv={{ creds_dir }}/venv
@@ -101,6 +105,14 @@
        - gspread
        - oauth2client
     delegate_to: 127.0.0.1
+    run_once: yes
+    tags:
+      - configuration
+      - plugin
+      - permissions
+      - permissions-sync
+      - permissions-gen
+      - nginx
 
   - name: Generate permissions file from google spreadsheets when auth_permissions_gspreadsheets is true
     when: auth_permissions_gspreadsheets is defined and not(auth_permissions_gspreadsheets | trim == '')
@@ -118,7 +130,7 @@
       - nginx
 
   - name: Generate nginx basic auth file if nginx_proxy_enable is set && it requires permissions file locally
-    when: auth_permissions_gspreadsheets is defined and not(auth_permissions_gspreadsheets | trim == '') and 
+    when: auth_permissions_gspreadsheets is defined and not(auth_permissions_gspreadsheets | trim == '') and
           generate_basic_auth_file is defined and generate_basic_auth_file|bool
     shell: "{{ creds_dir }}/venv/bin/python {{ role_path }}/files/generate_nginx_basic_auth_file.py {{ creds_dir }}/permissions.json {{ creds_dir }}/{{nginx_basic_auth_file_name}}"
     delegate_to: 127.0.0.1
@@ -167,7 +179,7 @@
       - permissions
 
   - name: Copy permissions file from local src to nginx conf when nginx_auth_permissions_local_path is defined
-    when: enable_nginx_auth_proxy is defined and enable_nginx_auth_proxy|bool and 
+    when: enable_nginx_auth_proxy is defined and enable_nginx_auth_proxy|bool and
           nginx_auth_permissions_local_path is defined and not(nginx_auth_permissions_local_path | trim == '')
     copy:  src="{{ nginx_auth_permissions_local_path }}"  dest="{{nginx_conf_dir}}/permissions.yml" owner=root group=root mode=0644
     become: yes
@@ -185,4 +197,3 @@
     tags:
       - install
       - nginx
-
