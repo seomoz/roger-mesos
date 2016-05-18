@@ -2,7 +2,8 @@
 
   # If creds_dir var is passed, then we don't need to create a temp dir
   - name: Create a temp dir for local permissions file
-    local_action: shell mktemp -d
+    shell: mktemp -d
+    delegate_to: 127.0.0.1
     always_run: yes # run during check mode
     when: (creds_dir is not defined) or (creds_dir | trim == '')
     run_once: yes
@@ -57,7 +58,8 @@
 
   - name: Generate oauth file from template when auth_permissions_gspreadsheets is true
     when: auth_permissions_gspreadsheets is defined and not(auth_permissions_gspreadsheets | trim == '')
-    local_action: template src=oauth.j2 dest="{{ creds_dir }}/oauth" mode=0600
+    template: src=oauth.j2 dest="{{ creds_dir }}/oauth" mode=0644
+    delegate_to: 127.0.0.1
     always_run: yes # run during check mode
     run_once: yes
     notify: clean mktemp
