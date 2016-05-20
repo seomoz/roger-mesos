@@ -43,19 +43,6 @@
       - permissions-gen
       - nginx
 
-  - name: Create directories which need to exist if necessary
-    file: path={{ item }} state=directory owner=root
-    with_items:
-    - "{{ nginx_conf_dir }}"
-    become: yes
-    tags:
-      - configuration
-      - plugin
-      - permissions
-      - permissions-sync
-      - permissions-gen
-      - nginx
-
   - name: Generate oauth file from template when auth_permissions_gspreadsheets is true
     when: auth_permissions_gspreadsheets is defined and not(auth_permissions_gspreadsheets | trim == '')
     template: src=oauth.j2 dest="{{ creds_dir }}/oauth" mode=0644
@@ -129,7 +116,7 @@
       - permissions-gen
       - nginx
 
-  - name: Generate nginx basic auth file if nginx_proxy_enable is set && it requires permissions file locally
+  - name: Generate nginx basic auth file if generate_basic_auth_file is set && it requires permissions file locally
     when: auth_permissions_gspreadsheets is defined and not(auth_permissions_gspreadsheets | trim == '') and
           generate_basic_auth_file is defined and generate_basic_auth_file|bool
     shell: "{{ creds_dir }}/venv/bin/python {{ role_path }}/files/generate_nginx_basic_auth_file.py {{ creds_dir }}/permissions.json {{ creds_dir }}/{{nginx_basic_auth_file_name}}"
@@ -143,57 +130,3 @@
       - permissions-gen
       - nginx
 
-  - name: Copy generated permissions file from google spreadsheets when auth_permissions_gspreadsheets is true
-    when: marathon_auth_enable is defined and marathon_auth_enable|bool and
-          auth_permissions_gspreadsheets is defined and not(auth_permissions_gspreadsheets | trim == '')
-    copy: src="{{ creds_dir }}/permissions.json" dest="{{ marathon_auth_plugin_location }}/user-permissions.json" owner=root group=root mode=0644
-    become: yes
-    tags:
-      - configuration
-      - plugin
-      - permissions
-      - permissions-sync
-      - permissions-gen
-
-  - name: Copy permissions file from local src when marathon_auth_permissions_local_path is defined
-    when: marathon_auth_enable is defined and marathon_auth_enable|bool and
-          marathon_auth_permissions_local_path is defined and not(marathon_auth_permissions_local_path | trim == '')
-    copy:  src="{{ marathon_auth_permissions_local_path }}"  dest="{{ marathon_auth_plugin_location }}/user-permissions.json" owner=root group=root mode=0644
-    become: yes
-    tags:
-      - configuration
-      - plugin
-      - permissions
-      - permissions-sync
-
-  - name: Copy default marathon user-permissions.json file if neither marathon_auth_permissions_local_path nor auth_permissions_gspreadsheets are defined, and there isn't already a permissions file
-    when: marathon_auth_enable is defined and marathon_auth_enable|bool and
-          marathon_auth_permissions_local_path is not defined and
-          auth_permissions_gspreadsheets is not defined
-    template: src=user-permissions.json.j2 dest="{{ marathon_auth_plugin_location }}/user-permissions.json" owner=root group=root mode=0644
-          force=no # ensure that this file doesn't overwrite any existing permissions file
-    become: yes
-    tags:
-      - configuration
-      - plugin
-      - permissions
-
-  - name: Copy permissions file from local src to nginx conf when nginx_auth_permissions_local_path is defined
-    when: enable_nginx_auth_proxy is defined and enable_nginx_auth_proxy|bool and
-          nginx_auth_permissions_local_path is defined and not(nginx_auth_permissions_local_path | trim == '')
-    copy:  src="{{ nginx_auth_permissions_local_path }}"  dest="{{nginx_conf_dir}}/permissions.yml" owner=root group=root mode=0644
-    become: yes
-    tags:
-      - install
-      - nginx
-
-  - name: Copy default nginx user-permissions.json file if neither nginx_auth_permissions_local_path nor auth_permissions_gspreadsheets are defined, and there isn't already a permissions file
-    when: enable_nginx_auth_proxy is defined and enable_nginx_auth_proxy|bool and
-          nginx_auth_permissions_local_path is not defined and
-          auth_permissions_gspreadsheets is not defined
-    copy: src={{ role_path }}/files/permissions.yml dest="{{nginx_conf_dir}}/permissions.yml" owner=root group=root mode=0644
-          force=no # ensure that this file doesn't overwrite any existing permissions file
-    become: yes
-    tags:
-      - install
-      - nginx
