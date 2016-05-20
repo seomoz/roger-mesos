@@ -93,7 +93,7 @@ backend {{ if $app.Env.HTTP_PREFIX }}{{ escapeSlashes $app.Env.HTTP_PREFIX }}{{ 
         {{ if $app.Env.ENABLE_SESSION_AFFINITY }}
         cookie SERVERID insert indirect nocache
         {{ else if $app.Env.ENABLE_VERSION_AFFINITY }}{{ $versionhash := getVersionHash $app.EscapedId $app.Env.ENABLE_VERSION_AFFINITY }}
-        http-response set-header Set-Cookie VERSIONID={{ $versionhash }}
+        http-response add-header Set-Cookie VERSIONID={{ $versionhash }}
         {{ end }}
         # reqrep ^([^\ ]*\ ){{ $app.Id }}\/?(.*) \1\\/\2{{ if $app.Env.HTTP_PORT }} {{ range $page, $task := .Tasks }}
         {{ if $app.Env.ENABLE_SESSION_AFFINITY }}{{ $serverhash := getServerHash $app.EscapedId $task.Host $task.Port }}
@@ -108,7 +108,7 @@ backend {{ if $app.Env.HTTP_PREFIX }}{{ escapeSlashes $app.Env.HTTP_PREFIX }}{{ 
         option httpclose
         option forwardfor
 
-        http-response set-header Set-Cookie VERSIONID={{ $versionhash }}
+        http-response add-header Set-Cookie VERSIONID={{ $versionhash }}
 
         # reqrep ^([^\ ]*\ ){{ $app.Id }}\/?(.*) \1\\/\2{{ if $app.Env.HTTP_PORT }} {{ range $page, $task := .Tasks }}
         server {{ $app.EscapedId}}-{{ $task.Host }}-{{ getTaskPort $task.Ports $app.Env.HTTP_PORT }} {{ $task.Host }}:{{ getTaskPort $task.Ports $app.Env.HTTP_PORT }}{{ if $app.HealthCheckPath }} check{{ end }}
