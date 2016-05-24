@@ -134,10 +134,11 @@ backend marathon
         balance roundrobin
         option httpclose
         option forwardfor
-        option httpchk /ping
+        option httpchk /marathon/ping
         timeout check 10s
+        reqirep ^([^\ :]*)\ /(.*)     \1\ /marathon/\2
         {% for host in groups['marathon_servers'] -%}
-        server {{ host }}-8080 {{ host }}:8080 check inter 10s fall 1 rise 3
+        server {{ host }}-4080 {{ host }}:4080 check inter 10s fall 1 rise 3
         {% endfor %}
 
 backend chronos
@@ -145,10 +146,11 @@ backend chronos
         balance roundrobin
         option httpclose
         option forwardfor
-        option httpchk /ping
+        option httpchk /chronos/ping
         timeout check 10s
+        reqirep ^([^\ :]*)\ /(.*)     \1\ /chronos/\2
         {% for host in groups['chronos_servers'] -%}
-        server {{ host }}-4400 {{ host }}:4400 check inter 10s fall 1 rise 3
+        server {{ host }}-4080 {{ host }}:4080 check inter 10s fall 1 rise 3
         {% endfor %}
 # End Backend section for masters
 {% raw %}
