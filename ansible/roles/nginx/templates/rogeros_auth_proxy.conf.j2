@@ -45,6 +45,16 @@ server {
                 proxy_pass_header Authorization;
         }
 
+        location /marathon/ping {
+                 auth_basic Off;
+                 proxy_pass http://marathon/ping;
+        }
+
+        location /chronos/ping {
+                 auth_basic Off;
+                 proxy_pass http://chronos/ping;
+        }
+
 	location = /auth-proxy {
                 proxy_pass http://localhost:{{nginx_aaad_port}};
                 proxy_set_header URI $request_uri;
