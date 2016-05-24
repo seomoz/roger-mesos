@@ -24,7 +24,7 @@ def delete_data(url, headers, payload):
     return (result.status_code)
 
 
-def headers_value():
+def get_authorization_header():
     encoded = base64.b64encode(b'internal_test_user:internal_test_user')
     encoded = "Basic " + encoded
     headers = {"Content-Type": "application/json", "Authorization": encoded}
@@ -146,7 +146,7 @@ def main(args):
                     'http://' + machine + ':4080/marathon/v2/apps/sortdb/internal-test-team/test-app/']
 
     json_data = create_json_data()
-    headers = headers_value()
+    headers = get_authorization_header()
 
     for app_url in app_url_list:
         print("\nExecuting Test for {} endpoint\n".format(app_url))
