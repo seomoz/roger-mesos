@@ -24,6 +24,19 @@ def delete_data(url, headers, payload):
     return (result.status_code)
 
 
+def headers_value():
+    encoded = base64.b64encode(b'internal_test_user:internal_test_user')
+    encoded = "Basic " + encoded
+    headers = {"Content-Type": "application/json", "Authorization": encoded}
+    return headers
+
+
+def create_json_data():
+    with open(parent_dir + "/sample_data.json") as json_file:
+        json_data = json.load(json_file)
+    return json_data
+
+
 def test_proxy_common_user(environment):
 
     headers = {"Content-Type": "application/json"}
@@ -44,108 +57,64 @@ def test_proxy_common_user(environment):
     print("GET Passed for marathon/v2/tasks/\n")
 
 
-def test_proxy_user_valid_permissions(environment):
-
-    app_url = 'http://' + environment + ':4080/marathon/v2/apps/internal-test-team/test-app/'
-    encoded = base64.b64encode(b'internal_test_user:internal_test_user')
-    encoded = "Basic " + encoded
-    headers = {"Content-Type": "application/json", "Authorization": encoded}
-
+def test_proxy_user_valid_permissions_create(app_url, headers, json_data):
     # Create App
-    with open(parent_dir + "/sample_data.json") as json_file:
-        json_data = json.load(json_file)
-    result_code = put_data(app_url, headers, json_data)
-    assert(result_code == 200 or result_code == 201)
-    print("Create Test: Pass")
+    try:
+        result_code = put_data(app_url, headers, json_data)
+        assert(result_code == 200 or result_code == 201)
+        print("Create Test: Pass")
+    except (Exception) as e:
+        print("The following error occurred: %s" %
+              e, file=sys.stderr)
+        print("Create Failed")
 
+
+def test_proxy_user_valid_permissions_read(app_url, headers):
     # Read App
-    result_code = get_data(app_url, headers)
-    assert(result_code == 200)
-    print("Read Test:   Pass")
+    try:
+        result_code = get_data(app_url, headers)
+        assert(result_code == 200)
+        print("Read Test:   Pass")
+    except (Exception) as e:
+        print("The following error occurred: %s" %
+              e, file=sys.stderr)
+        print("Read Failed")
+
+
+def test_proxy_user_valid_permissions_delete(app_url, headers, json_data):
     # Sleep has been added as it takes time for the app to get created
-    time.sleep(5)
-    # Delete App
-    result_code = delete_data(app_url, headers, json_data)
-    assert(result_code == 200)
-    print("Delete Test: Pass\n")
-
-    app_url = 'http://' + environment + ':4080/marathon/v2/apps/mongo/internal-test-team/test-app/'
-
-    # Create App
-    with open(parent_dir + "/sample_data.json") as json_file:
-        json_data = json.load(json_file)
-    result_code = put_data(app_url, headers, json_data)
-    assert(result_code == 200 or result_code == 201)
-    print("Create Test: Pass for mongo end_point")
-
-    # Read App
-    result_code = get_data(app_url, headers)
-    assert(result_code == 200)
-    print("Read Test:   Pass for mongo end_point")
-    # Sleep has been added as it takes time for the app to get created
-    time.sleep(5)
-    # Delete App
-    result_code = delete_data(app_url, headers, json_data)
-    assert(result_code == 200)
-    print("Delete Test: Pass for mongo end_point\n")
-
-    app_url = 'http://' + environment + ':4080/marathon/v2/apps/sortdb/internal-test-team/test-app/'
-
-    # Create App
-    with open(parent_dir + "/sample_data.json") as json_file:
-        json_data = json.load(json_file)
-    result_code = put_data(app_url, headers, json_data)
-    assert(result_code == 200 or result_code == 201)
-    print("Create Test: Pass for sortdb end_point")
-
-    # Read App
-    result_code = get_data(app_url, headers)
-    assert(result_code == 200)
-    print("Read Test:   Pass for sortdb end_point")
-    # Sleep has been added as it takes time for the app to get created
-    time.sleep(5)
-    # Delete App
-    result_code = delete_data(app_url, headers, json_data)
-    assert(result_code == 200)
-    print("Delete Test: Pass for sortdb end_point\n")
+    try:
+        time.sleep(5)
+        # Delete App
+        result_code = delete_data(app_url, headers, json_data)
+        assert(result_code == 200)
+        print("Delete Test: Pass\n")
+    except (Exception) as e:
+        print("The following error occurred: %s" %
+              e, file=sys.stderr)
+        print("Delete Failed")
 
 
-def test_proxy_unauthorized_user(environment):
-    # Provide content username
-    encoded = base64.b64encode(b'internal_test_user:internal_test_user')
-    encoded = "Basic " + encoded
-    headers = {"Content-Type": "application/json", "Authorization": encoded}
-
-    # Create App
-    app_url = 'http://' + environment + ':4080/marathon/v2/apps/moz-local/'
-    with open(parent_dir + "/sample_data.json") as json_file:
-        json_data = json.load(json_file)
+def test_proxy_unauthorized_user_create(app_url, headers):
     result_code = put_data(app_url, headers, json_data)
     assert(result_code == 403)
     print("Create Failed: Unauthorized User")
 
+
+def test_proxy_unauthorized_user_read(app_url, headers):
     # Read App
     result_code = get_data(app_url, headers)
     assert(result_code == 403)
     print("Read Failed: Unauthorized User")
 
-    # Delete App
-    app_url = 'http://' + environment + ':4080/marathon/v2/apps/moz-local/test-app'
+
+def test_proxy_unauthorized_user_delete(app_url, headers):
     result_code = delete_data(app_url, headers, json_data)
     assert(result_code == 403)
     print("Delete Failed: Unauthorized User\n")
 
 
-def test_invalid_end_points(environment):
-    # Provide content username
-    encoded = base64.b64encode(b'internal_test_user:internal_test_user')
-    encoded = "Basic " + encoded
-    headers = {"Content-Type": "application/json", "Authorization": encoded}
-
-    # Create App
-    app_url = 'http://' + environment + ':4080/marathon/v2/apps/internal-test-team/' # Invalid End Point
-    with open(parent_dir + "/sample_data.json") as json_file:
-        json_data = json.load(json_file)
+def test_invalid_end_points(app_url, headers, json_data):
     result_code = put_data(app_url, headers, json_data)
     assert(result_code == 403)
     print("Create Failed: Invalid End Point")
@@ -172,15 +141,22 @@ def main(args):
         sock.close()
         sys.exit(0)
 
-    print("Executing common_access test:\n")
-    test_proxy_common_user(machine)
-    print("Executing Valid User Test:\n")
-    test_proxy_user_valid_permissions(machine)
-    print("Executing Unauthorized User Test:\n")
-    test_proxy_unauthorized_user(machine)
-    print("Executing Invalid End Point Test\n")
-    test_invalid_end_points(machine)
+    app_url_list = ['http://' + machine + ':4080/marathon/v2/apps/internal-test-team/test-app/',
+                    'http://' + machine + ':4080/marathon/v2/apps/mongo/internal-test-team/test-app/',
+                    'http://' + machine + ':4080/marathon/v2/apps/sortdb/internal-test-team/test-app/']
 
+    json_data = create_json_data()
+    headers = headers_value()
+
+    for app_url in app_url_list:
+        print("\nExecuting Test for {} endpoint\n".format(app_url))
+        test_proxy_user_valid_permissions_create(app_url, headers, json_data)
+        test_proxy_user_valid_permissions_read(app_url, headers)
+        test_proxy_user_valid_permissions_delete(app_url, headers, json_data)
+
+    app_url = 'http://' + machine + ':4080/marathon/v2/apps/internal-test-team/'
+    print ("\nExecuting Test for Invalid End Point: {}\n".format(app_url))
+    test_invalid_end_points(app_url, headers, json_data)
     print("\nAll Tests Passed \n")
 
 if __name__ == "__main__":
