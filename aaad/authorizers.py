@@ -26,7 +26,7 @@ class FileAuthorizer:
 
         def resource_check(self, resource, allowed_actions):
             for pattern in allowed_actions:
-                prog = re.compile(pattern)
+                prog = re.compile("^{}$".format(pattern))
                 result = prog.match(resource)
                 if result:
                     return True
