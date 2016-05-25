@@ -1,5 +1,9 @@
 # inventory file for 'single' environment
 
+[machines:vars]
+marathon_auth_enable=true
+nginx_auth_enable=true
+
 [machines]
 localmesos01 env=test base_data_dir=/data shared_mount=/vagrant
 
