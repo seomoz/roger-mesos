@@ -26,31 +26,32 @@ class FileAuthorizer:
 
         def resource_check(self, resource, allowed_actions):
             for pattern in allowed_actions:
-                prog = re.compile(pattern)
+                prog = re.compile("^{}$".format(pattern))
                 result = prog.match(resource)
                 if result:
                     return True
 
             return False
 
-        def authorize(self, user, act_as, resource, action = "GET"):
+        def authorize(self, user, act_as, resource, logging, info, action = "GET"):
+            logger = logging.getLogger("Authorization")
             if not user or not act_as or not resource:
                 return False
 
             if user not in self.data.keys() or act_as not in self.data.keys():
-                print "User [{}] or act as user [{}] is not an authorized user".format(user, act_as)
+                logger.warning("Invalid user", extra = info)
                 return False            
 
             if user != act_as:
                 if 'can_act_as' not in self.data[user]:
-                    print "Authorization Failed: {} cannot act as {}".format(user, act_as)
+                    logger.warning("User act as failed", extra = info)
                     return False
 
             allowed_users_list = []
             self.get_merged_data(user, allowed_users_list, [], self.data, '')
 
             if act_as not in allowed_users_list:
-                print "Authorization Failed: {} cannot act as {}".format(user, act_as)
+                logger.warning("User act as failed", extra = info)
                 return False
 
             allowed_users_list = []
@@ -61,7 +62,7 @@ class FileAuthorizer:
          
             result = self.resource_check(resource, allowed_actions)
             if result == False:
-                print "User [{}] acting as [{}] is not authorized for requested resource [{}]".format(user, act_as, resource)
+                logger.warning("Unauthorized [{}]".format(resource), extra = info)
                 return False
 
             return True
