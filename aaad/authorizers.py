@@ -39,7 +39,7 @@ class FileAuthorizer:
                 return False
 
             if user not in self.data.keys() or act_as not in self.data.keys():
-                logger.warning("User is not an authorized user", extra = info)
+                logger.warning("Invalid user", extra = info)
                 return False            
 
             if user != act_as:
@@ -62,7 +62,7 @@ class FileAuthorizer:
          
             result = self.resource_check(resource, allowed_actions)
             if result == False:
-                logger.warning("User is not authorized for [{}]".format(resource), extra = info)
+                logger.warning("Unauthorized [{}]".format(resource), extra = info)
                 return False
 
             return True

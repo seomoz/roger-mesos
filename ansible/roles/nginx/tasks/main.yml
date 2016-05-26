@@ -84,6 +84,7 @@
     tags:
       - install
       - nginx 
+      - update
 
   - name: Configure aaad upstart job
     template: src=aaad.conf.j2 dest=/etc/init/aaad.conf owner=root group=root mode=0644
