@@ -33,24 +33,25 @@ class FileAuthorizer:
 
             return False
 
-        def authorize(self, user, act_as, resource, logging, action = "GET"):
+        def authorize(self, user, act_as, resource, logging, info, action = "GET"):
+            logger = logging.getLogger("Authorization")
             if not user or not act_as or not resource:
                 return False
 
             if user not in self.data.keys() or act_as not in self.data.keys():
-                logging.warning("User [{}] or act as user [{}] is not an authorized user".format(user, act_as))
+                logger.warning("User is not an authorized user", extra = info)
                 return False            
 
             if user != act_as:
                 if 'can_act_as' not in self.data[user]:
-                    logging.warning("Authorization Failed: {} cannot act as {}".format(user, act_as))
+                    logger.warning("User act as failed", extra = info)
                     return False
 
             allowed_users_list = []
             self.get_merged_data(user, allowed_users_list, [], self.data, '')
 
             if act_as not in allowed_users_list:
-                logging.warning("Authorization Failed: {} cannot act as {}".format(user, act_as))
+                logger.warning("User act as failed", extra = info)
                 return False
 
             allowed_users_list = []
@@ -61,7 +62,7 @@ class FileAuthorizer:
          
             result = self.resource_check(resource, allowed_actions)
             if result == False:
-                logging.warning("User [{}] acting as [{}] is not authorized for requested resource [{}]".format(user, act_as, resource))
+                logger.warning("User is not authorized for [{}]".format(resource), extra = info)
                 return False
 
             return True

@@ -25,8 +25,8 @@ class AuthHandler(BaseHTTPRequestHandler):
         auth_header = self.headers.get('Authorization')
         resource = self.headers.get('URI')
         action = self.headers.get('method')
+        client_ip = self.headers.get('X-Forwarded-For')
  
-        logging.debug(self.headers)
         # Carry out Basic Authentication
         if auth_header is None or not auth_header.lower().strip().startswith('basic '):
             self.send_response(401)
@@ -43,11 +43,10 @@ class AuthHandler(BaseHTTPRequestHandler):
         else:
             act_as_user = user
 
-        addr = ""
-        if len(self.client_address) > 0:
-            addr = BaseHTTPRequestHandler.address_string(self)
-   
-        logging.info("{} - [{}] {} user:{} act_as_user:{} URI:{}".format(addr, self.log_date_time_string(), action, user, act_as_user, resource))
+        info = {'clientip': str(client_ip), 'user': str(user), 'act_as': str(act_as_user)}
+        self.info = info
+        logger.debug("\n{}".format(self.headers), extra = info)
+        logger.info("{} {}".format(action, resource), extra = info)
 
         if not self.authenticate_request(user, password):
             self.send_response(401)
@@ -79,7 +78,7 @@ class AuthHandler(BaseHTTPRequestHandler):
         ctx = self.ctx
         file_authorizer = FileAuthorizer(permissions_file).instance
         try:
-            if not file_authorizer.authorize(user, act_as_user, path, logging, action):
+            if not file_authorizer.authorize(user, act_as_user, path, logging, self.info, action):
                 return False
 
         except:
@@ -107,13 +106,11 @@ class AuthHandler(BaseHTTPRequestHandler):
         self.send_response(403)
         self.end_headers()
 
-
     def log_message(self, format, *args):
-        logging.debug("[%s] %s\n" % (self.log_date_time_string(), format % args))
-
+        logger.debug("{}".format(args), extra = self.info)
 
     def log_error(self, format, *args):
-        self.log_message(format, *args)  # Verify username/password against LDAP server
+        self.log_message(format, *args)
 
 def exit_handler(signal, frame):
     global Listen
@@ -123,7 +120,7 @@ def exit_handler(signal, frame):
             os.unlink(Listen)
         except:
             ex, value, trace = sys.exc_info()
-            logging.error('Failed to remove socket "%s": %s\n' %
+            logger.error('Failed to remove socket "%s": %s\n' %
                              (Listen, str(value)))
     sys.exit(0)
 
@@ -153,7 +150,9 @@ if __name__ == '__main__':
     if log_level not in log_levels.keys():
          sys.exit("LOG LEVEL is not valid. Allowed levels {}.".format(log_levels.keys()))
     level = log_levels.get(log_level, logging.NOTSET)
-    logging.basicConfig(level=level)
+    FORMAT = "[%(asctime)-15s] %(levelname)s - %(name)s - IP:%(clientip)s User:%(user)s ActAs:%(act_as)s - %(message)s"
+    logging.basicConfig(level=level, format=FORMAT)
+    logger = logging.getLogger("AAAd")
     server = AuthHTTPServer(Listen, AuthHandler)
     signal.signal(signal.SIGINT, exit_handler)
     server.serve_forever()
