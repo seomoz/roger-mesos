@@ -50,13 +50,13 @@ frontend http-in
         {{ $acls := .Acls }}{{ $backendrules := .BackendRules }}{{ $services := .Services }}{{ range $index, $app := .Apps }} {{ if hasKey $services $app.Id }} {{ $service := getService $services $app.Id }}
         acl {{ $app.EscapedId }}-aclrule {{ $service.Acl}}
         use_backend {{ $app.EscapedId }}-cluster if {{ $app.EscapedId }}-aclrule
-        {{ else }}{{ if $app.Env.HTTP_PREFIX }}{{ $aclprefix := escapeSlashes $app.Env.HTTP_PREFIX }}{{ $aclname := print $aclprefix "-aclrule" }}{{ $backendname := print $aclprefix $app.EscapedId "-cluster" }}
+        {{ else }}{{ $backendname := print $app.EscapedId "-cluster" }}{{ if $app.Env.HTTP_PREFIX }}{{ $aclprefix := escapeSlashes $app.Env.HTTP_PREFIX }}{{ $aclname := print $aclprefix "-aclrule" }}
         {{ addAcl $acls (print $aclname " path_beg -i " $app.Env.HTTP_PREFIX) }}#acl {{ $aclname }} path_beg -i {{ $app.Env.HTTP_PREFIX }}
         {{ addBackendRule $backendrules $backendname $aclname }}#use_backend {{ $backendname }} if {{ $aclname }}
         {{ if and $app.Env.ENABLE_VERSION_AFFINITY (not $app.Env.ENABLE_SESSION_AFFINITY) }}{{ $versionhash := getVersionHash $app.EscapedId $app.Env.ENABLE_VERSION_AFFINITY }}
         {{ addAcl $acls (print $aclname "-" $versionhash " hdr_reg(Cookie) VERSIONID=" $versionhash) }}#acl {{ $aclname }}-{{ $versionhash }} hdr_reg(Cookie) VERSIONID={{ $versionhash }}
         {{ addBackendRule $backendrules (print $backendname "-" $versionhash) (print $aclname " " $aclname "-" $versionhash) }}#use_backend {{ $backendname }}-{{ $versionhash }} if {{ $aclname }} {{ $aclname }}-{{ $versionhash }}
-        {{ end }}{{ else }}{{ $aclname := print $app.EscapedId "-aclrule" }}{{ $backendname := print $app.EscapedId "-cluster" }}
+        {{ end }}{{ else }}{{ $aclname := print $app.EscapedId "-aclrule" }}
         {{ addAcl $acls (print $aclname " path_beg -i " $app.Id) }}#acl {{ $aclname }} path_beg -i {{ $app.Id }}
         {{ addBackendRule $backendrules $backendname $aclname }}#use_backend {{ $backendname }} if {{ $aclname }}
         {{ if and $app.Env.ENABLE_VERSION_AFFINITY (not $app.Env.ENABLE_SESSION_AFFINITY) }}{{ $versionhash := getVersionHash $app.EscapedId $app.Env.ENABLE_VERSION_AFFINITY }}
@@ -84,7 +84,7 @@ listen {{ $app.EscapedId }}-cluster-tcp-{{ $external_port }} :{{ $external_port 
         server {{ $app.EscapedId}}-{{ $task.Host }}-{{ $external_port }} {{ $task.Host }}:{{ getTaskPort $task.Ports $task_port }} {{ end }} {{ end }}
 # End Tcp ports for {{ $app.EscapedId }}
 
-backend {{ if $app.Env.HTTP_PREFIX }}{{ escapeSlashes $app.Env.HTTP_PREFIX }}{{ end }}{{ $app.EscapedId }}-cluster{{ if $app.HealthCheckPath }}
+backend {{ $app.EscapedId }}-cluster{{ if $app.HealthCheckPath }}
         option httpchk GET {{ $app.HealthCheckPath }}
         {{ end }}
         balance leastconn
@@ -101,7 +101,7 @@ backend {{ if $app.Env.HTTP_PREFIX }}{{ escapeSlashes $app.Env.HTTP_PREFIX }}{{ 
         {{ else }}server {{ $app.EscapedId}}-{{ $task.Host }}-{{ getTaskPort $task.Ports $app.Env.HTTP_PORT }} {{ $task.Host }}:{{ getTaskPort $task.Ports $app.Env.HTTP_PORT }}{{ if $app.HealthCheckPath }} check{{ end }}
         {{ end }}{{ end }}{{ end }}{{ if and $app.Env.ENABLE_VERSION_AFFINITY (not $app.Env.ENABLE_SESSION_AFFINITY) }}{{ $versionhash := getVersionHash $app.EscapedId $app.Env.ENABLE_VERSION_AFFINITY }}
 # Version specific backend - {{ $versionhash }} ({{ $app.Env.ENABLE_VERSION_AFFINITY }})
-backend {{ if $app.Env.HTTP_PREFIX }}{{ escapeSlashes $app.Env.HTTP_PREFIX }}{{ end }}{{ $app.EscapedId }}-cluster-{{ $versionhash }}{{ if $app.HealthCheckPath }}
+backend {{ $app.EscapedId }}-cluster-{{ $versionhash }}{{ if $app.HealthCheckPath }}
         option httpchk GET {{ $app.HealthCheckPath }}
         {{ end }}
         balance leastconn
