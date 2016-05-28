@@ -73,8 +73,8 @@ frontend http-in
         # CHANGE: Your stats credentials
         stats auth admin:admin
         stats uri /haproxy_stats
-
-{{ range $index, $app := .Apps }}{{ if (or $app.TcpPorts $app.Env.HTTP_PORT) }}# Begin Backend section for {{ $app.EscapedId }}{{ if $app.TcpPorts }}
+{{ range $index, $app := .Apps }}{{ if (or $app.TcpPorts $app.Env.HTTP_PORT) }}
+# Begin Backend section for {{ $app.EscapedId }}{{ if $app.TcpPorts }}
 # Begin Tcp ports for {{ $app.EscapedId }} {{ range $external_port, $task_port := $app.TcpPorts }}
 listen {{ $app.EscapedId }}-cluster-tcp-{{ $external_port }} :{{ $external_port }}
         mode tcp
