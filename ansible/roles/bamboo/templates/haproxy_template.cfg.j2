@@ -50,19 +50,19 @@ frontend http-in
         {{ $acls := .Acls }}{{ $backendrules := .BackendRules }}{{ $services := .Services }}{{ range $index, $app := .Apps }} {{ if hasKey $services $app.Id }} {{ $service := getService $services $app.Id }}
         acl {{ $app.EscapedId }}-aclrule {{ $service.Acl}}
         use_backend {{ $app.EscapedId }}-cluster if {{ $app.EscapedId }}-aclrule
-        {{ else }}{{ $backendname := print $app.EscapedId "-cluster" }}{{ if $app.Env.HTTP_PREFIX }}{{ $aclprefix := escapeSlashes $app.Env.HTTP_PREFIX }}{{ $aclname := print $aclprefix "-aclrule" }}
-        {{ addAcl $acls (print $aclname " path_beg -i " $app.Env.HTTP_PREFIX) }}#acl {{ $aclname }} path_beg -i {{ $app.Env.HTTP_PREFIX }}
-        {{ addBackendRule $backendrules $backendname $aclname }}#use_backend {{ $backendname }} if {{ $aclname }}
-        {{ if and $app.Env.ENABLE_AFFINITY (not $app.Env.ENABLE_SESSION_AFFINITY) }}{{ $appidhash := getHash $app.EscapedId }}
-        {{ addAcl $acls (print $aclname "-" $appidhash " hdr_reg(Cookie) APPID=" $appidhash) }}#acl {{ $aclname }}-{{ $appidhash }} hdr_reg(Cookie) APPID={{ $appidhash }}
-        {{ addBackendRule $backendrules (print $backendname "-" $appidhash) (print $aclname " " $aclname "-" $appidhash) }}#use_backend {{ $backendname }}-{{ $appidhash }} if {{ $aclname }} {{ $aclname }}-{{ $appidhash }}
-        {{ end }}{{ else }}{{ $aclname := print $app.EscapedId "-aclrule" }}
-        {{ addAcl $acls (print $aclname " path_beg -i " $app.Id) }}#acl {{ $aclname }} path_beg -i {{ $app.Id }}
-        {{ addBackendRule $backendrules $backendname $aclname }}#use_backend {{ $backendname }} if {{ $aclname }}
-        {{ if and $app.Env.ENABLE_AFFINITY (not $app.Env.ENABLE_SESSION_AFFINITY) }}{{ $appidhash := getHash $app.EscapedId }}
-        {{ addAcl $acls (print $aclname "-" $appidhash " hdr_reg(Cookie) APPID=" $appidhash) }}#acl {{ $aclname }}-{{ $appidhash }} hdr_reg(Cookie) APPID={{ $appidhash }}
-        {{ addBackendRule $backendrules (print $backendname "-" $appidhash) (print $aclname " " $aclname "-" $appidhash) }}#use_backend {{ $backendname }}-{{ $appidhash }} if {{ $aclname }} {{ $aclname }}-{{ $appidhash }}
-        {{ end }}{{ end }}{{ end }} {{ end }}
+        {{- else }}{{ if $app.Env.HTTP_PORT }}{{ $backendname := print $app.EscapedId "-cluster" }}{{ if $app.Env.HTTP_PREFIX }}{{ $aclprefix := escapeSlashes $app.Env.HTTP_PREFIX }}{{ $aclname := print $aclprefix "-aclrule" }}
+        {{- addAcl $acls (print $aclname " path_beg -i " $app.Env.HTTP_PREFIX) }}{{/* #acl {{ $aclname }} path_beg -i {{ $app.Env.HTTP_PREFIX }} */}}
+        {{- addBackendRule $backendrules $backendname $aclname }}{{/* #use_backend {{ $backendname }} if {{ $aclname }} */}}
+        {{- if and $app.Env.ENABLE_AFFINITY (not $app.Env.ENABLE_SESSION_AFFINITY) }}{{ $appidhash := getHash $app.EscapedId }}
+        {{- addAcl $acls (print $aclname "-" $appidhash " hdr_reg(Cookie) APPID=" $appidhash) }}{{/* #acl {{ $aclname }}-{{ $appidhash }} hdr_reg(Cookie) APPID={{ $appidhash }} */}}
+        {{- addBackendRule $backendrules (print $backendname "-" $appidhash) (print $aclname " " $aclname "-" $appidhash) }}{{/* #use_backend {{ $backendname }}-{{ $appidhash }} if {{ $aclname }} {{ $aclname }}-{{ $appidhash }} */}}
+        {{- end }}{{ else }}{{ $aclname := print $app.EscapedId "-aclrule" }}
+        {{- addAcl $acls (print $aclname " path_beg -i " $app.Id) }}{{/* #acl {{ $aclname }} path_beg -i {{ $app.Id }} */}}
+        {{- addBackendRule $backendrules $backendname $aclname }}{{/* #use_backend {{ $backendname }} if {{ $aclname }} */}}
+        {{- if and $app.Env.ENABLE_AFFINITY (not $app.Env.ENABLE_SESSION_AFFINITY) }}{{ $appidhash := getHash $app.EscapedId }}
+        {{- addAcl $acls (print $aclname "-" $appidhash " hdr_reg(Cookie) APPID=" $appidhash) }}{{/* #acl {{ $aclname }}-{{ $appidhash }} hdr_reg(Cookie) APPID={{ $appidhash }} */}}
+        {{- addBackendRule $backendrules (print $backendname "-" $appidhash) (print $aclname " " $aclname "-" $appidhash) }}{{/* #use_backend {{ $backendname }}-{{ $appidhash }} if {{ $aclname }} {{ $aclname }}-{{ $appidhash }} */}}
+        {{- end }}{{ end }}{{ end }}{{ end }}{{ end }}
         # acls{{ range $acl, $v := $acls }}
         acl {{ $acl }}{{ end }}
 
@@ -74,7 +74,7 @@ frontend http-in
         stats auth admin:admin
         stats uri /haproxy_stats
 
-{{ range $index, $app := .Apps }}# Begin Backend section for {{ $app.EscapedId }}
+{{ range $index, $app := .Apps }}{{ if (or $app.TcpPorts $app.Env.HTTP_PORT) }}# Begin Backend section for {{ $app.EscapedId }}{{ if $app.TcpPorts }}
 # Begin Tcp ports for {{ $app.EscapedId }} {{ range $external_port, $task_port := $app.TcpPorts }}
 listen {{ $app.EscapedId }}-cluster-tcp-{{ $external_port }} :{{ $external_port }}
         mode tcp
@@ -82,8 +82,7 @@ listen {{ $app.EscapedId }}-cluster-tcp-{{ $external_port }} :{{ $external_port 
         balance roundrobin
         {{ range $page, $task := $app.Tasks }}
         server {{ $app.EscapedId}}-{{ $task.Host }}-{{ $external_port }} {{ $task.Host }}:{{ getTaskPort $task.Ports $task_port }} {{ end }} {{ end }}
-# End Tcp ports for {{ $app.EscapedId }}
-
+# End Tcp ports for {{ $app.EscapedId }}{{ end }}{{ if $app.Env.HTTP_PORT }}
 backend {{ $app.EscapedId }}-cluster{{ if $app.HealthCheckPath }}
         option httpchk GET {{ $app.HealthCheckPath }}
         {{ end }}
@@ -98,10 +97,9 @@ backend {{ $app.EscapedId }}-cluster{{ if $app.HealthCheckPath }}
         # reqrep ^([^\ ]*\ ){{ $app.Id }}\/?(.*) \1\\/\2{{ if $app.Env.HTTP_PORT }} {{ range $page, $task := .Tasks }}
         {{ if $app.Env.ENABLE_SESSION_AFFINITY }}{{ $serverhash := getServerHash $app.EscapedId $task.Host $task.Port }}
         server {{ $serverhash }} {{ $task.Host }}:{{ $task.Port }} check cookie {{ $serverhash }}{{ if $app.HealthCheckPath }} check{{ end }}
-        {{ else }}server {{ $app.EscapedId}}-{{ $task.Host }}-{{ getTaskPort $task.Ports $app.Env.HTTP_PORT }} {{ $task.Host }}:{{ getTaskPort $task.Ports $app.Env.HTTP_PORT }}{{ if $app.HealthCheckPath }} check{{ end }}
-        {{ end }}{{ end }}{{ end }}{{ if and $app.Env.ENABLE_AFFINITY (not $app.Env.ENABLE_SESSION_AFFINITY) }}{{ $appidhash := getHash $app.EscapedId }}
-# backend to support affinity - {{ $appidhash }}
-backend {{ $app.EscapedId }}-cluster-{{ $appidhash }}{{ if $app.HealthCheckPath }}
+        {{- else }}server {{ $app.EscapedId}}-{{ $task.Host }}-{{ getTaskPort $task.Ports $app.Env.HTTP_PORT }} {{ $task.Host }}:{{ getTaskPort $task.Ports $app.Env.HTTP_PORT }}{{ if $app.HealthCheckPath }} check{{ end }}
+        {{- end }}{{ end }}{{ end }}{{ if and $app.Env.ENABLE_AFFINITY (not $app.Env.ENABLE_SESSION_AFFINITY) }}{{ $appidhash := getHash $app.EscapedId }}
+backend {{ $app.EscapedId }}-cluster-{{ $appidhash }}{{ if $app.HealthCheckPath }} # to support affinity - {{ $appidhash }}
         option httpchk GET {{ $app.HealthCheckPath }}
         {{ end }}
         balance leastconn
@@ -112,11 +110,10 @@ backend {{ $app.EscapedId }}-cluster-{{ $appidhash }}{{ if $app.HealthCheckPath 
 
         # reqrep ^([^\ ]*\ ){{ $app.Id }}\/?(.*) \1\\/\2{{ if $app.Env.HTTP_PORT }} {{ range $page, $task := .Tasks }}
         server {{ $app.EscapedId}}-{{ $task.Host }}-{{ getTaskPort $task.Ports $app.Env.HTTP_PORT }} {{ $task.Host }}:{{ getTaskPort $task.Ports $app.Env.HTTP_PORT }}{{ if $app.HealthCheckPath }} check{{ end }}
-        {{ end }}{{ end }}{{ end }}
-# End Backend section for {{ $app.EscapedId }} {{ end }}
+        {{ end }}{{ end }}{{ end }}{{ end }}
+# End Backend section for {{ $app.EscapedId }}{{ end }}{{ end }}
 
-{% endraw %}
-# Begin Backend section for masters
+{% endraw %}# Begin Backend section for masters
 backend mesos
         mode http
         balance roundrobin
@@ -125,9 +122,9 @@ backend mesos
         option httpchk /master/state.json
         http-check expect string elected_time
         timeout check 10s
-        {% for host in groups['masters'] -%}
+{% for host in groups['masters'] %}
         server {{ host }}-5050 {{ host }}:5050 check inter 10s fall 1 rise 3
-        {% endfor %}
+{% endfor %}
 
 backend marathon
         mode http
@@ -138,9 +135,9 @@ backend marathon
         timeout check 10s
 {% if nginx_auth_enable is defined and nginx_auth_enable|bool %}        reqirep ^([^\ :]*)\ /(.*)     \1\ /marathon/\2
 {% endif %}
-        {% for host in groups['marathon_servers'] -%}
+{% for host in groups['marathon_servers'] %}
         server {% if nginx_auth_enable is defined and nginx_auth_enable|bool %}{{ host }}-4080 {{ host }}:4080{% else %}{{ host }}-8080 {{ host }}:8080{% endif %} check inter 10s fall 1 rise 3
-        {% endfor %}
+{% endfor %}
 
 backend chronos
         mode http
@@ -151,12 +148,12 @@ backend chronos
         timeout check 10s
 {% if nginx_auth_enable is defined and nginx_auth_enable|bool %}        reqirep ^([^\ :]*)\ /(.*)     \1\ /chronos/\2
 {% endif %}
-        {% for host in groups['chronos_servers'] -%}
+{% for host in groups['chronos_servers'] %}
         server {% if nginx_auth_enable is defined and nginx_auth_enable|bool %}{{ host }}-4080 {{ host }}:4080{% else %}{{ host }}-4400 {{ host }}:4400{% endif %} check inter 10s fall 1 rise 3
-        {% endfor %}
+{% endfor %}
 # End Backend section for masters
 {% raw %}
-
+{{/*
 ##
 ## map service ports of marathon apps
 ## ( see https://mesosphere.github.io/marathon/docs/service-discovery-load-balancing.html#ports-assignment ))
@@ -175,3 +172,4 @@ backend chronos
 ##         server {{ $app.EscapedId}}-{{ $task.Host }}-{{ $task.Port }} {{ $task.Host }}:{{ $task.Port }} {{ if $app.HealthCheckPath }} check inter 30000 {{ end }} {{ end }}
 ## {{ end }}
 {%- endraw -%}
+*/}}
