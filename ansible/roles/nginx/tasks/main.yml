@@ -7,13 +7,6 @@
       - install
       - nginx 
 
-  - name: try to stop nginx proxy if it is already running
-    command: /usr/local/nginx/sbin/nginx -s stop
-    become: yes
-    ignore_errors: yes
-    tags:
-      - nginx 
-
   - name: Untar nginx package
     unarchive: copy=no dest="{{tmp_dir}}" src="{{tmp_dir}}/{{nginx_pkg_tar}}"
     become: yes
@@ -85,14 +78,15 @@
       - install
       - nginx 
       - update
+      - aaad
 
   - name: Configure aaad upstart job
-    template: src=aaad.conf.j2 dest=/etc/init/aaad.conf owner=root group=root mode=0644
+    template: src=aaad.conf.upstart.j2 dest=/etc/init/aaad.conf owner=root group=root mode=0644
     become: yes
+    notify: restart aaad
     tags:
       - nginx
-      - aaa daemon
-
+      - aaad
 
   - name: create directory to put different sites config
     file: path="{{nginx_conf_dir}}/sites-available" state=directory
@@ -129,24 +123,10 @@
       - install
       - nginx
 
-  - name: start nginx proxy for rogeros auth 
-    command: /usr/local/nginx/sbin/nginx 
+  - name: Configure Nginx upstart job
+    template: src=nginx.conf.upstart.j2 dest=/etc/init/nginx.conf owner=root group=root mode=0644
     become: yes
+    notify: restart nginx
     tags:
-      - nginx 
-
-  - name: stop aaa daemon, it will fail when aaad is not running so ignore the error
-    command: stop aaad 
-    become: yes
-    ignore_errors: yes
-    tags:
-      - nginx 
-      - aaad
-
-  - name: start aaa daemon
-    command: start aaad
-    become: yes
-    tags:
-      - nginx 
-      - aaad
+      - nginx
 
