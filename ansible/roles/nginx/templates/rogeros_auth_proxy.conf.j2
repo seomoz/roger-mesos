@@ -29,7 +29,7 @@ server {
 		auth_request /auth-proxy;
                 proxy_pass http://marathon/;
                 add_header act-as-user $http_x_upstream_act_as_user;
-		proxy_set_header Host $host;
+                proxy_set_header Host $host;
                 proxy_set_header X-Real-IP $remote_addr;
                 proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
                 proxy_set_header X-Scheme $scheme;
@@ -43,12 +43,12 @@ server {
         }
 
         location /chronos/ {
-		satisfy all;
-		auth_basic "Restricted";
-		auth_basic_user_file {{nginx_conf_dir}}/{{nginx_basic_auth_file_name}};
-		auth_request /auth-proxy;
-		proxy_pass http://chronos/;
-		proxy_set_header Host $host;
+                satisfy all;
+                auth_basic "Restricted";
+                auth_basic_user_file {{nginx_conf_dir}}/{{nginx_basic_auth_file_name}};
+                auth_request /auth-proxy;
+                proxy_pass http://chronos/;
+                proxy_set_header Host $host;
                 proxy_set_header X-Real-IP $remote_addr;
                 proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
                 proxy_set_header X-Scheme $scheme;
