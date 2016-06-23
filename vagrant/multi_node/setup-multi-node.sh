@@ -7,7 +7,7 @@ ansible-playbook -i hosts/localmesos-cluster --user=vagrant --ask-pass ../../ans
 vagrant reload
 
 echo "Running initial-cluster..."
-ansible-playbook -i hosts/localmesos-cluster --user=vagrant --ask-pass --extra-vars="mesos_cluster_name=localcluster-on-`hostname` mesos_master_network_interface=ansible_eth1 mesos_slave_network_interface=ansible_eth1" ../../ansible/initial-cluster.yml
+ansible-playbook -i hosts/localmesos-cluster --user=vagrant --ask-pass --extra-vars="mesos_cluster_name=localcluster-on-`hostname` mesos_master_network_interface=ansible_eth1 mesos_slave_network_interface=ansible_eth1" ../../ansible/initial-cluster.yml -e @$HOME/rogeros-ansible-secrets.yml.encrypted --vault-password-file ~/.rogeros-ansible-vault-pass --diff
 
 # restart Zookeeper
 ansible zookeeper -i hosts/localmesos-cluster --user=vagrant -s -m service -a "name=zookeeper state=restarted" --ask-pass
