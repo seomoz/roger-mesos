@@ -1,7 +1,7 @@
 # inventory file for 'single' environment
 
 [machines:vars]
-marathon_auth_enable=true
+marathon_auth_enable=false
 nginx_auth_enable=true
 
 [machines]

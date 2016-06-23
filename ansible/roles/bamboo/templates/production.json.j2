@@ -1,6 +1,6 @@
 {
   "Marathon": {
-    "Endpoint": "{%- for host in groups['marathon_servers'] -%}http://{% if marathon_auth_enable is defined and marathon_auth_enable|bool %}{{ marathon_bamboo_user }}:{{ marathon_bamboo_pass }}@{% endif %}{{ host }}:8080{% if not loop.last %},{% endif %}{%- endfor %}"
+    "Endpoint": "{%- for host in groups['marathon_servers'] -%}http://{% if nginx_auth_enable is defined and nginx_auth_enable|bool %}{{ marathon_bamboo_user }}:{{ marathon_bamboo_pass }}@{{ host }}:4080/marathon/{% else %}{% if marathon_auth_enable is defined and marathon_auth_enable|bool %}{{ marathon_bamboo_user }}:{{ marathon_bamboo_pass }}@{% endif %}{{ host }}:8080{% endif %}{% if not loop.last %},{% endif %}{%- endfor %}"
   },
 
   "Bamboo": {
