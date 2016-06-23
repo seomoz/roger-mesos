@@ -26,7 +26,7 @@ class AuthHandler(BaseHTTPRequestHandler):
         resource = self.headers.get('URI')
         action = self.headers.get('method')
         client_ip = self.headers.get('X-Forwarded-For')
- 
+
         # Carry out Basic Authentication
         if auth_header is None or not auth_header.lower().strip().startswith('basic '):
             self.send_response(401)
@@ -38,8 +38,8 @@ class AuthHandler(BaseHTTPRequestHandler):
         ctx['user'] = user
         ctx['pass'] = password
 
-        if self.headers.get('act_as_user') is not None:
-            act_as_user = self.headers.get('act_as_user')
+        if self.headers.get('act-as-user'):
+            act_as_user = self.headers.get('act-as-user')
         else:
             act_as_user = user
 
