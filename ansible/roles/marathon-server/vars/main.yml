@@ -12,7 +12,6 @@ marathon_args_files:
   - max_apps
   - task_launch_timeout
   - zk
-  - http_address
 
 marathon_auth_args_files:
   - plugin_conf

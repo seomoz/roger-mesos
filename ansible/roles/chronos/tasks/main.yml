@@ -46,3 +46,14 @@
     - packages
     - chronos
     - configure
+
+- name: Configure Chronos http_address commandline flag
+  template: src=chronos-flags/http_address.j2 dest={{ chronos_args_directory }}/http_address owner=root group=root mode=0644
+  when: nginx_auth_enable is defined and nginx_auth_enable|bool
+  become: yes
+  notify: restart chronos
+  tags:
+    - packages
+    - chronos
+    - configure
+

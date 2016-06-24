@@ -8,7 +8,6 @@ chronos_args_files:
   - http_port
   - master
   - zk_hosts
-  - http_address
 
 chronos_args_directory: /etc/chronos/conf
 
