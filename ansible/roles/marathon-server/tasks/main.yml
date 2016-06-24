@@ -172,6 +172,15 @@
       - plugin
       - configuration
 
+  - name: Remove plugin conf file when marathon_auth_enable is false
+    when: marathon_auth_enable is not defined or not marathon_auth_enable|bool
+    file: path="{{ base_data_dir }}/marathon/marathon-plugin.conf" state=absent 
+    become: yes
+    tags:
+      - install
+      - plugin
+      - configuration
+
   - name: Configure marathon upstart job
     template: src=marathon.conf.j2 dest=/etc/init/marathon.conf owner=root group=root mode=0600
     become: yes
