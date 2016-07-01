@@ -144,7 +144,7 @@
 
   - name: Configure Marathon http_address commandline flag
     template: src=marathon-flags/http_address.j2 dest=/etc/marathon/conf/http_address owner=root group=root mode=0644
-    when: nginx_auth_enable is defined and nginx_auth_enable|bool
+    when: nginx_auth_enable is defined and nginx_auth_enable|bool and marathon_auth_enable is defined and not marathon_auth_enable|bool
     become: yes
     notify: restart marathon
     tags:
