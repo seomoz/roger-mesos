@@ -62,6 +62,38 @@
     tags:
       - marathon
 
+  - name: Configure marathon_webui_url if defined
+    when: marathon_webui_url is defined
+    template: src=marathon-flags/webui_url.j2 dest=/etc/marathon/conf/webui_url owner=root group=root mode=0644
+    become: yes
+    notify: restart marathon
+    tags:
+      - marathon
+
+  - name: Remove marathon_webui_url if not defined (is required if it was defined earlier)
+    when: marathon_webui_url is not defined
+    file: path=/etc/marathon/conf/webui_url state=absent
+    become: yes
+    notify: restart marathon
+    tags:
+      - marathon
+
+  - name: Configure mesos_leader_ui_url if defined
+    when: mesos_leader_ui_url is defined
+    template: src=marathon-flags/mesos_leader_ui_url.j2 dest=/etc/marathon/conf/mesos_leader_ui_url owner=root group=root mode=0644
+    become: yes
+    notify: restart marathon
+    tags:
+      - marathon
+
+  - name: Remove mesos_leader_ui_url if not defined (is required if it was defined earlier)
+    when: mesos_leader_ui_url is not defined
+    file: path=/etc/marathon/conf/mesos_leader_ui_url state=absent
+    become: yes
+    notify: restart marathon
+    tags:
+      - marathon
+
   - name: Download auth plugin
     when: marathon_auth_enable is defined and marathon_auth_enable|bool
     get_url: url={{marathon_auth_plugin_url}} dest={{tmp_dir}}/{{marathon_auth_plugin_pkg}} sha256sum={{marathon_auth_plugin_pkg_sha256}}
@@ -174,7 +206,7 @@
 
   - name: Remove plugin conf file when marathon_auth_enable is false
     when: marathon_auth_enable is not defined or not marathon_auth_enable|bool
-    file: path="{{ base_data_dir }}/marathon/marathon-plugin.conf" state=absent 
+    file: path="{{ base_data_dir }}/marathon/marathon-plugin.conf" state=absent
     become: yes
     tags:
       - install
