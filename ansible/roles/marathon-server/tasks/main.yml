@@ -163,6 +163,16 @@
       - plugin
       - permissions
 
+  - name: Remove marathon http_address commandline flag when marathon_auth_enable is true
+    when: marathon_auth_enable is defined and marathon_auth_enable|bool
+    file: path="/etc/marathon/conf/http_address" state=absent
+    become: yes
+    notify: restart marathon
+    tags:
+      - marathon
+      - plugin
+      - permissions
+
   - name: Remove plugin  when marathon_auth_enable is false
     when: marathon_auth_enable is not defined or not marathon_auth_enable|bool
     file: path="{{ marathon_auth_plugin_location }}" state=absent  # WARNING: deleting the plugin directory.. should NOT do this if there are many plugins
