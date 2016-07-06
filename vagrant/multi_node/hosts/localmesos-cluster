@@ -1,7 +1,7 @@
 #inventory file for local multi-node cluster environment
 
 [machines:vars]
-marathon_auth_enable=false
+marathon_auth_enable=true
 nginx_auth_enable=true
 
 [machines]
