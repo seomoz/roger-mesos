@@ -114,16 +114,20 @@ function($,
 
       if (run) {
         model.run({
-          wait: true,
 
           success: function(model, response, options) {
             console.log('ran: ', model.get('name'))
           },
 
+          error: function(xhr) {
+            console.log('error: could not run', arguments)
+            view.trigger('run run:error', {
+              success: false,
+              xhr: xhr
+            });
+          },
 
-          error: function() {
-            console.log('error: could not run', model.get('name'))
-          }
+          wait: true
           
         });
       }

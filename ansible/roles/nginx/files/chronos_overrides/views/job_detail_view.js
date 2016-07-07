@@ -157,6 +157,7 @@ function($,
 
         this.listenTo(view, {
           'delete:error': this.deleteError,
+          'run:error': this.runError,
           edit: this.edit,
           cancel: this.cancel,
           close: this.close,
@@ -248,6 +249,19 @@ function($,
       this.renderMessage('error', JobPersistenceErrorTpl, {
         'delete': true,
         jobName: this.model.get('name'),
+        serverError: {
+          text: xhr.responseText,
+          status: xhr.status
+        }
+      });
+    },
+
+    runError: function(data) {
+      var xhr = data.xhr || {};
+      console.log(xhr);
+      this.renderMessage('error', JobPersistenceErrorTpl, {
+        'run': true,
+        //jobName: this.model.get('name'),
         serverError: {
           text: xhr.responseText,
           status: xhr.status
