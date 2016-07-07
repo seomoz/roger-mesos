@@ -13,6 +13,10 @@ nginx_release_url: http://nginx.org/download/{{nginx_pkg_tar}}
 
 nginx_conf_dir: /usr/local/nginx/conf
 
+nginx_chronos_auth_dir: /usr/local/nginx/chronos/auth
+nginx_chronos_auth_views_dir: /usr/local/nginx/chronos/auth/chronos/scripts/views/
+nginx_chronos_auth_templates_dir: /usr/local/nginx/chronos/auth/chronos/scripts/templates/
+
 generate_basic_auth_file: true
 
 nginx_basic_auth_file_name: .htpasswd

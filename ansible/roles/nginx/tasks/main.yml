@@ -35,9 +35,37 @@
 
   - name: Create directories which need to exist if necessary
     file: path={{ item }} state=directory owner=root
-    with_items: "{{ nginx_conf_dir }}"
+    with_items: 
+      - "{{ nginx_conf_dir }}"
+      - "{{ nginx_chronos_auth_dir }}"
+      - "{{ nginx_chronos_auth_views_dir }}"
+      - "{{ nginx_chronos_auth_templates_dir }}"
     when: nginx_auth_enable is defined and nginx_auth_enable|bool
     become: yes
+    tags:
+      - install
+      - nginx
+
+  - name: Synchronize Chronos overridden view files
+    synchronize: src=chronos_overrides/views/ dest={{ nginx_chronos_auth_views_dir }} recursive=yes delete=yes
+    become: yes
+    notify: restart nginx
+    tags:
+      - install
+      - nginx
+
+  - name: Copy Chronos overridden template file
+    copy: src=chronos_overrides/templates/job_persistence_error.hbs dest={{ nginx_chronos_auth_templates_dir }} mode=0644
+    become: yes
+    notify: restart nginx
+    tags:
+      - install
+      - nginx
+
+  - name: Copy Chronos error file
+    copy: src=errors/403.txt dest={{ nginx_chronos_auth_dir }}/403 mode=0644
+    become: yes
+    notify: restart nginx
     tags:
       - install
       - nginx
@@ -130,6 +158,13 @@
     template: src=nginx.conf.upstart.j2 dest=/etc/init/nginx.conf owner=root group=root mode=0644
     become: yes
     notify: restart nginx
+    tags:
+      - nginx
+
+  - name: Remove Chronos Auth directory under Nginx when nginx_auth_enable is false
+    when: nginx_auth_enable is not defined or not nginx_auth_enable|bool
+    file: path="{{ nginx_chronos_auth_dir }}" state=absent
+    become: yes
     tags:
       - nginx
 
