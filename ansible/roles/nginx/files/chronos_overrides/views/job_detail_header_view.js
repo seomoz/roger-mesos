@@ -119,7 +119,6 @@ function($,
             console.log('ran: ', model.get('name'))
           },
 
-
           error: function(xhr) {
             console.log('error: could not run', arguments)
             view.trigger('run run:error', {
