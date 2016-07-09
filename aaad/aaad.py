@@ -48,6 +48,10 @@ class AuthHandler(BaseHTTPRequestHandler):
         logger.debug("\n{}".format(self.headers), extra = info)
         logger.info("{} {}".format(action, resource), extra = info)
 
+        content_len = int(self.headers.getheader('content-length', 0))
+        body = self.rfile.read(content_len)
+        logger.debug("\n{}".format(body), extra = info)
+
         if not self.authenticate_request(user, password):
             self.send_response(401)
             self.end_headers()

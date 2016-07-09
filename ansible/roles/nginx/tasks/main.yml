@@ -1,18 +1,18 @@
 ---
 
-  - name: Download nginx release
+  - name: Download openresty/nginx bundle
     get_url: url="{{nginx_release_url}}" dest="{{tmp_dir}}"
     become: yes
     tags:
       - install
-      - nginx 
+      - nginx
 
   - name: Untar nginx package
     unarchive: copy=no dest="{{tmp_dir}}" src="{{tmp_dir}}/{{nginx_pkg_tar}}"
     become: yes
     tags:
       - install
-      - nginx 
+      - nginx
 
   - name: Install nginx dependencies
     apt: name={{ item }} state=present
@@ -25,17 +25,17 @@
   - name: configure and install nginx with auth_request module
     command: chdir={{tmp_dir}}/{{nginx_pkg}} {{item}}
     with_items:
-      - ./configure --with-http_auth_request_module 
-      - make 
+      - ./configure --with-http_auth_request_module
+      - make
       - make install
     become: yes
     tags:
       - install
-      - nginx 
+      - nginx
 
   - name: Create directories which need to exist if necessary
     file: path={{ item }} state=directory owner=root
-    with_items: 
+    with_items:
       - "{{ nginx_conf_dir }}"
       - "{{ nginx_chronos_auth_dir }}"
       - "{{ nginx_chronos_auth_views_dir }}"
@@ -50,6 +50,13 @@
     synchronize: src=chronos_overrides/views/ dest={{ nginx_chronos_auth_views_dir }} recursive=yes delete=yes
     become: yes
     notify: restart nginx
+    tags:
+      - install
+      - nginx
+
+  - name: Copy Lua Auth Script file
+    copy: src=../files/auth_script.lua dest={{ nginx_auth_script_dir }} mode=0644
+    become: yes
     tags:
       - install
       - nginx
@@ -72,13 +79,13 @@
 
   - name: Copy basic auth credentials file to the nginx conf
     copy: src={{ creds_dir }}/{{nginx_basic_auth_file_name}} dest="{{nginx_conf_dir}}/{{nginx_basic_auth_file_name}}"  mode=0644
-    when: auth_permissions_gspreadsheets is defined and not(auth_permissions_gspreadsheets | trim == '') and 
+    when: auth_permissions_gspreadsheets is defined and not(auth_permissions_gspreadsheets | trim == '') and
           generate_basic_auth_file is defined and generate_basic_auth_file|bool
     become: yes
     notify: restart nginx
     tags:
       - install
-      - nginx 
+      - nginx
 
   - name: Copy permissions file from local src to nginx conf when nginx_auth_permissions_local_path is defined
     when: nginx_auth_enable is defined and nginx_auth_enable|bool and
@@ -107,7 +114,7 @@
     become: yes
     tags:
       - install
-      - nginx 
+      - nginx
       - update
       - aaad
 
@@ -124,28 +131,28 @@
     become: yes
     tags:
       - install
-      - nginx 
+      - nginx
 
   - name: create a directory to hold symlink to the default site config
-    file: path="{{nginx_conf_dir}}/sites-enabled"   state=directory 
+    file: path="{{nginx_conf_dir}}/sites-enabled"   state=directory
     become: yes
     tags:
       - install
-      - nginx 
+      - nginx
 
   - name: copy proxy config to sites-available
     template: src=rogeros_auth_proxy.conf.j2 dest="{{nginx_conf_dir}}/sites-available/rogeros_auth_proxy.conf" mode=0644
     become: yes
     tags:
       - install
-      - nginx 
+      - nginx
 
   - name: symlink proxy config to default site
     file: src="{{nginx_conf_dir}}/sites-available/rogeros_auth_proxy.conf" dest="{{nginx_conf_dir}}/sites-enabled/default" state=link
     become: yes
     tags:
       - install
-      - nginx 
+      - nginx
 
   - name: copy nginx conf file
     template: src=nginx.conf.j2 dest={{nginx_conf_dir}}/nginx.conf  mode=0644
@@ -167,4 +174,3 @@
     become: yes
     tags:
       - nginx
-

@@ -22,30 +22,30 @@ server {
         location /chronos/scripts/views/job_detail_header_view.js {
 
             auth_basic Off;
-            root /usr/local/nginx/chronos/auth;
+            root /usr/local/openresty/nginx/chronos/auth;
         }
 
         location /chronos/scripts/templates/job_persistence_error.hbs {
 
             auth_basic Off;
-            root /usr/local/nginx/chronos/auth;
+            root /usr/local/openresty/nginx/chronos/auth;
         }
 
         location /chronos/scripts/views/job_detail_view.js {
 
             auth_basic Off;
-            root /usr/local/nginx/chronos/auth;
+            root /usr/local/openresty/nginx/chronos/auth;
         }
 
 
         location /marathon/ {
-		# goes to another method if basic http auth fails
-		# in our case, it will always go to the aaadaemon
-		# because http credential files is empty
-		satisfy all;
-		auth_basic "Restricted";
-		auth_basic_user_file {{nginx_conf_dir}}/{{nginx_basic_auth_file_name}};
-		auth_request /auth-proxy;
+                # goes to another method if basic http auth fails
+                # in our case, it will always go to the aaadaemon
+                # because http credential files is empty
+                satisfy all;
+                auth_basic "Restricted";
+                auth_basic_user_file {{nginx_conf_dir}}/{{nginx_basic_auth_file_name}};
+                access_by_lua_file '/usr/local/openresty/nginx/auth_script.lua';
                 proxy_pass http://marathon/;
                 add_header act-as-user $http_x_upstream_act_as_user;
                 proxy_set_header Host $host;
@@ -65,7 +65,7 @@ server {
                 satisfy all;
                 auth_basic "Restricted";
                 auth_basic_user_file {{nginx_conf_dir}}/{{nginx_basic_auth_file_name}};
-                auth_request /auth-proxy;
+                access_by_lua_file '/usr/local/openresty/nginx/auth_script.lua';
                 proxy_pass http://chronos/;
                 proxy_set_header Host $host;
                 proxy_set_header X-Real-IP $remote_addr;
@@ -79,7 +79,7 @@ server {
         }
 
         location = /403 {
-                root /usr/local/nginx/chronos/auth;
+                root /usr/local/openresty/nginx/chronos/auth;
                 internal;
         }
 

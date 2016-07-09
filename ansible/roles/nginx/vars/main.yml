@@ -2,20 +2,28 @@
 
 nginx_package_deps:
   - libpcre3-dev
-  - zlib1g-dev 
+  - zlib1g-dev
   - libgcrypt11-dev
+  - libreadline-dev
+  - libncurses5-dev
+  - perl
+  - libssl-dev
+  - make
+  - build-essential
 
-nginx_pkg: nginx-1.8.1
+
+nginx_pkg: openresty-1.9.15.1
 
 nginx_pkg_tar: "{{nginx_pkg}}.tar.gz"
 
-nginx_release_url: http://nginx.org/download/{{nginx_pkg_tar}}
+nginx_release_url: http://openresty.org/download/{{nginx_pkg_tar}}
 
-nginx_conf_dir: /usr/local/nginx/conf
+nginx_conf_dir: /usr/local/openresty/nginx/conf
 
-nginx_chronos_auth_dir: /usr/local/nginx/chronos/auth
-nginx_chronos_auth_views_dir: /usr/local/nginx/chronos/auth/chronos/scripts/views/
-nginx_chronos_auth_templates_dir: /usr/local/nginx/chronos/auth/chronos/scripts/templates/
+nginx_chronos_auth_dir: /usr/local/openresty/nginx/chronos/auth
+nginx_chronos_auth_views_dir: /usr/local/openresty/nginx/chronos/auth/chronos/scripts/views/
+nginx_chronos_auth_templates_dir: /usr/local/openresty/nginx/chronos/auth/chronos/scripts/templates/
+nginx_auth_script_dir: /usr/local/openresty/nginx/
 
 generate_basic_auth_file: true
 
@@ -24,4 +32,3 @@ nginx_basic_auth_file_name: .htpasswd
 nginx_proxy_port: 4080
 
 nginx_aaad_port: 8888
-
