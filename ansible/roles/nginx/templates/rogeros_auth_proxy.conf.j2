@@ -19,6 +19,11 @@ server {
                  proxy_pass http://marathon/ping;
         }
 
+        location /marathon/metrics {
+                auth_basic Off;
+                proxy_pass http://marathon/metrics;
+        }
+
         location /chronos/scripts/views/job_detail_header_view.js {
 
             auth_basic Off;
@@ -56,6 +61,11 @@ server {
         location /chronos/ping {
                  auth_basic Off;
                  proxy_pass http://chronos/ping;
+        }
+
+        location /chronos/metrics {
+                 auth_basic Off;
+                 proxy_pass http://chronos/metrics;
         }
 
         location /chronos/ {
