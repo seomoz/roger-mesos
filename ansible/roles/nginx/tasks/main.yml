@@ -1,6 +1,5 @@
 ---
-  - name: Remove any existing NGINX under "/usr/local" when nginx_auth_enable is true
-    when: nginx_auth_enable is defined and nginx_auth_enable|bool
+  - name: Remove any existing NGINX under "/usr/local"
     file: path="{{ nginx_previous_version_dir }}/nginx" state=absent
     become: yes
     tags:
