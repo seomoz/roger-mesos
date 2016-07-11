@@ -19,6 +19,7 @@ nginx_pkg_tar: "{{nginx_pkg}}.tar.gz"
 nginx_release_url: http://openresty.org/download/{{nginx_pkg_tar}}
 
 nginx_conf_dir: /usr/local/openresty/nginx/conf
+nginx_previous_version_dir: /usr/local/
 
 nginx_chronos_auth_dir: /usr/local/openresty/nginx/chronos/auth
 nginx_chronos_auth_views_dir: /usr/local/openresty/nginx/chronos/auth/chronos/scripts/views/
