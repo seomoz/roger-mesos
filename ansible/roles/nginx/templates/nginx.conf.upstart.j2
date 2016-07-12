@@ -4,7 +4,7 @@ author "George Shammas <georgyo@gmail.com>"
 start on (filesystem and net-device-up IFACE=!lo)
 stop on runlevel [!2345]
 
-env DAEMON=/usr/local/nginx/sbin/nginx
+env DAEMON=/usr/local/openresty/nginx/sbin/nginx
 env PID=/var/run/nginx.pid
 
 expect fork
@@ -21,4 +21,3 @@ pre-start script
 end script
 
 exec $DAEMON
-

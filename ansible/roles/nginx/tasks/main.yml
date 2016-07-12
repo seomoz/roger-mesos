@@ -1,6 +1,11 @@
 ---
+  - name: Remove any existing NGINX under "/usr/local"
+    file: path="{{ nginx_previous_version_dir }}" state=absent
+    become: yes
+    tags:
+      - nginx
 
-  - name: Download nginx release
+  - name: Download openresty/nginx bundle
     get_url: url="{{nginx_release_url}}" dest="{{tmp_dir}}"
     become: yes
     tags:
@@ -50,6 +55,14 @@
     synchronize: src=chronos_overrides/views/ dest={{ nginx_chronos_auth_views_dir }} recursive=yes delete=yes
     become: yes
     notify: restart nginx
+    tags:
+      - install
+      - nginx
+
+  - name: Copy Lua Auth Script file
+    copy: src=../files/auth_request.lua dest={{ nginx_auth_script_dir }} mode=0644
+    when: nginx_auth_enable is defined and nginx_auth_enable|bool
+    become: yes
     tags:
       - install
       - nginx
@@ -167,6 +180,13 @@
   - name: Remove Chronos Auth directory under Nginx when nginx_auth_enable is false
     when: nginx_auth_enable is not defined or not nginx_auth_enable|bool
     file: path="{{ nginx_chronos_auth_dir }}" state=absent
+    become: yes
+    tags:
+      - nginx
+
+  - name: Remove Auth Lua Script when nginx_auth_enable is false
+    when: nginx_auth_enable is not defined or not nginx_auth_enable|bool
+    file: path="{{ nginx_auth_script_dir }}/auth_request.lua" state=absent
     become: yes
     tags:
       - nginx
