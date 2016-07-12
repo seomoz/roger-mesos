@@ -1,6 +1,6 @@
 ---
   - name: Remove any existing NGINX under "/usr/local"
-    file: path="{{ nginx_previous_version_dir }}/nginx" state=absent
+    file: path="{{ nginx_previous_version_dir }}" state=absent
     become: yes
     tags:
       - nginx
