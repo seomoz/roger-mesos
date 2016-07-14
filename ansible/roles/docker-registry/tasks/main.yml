@@ -8,11 +8,19 @@
     - update_cache
 
 - name: Ensure docker registry dir exists
-  file: path={{ docker_registry_dir }} state=directory owner=root
+  file: path={{ docker_registry2_dir }} state=directory owner=root
   become: yes
 
-- name: Backup registry to docker_backup_dir (if defined) using rsync and cron
-  cron: name="backupdockerregistry" state="present" job="rsync -a {{ docker_registry_dir }}/ {{ docker_backup_dir }}/docker-registry" special_time="daily"
+- name: Ensure docker registry config dir exists
+  file: path={{ docker_registry2_config_dir }} state=directory owner=root
+  become: yes
+
+- name: Copy docker registry2 configuration.
+  template: src=config.yml.j2 dest={{ docker_registry2_config_dir }}/config.yml owner=root group=root mode=0644
+  become: yes
+
+- name: Backup registry2 to docker_backup_dir (if defined) using rsync and cron
+  cron: name="backupdockerregistry2" state="present" job="rsync -a {{ docker_registry2_dir }}/ {{ docker_backup_dir }}/docker-registry2" special_time="daily"
   become: yes
   when: docker_backup_dir is defined
 
@@ -20,6 +28,6 @@
   service: name=docker state=started
   become: yes
 
-- name: Start docker-registry
-  command: docker run --restart=always -d -p 5000:5000 -v {{ docker_registry_dir }}:/registry -e STORAGE_PATH=/registry -e SEARCH_BACKEND=sqlalchemy registry
+- name: Start docker-registry2
+  command: docker run --restart=always -d -p 5000:5000 -v {{ docker_registry2_dir }}:/var/lib/registry -v {{ docker_registry2_config_dir }}/config.yml:/etc/docker/registry/config.yml --name registry2 registry:2.4.1
   become: yes

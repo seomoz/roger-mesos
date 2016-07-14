@@ -1,0 +1,8 @@
+version: 0.1
+storage:
+  filesystem:
+    rootdirectory: /var/lib/registry
+http:
+  addr: 0.0.0.0:5000
+  secret: {{ docker_registry2_http_secret }}
+

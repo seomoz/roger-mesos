@@ -1,3 +1,4 @@
 ---
+docker_registry2_dir: "{{ base_data_dir }}/docker-registry2"
+docker_registry2_config_dir: "/etc/docker/registry"
 
-docker_registry_dir: "{{ base_data_dir }}/docker-registry"
