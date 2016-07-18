@@ -42,15 +42,18 @@ class FileAuthorizer:
                 prog = re.compile("^{}$".format(pattern))
                 result = prog.match(request_uri)
                 if result:
-                    try: 
-                        template_data = json.loads(data) 
-                    except (Exception) as e:
-                        logger.warning("Request body is an invalid json")
-                        return False
+                    if data != "":
+                        try:
+                            template_data = json.loads(data)
+                        except (Exception) as e:
+                            logger.warning("Request body is an invalid json")
+                            return False
 
-                    attribute_rules = item[pattern]
-                    valid = self.validate_request_body(attribute_rules, template_data)
-                    return valid
+                        attribute_rules = item[pattern]
+                        valid = self.validate_request_body(attribute_rules, template_data)
+                        return valid
+                    else:
+                        return (item[pattern] == {})
 
             return False
 
