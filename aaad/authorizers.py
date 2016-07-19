@@ -1,5 +1,8 @@
 import utils
 import re
+import json
+import os
+import sys
 
 class FileAuthorizer:
     class __FileAuthorizer:
@@ -14,26 +17,69 @@ class FileAuthorizer:
             allowed_users.append(user)
             if action != '' and 'action' in data[user]:
                 if data[user]['action'] != None and action in data[user]['action']:
-                    temp_list = list(set(data[user]['action'][action]) - set(allowed_actions))
-                    for item in temp_list:
-                        allowed_actions.append(item)            
-
+                    for item in data[user]['action'][action]:
+                        temp_item = {}
+                        if type(item) == str:
+                            temp_item = {}
+                            temp_item[item] = {}
+                        else:
+                            if type(item) == dict:
+                                temp_item = item
+                          
+                        if not temp_item in allowed_actions:
+                            allowed_actions.append(temp_item)
+                            
             if 'can_act_as' not in data[user]:
                 return
 
             for u in data[user]['can_act_as']:
                 self.get_merged_data(u, allowed_users, allowed_actions, data, action)
 
-        def resource_check(self, resource, allowed_actions):
-            for pattern in allowed_actions:
+        def resource_check(self, request_uri, data, allowed_actions):
+            for item in allowed_actions:
+                uri = item.keys()
+                pattern = uri[0]
                 prog = re.compile("^{}$".format(pattern))
-                result = prog.match(resource)
+                result = prog.match(request_uri)
                 if result:
-                    return True
+                    if data != "":
+                        try:
+                            template_data = json.loads(data)
+                        except (Exception) as e:
+                            logger.warning("Request body is an invalid json")
+                            return False
+
+                        attribute_rules = item[pattern]
+                        valid = self.validate_request_body(attribute_rules, template_data)
+                        return valid
+                    else:
+                        return (item[pattern] == {})
 
             return False
 
-        def authorize(self, user, act_as, resource, logging, info, action = "GET"):
+        def validate_request_body(self, attribute_rules, body):
+            for attribute in attribute_rules.keys():
+                items = attribute.split('/')
+                temp_data = body
+                for item in items:
+                    if not type(temp_data) == dict:
+                        return False
+                    if item in temp_data.keys():
+                        temp_data = temp_data[item]
+                    else:
+                        #Attribute not available in request body
+                        return False
+
+                prog = re.compile("^{}$".format(attribute_rules[attribute]))
+                result = prog.match(temp_data)
+                if result:
+                    continue
+                else:
+                    return False
+
+            return True
+
+        def authorize(self, user, act_as, resource, logging, info, data, action = "GET"):
             logger = logging.getLogger("Authorization")
             if not user or not act_as or not resource:
                 return False
@@ -60,7 +106,7 @@ class FileAuthorizer:
                 allowed_actions = self.data[act_as]['action'][action]
             self.get_merged_data(act_as, allowed_users_list, allowed_actions, self.data, action)
          
-            result = self.resource_check(resource, allowed_actions)
+            result = self.resource_check(resource, data, allowed_actions)
             if result == False:
                 logger.warning("Unauthorized [{}]".format(resource), extra = info)
                 return False
