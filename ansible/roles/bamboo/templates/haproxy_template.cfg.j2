@@ -112,9 +112,7 @@ backend {{ $app.EscapedId }}-cluster-{{ $appidhash }}{{ if $app.HealthCheckPath 
         server {{ $app.EscapedId}}-{{ $task.Host }}-{{ getTaskPort $task.Ports $app.Env.HTTP_PORT }} {{ $task.Host }}:{{ getTaskPort $task.Ports $app.Env.HTTP_PORT }}{{ if $app.HealthCheckPath }} check{{ end }}
         {{ end }}{{ end }}{{ end }}{{ end }}
 # End Backend section for {{ $app.EscapedId }}{{ end }}{{ end }}
-{% endraw %}
-
-# Begin Backend section for masters
+{% endraw %}# Begin Backend section for masters
 backend mesos
         mode http
         balance roundrobin
