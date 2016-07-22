@@ -112,8 +112,9 @@ backend {{ $app.EscapedId }}-cluster-{{ $appidhash }}{{ if $app.HealthCheckPath 
         server {{ $app.EscapedId}}-{{ $task.Host }}-{{ getTaskPort $task.Ports $app.Env.HTTP_PORT }} {{ $task.Host }}:{{ getTaskPort $task.Ports $app.Env.HTTP_PORT }}{{ if $app.HealthCheckPath }} check{{ end }}
         {{ end }}{{ end }}{{ end }}{{ end }}
 # End Backend section for {{ $app.EscapedId }}{{ end }}{{ end }}
+{% endraw %}
 
-{% endraw %}# Begin Backend section for masters
+# Begin Backend section for masters
 backend mesos
         mode http
         balance roundrobin
@@ -152,6 +153,7 @@ backend chronos
         server {% if nginx_auth_enable is defined and nginx_auth_enable|bool %}{{ host }}-4080 {{ host }}:4080{% else %}{{ host }}-4400 {{ host }}:4400{% endif %} check inter 10s fall 1 rise 3
 {% endfor %}
 # End Backend section for masters
+{% if additional_haproxy_cfg_content is defined %}{{ additional_haproxy_cfg_content }}{% endif %}
 {% raw %}
 {{/*
 ##
