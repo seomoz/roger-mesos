@@ -180,8 +180,6 @@
     notify: restart marathon
     tags:
       - marathon
-      - plugin
-      - permissions
       - http-address
 
   - name: Remove marathon auth commandline flags when marathon_auth_enable is false
