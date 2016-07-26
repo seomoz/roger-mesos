@@ -182,7 +182,7 @@
       - marathon
       - plugin
       - permissions
-      - http_address
+      - http-address
 
   - name: Remove marathon auth commandline flags when marathon_auth_enable is false
     when: marathon_auth_enable is not defined or not marathon_auth_enable|bool
