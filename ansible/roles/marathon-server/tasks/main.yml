@@ -173,33 +173,21 @@
       - marathon
       - plugin
       - permissions
-      - permissions-sync
 
   - name: Configure Marathon http_address commandline flag
     template: src=marathon-flags/http_address.j2 dest=/etc/marathon/conf/http_address owner=root group=root mode=0644
-    when: nginx_auth_enable is defined and nginx_auth_enable|bool and marathon_auth_enable is defined and marathon_auth_enable|bool
     become: yes
     notify: restart marathon
     tags:
       - marathon
       - plugin
       - permissions
-      - permissions-sync
+      - http_address
 
   - name: Remove marathon auth commandline flags when marathon_auth_enable is false
     when: marathon_auth_enable is not defined or not marathon_auth_enable|bool
     file: path="/etc/marathon/conf/{{item}}" state=absent
     with_items: "{{ marathon_auth_args_files }}"
-    become: yes
-    notify: restart marathon
-    tags:
-      - marathon
-      - plugin
-      - permissions
-
-  - name: Remove marathon http_address commandline flag when marathon_auth_enable is true
-    when: marathon_auth_enable is defined and marathon_auth_enable|bool
-    file: path="/etc/marathon/conf/http_address" state=absent
     become: yes
     notify: restart marathon
     tags:
