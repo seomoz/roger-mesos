@@ -35,26 +35,37 @@ class FileAuthorizer:
             for u in data[user]['can_act_as']:
                 self.get_merged_data(u, allowed_users, allowed_actions, data, action)
 
-        def resource_check(self, request_uri, data, allowed_actions):
+        def resource_check(self, request_uri, body, allowed_actions, content_type):
             for item in allowed_actions:
                 uri = item.keys()
                 pattern = uri[0]
                 prog = re.compile("^{}$".format(pattern))
                 result = prog.match(request_uri)
                 if result:
-                    if data != "":
-                        try:
-                            template_data = json.loads(data)
-                        except (Exception) as e:
-                            logger.warning("Request body is an invalid json")
+
+                    if (item[pattern] == {}):
+                        return True
+                    else:
+                        if body == "":
                             return False
+                        else:
+                            if content_type.lower() == "application/json" or content_type.lower() == "application/javascript":
+                                try:
+                                    template_data = json.loads(body)
+                                except (Exception) as e:
+                                    logger.error("Request body is an invalid json")
+                                    return False
+                
+                                attribute_rules = item[pattern]
+                                valid = self.validate_request_body(attribute_rules, template_data)
+                                return valid 
+                            else:
+                                return False
 
                         attribute_rules = item[pattern]
                         valid = self.validate_request_body(attribute_rules, template_data)
                         return valid
-                    else:
-                        return (item[pattern] == {})
-
+                        
             return False
 
         def validate_request_body(self, attribute_rules, body):
@@ -79,7 +90,7 @@ class FileAuthorizer:
 
             return True
 
-        def authorize(self, user, act_as, resource, logging, info, data, action = "GET"):
+        def authorize(self, user, act_as, resource, logging, info, data, content_type, action = "GET"):
             logger = logging.getLogger("Authorization")
             if not user or not act_as or not resource:
                 return False
@@ -117,7 +128,7 @@ class FileAuthorizer:
 
             self.get_merged_data(act_as, allowed_users_list, allowed_actions, self.data, action)
          
-            result = self.resource_check(resource, data, allowed_actions)
+            result = self.resource_check(resource, data, allowed_actions, content_type)
             if result == False:
                 logger.warning("Unauthorized [{}]".format(resource), extra = info)
                 return False

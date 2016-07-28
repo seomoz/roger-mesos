@@ -52,12 +52,14 @@ class AuthHandler(BaseHTTPRequestHandler):
         body = self.rfile.read(content_len)
         logger.debug("\n{}".format(body), extra = info)
 
+        content_type = self.headers.getheader("content-type", "")
+
         if not self.authenticate_request(user, password):
             self.send_response(401)
             self.end_headers()
             return False
 
-        if not self.authorize_request(user, act_as_user, action, resource, body):
+        if not self.authorize_request(user, act_as_user, action, resource, body, content_type):
             self.send_response(403)
             self.end_headers()
             return False
@@ -78,11 +80,11 @@ class AuthHandler(BaseHTTPRequestHandler):
 
         return True
 
-    def authorize_request(self, user, act_as_user, action, path, data):
+    def authorize_request(self, user, act_as_user, action, path, data, content_type):
         ctx = self.ctx
         file_authorizer = FileAuthorizer(permissions_file).instance
         try:
-            if not file_authorizer.authorize(user, act_as_user, path, logging, self.info, data, action):
+            if not file_authorizer.authorize(user, act_as_user, path, logging, self.info, data, content_type, action):
                 return False
 
         except:
