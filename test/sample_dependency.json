@@ -1,0 +1,16 @@
+{
+  "async": true,
+  "command": "echo 'Hello'",
+  "epsilon": "PT30M",
+  "errorCount": 0,
+  "lastError": "",
+  "lastSuccess": "2013-03-15T13:02:14.243Z",
+  "name": "internal-test-team-dependency",
+  "owner": "sambit@moz.com",
+  "parents": [
+    "internal-test-team"
+  ],
+  "retries": 2,
+  "successCount": 100
+}
+

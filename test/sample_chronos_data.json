@@ -1,0 +1,8 @@
+{
+  "schedule": "R/2014-09-25T17:22:00Z/PT2M",
+  "name": "internal-test-team",
+  "cpus": "0.5",
+  "mem": "512",
+  "uris": [],
+  "command": "while sleep 10; do date =u %T; done"
+}
