@@ -10,7 +10,7 @@ import time
 
 
 def get_data(url, headers):
-    result = requests.get(url, headers=headers, auth=('internal_test_user', 'internal_test_user'))
+    result = requests.get(url, auth=('internal_test_user', 'internal_test_user'))
     return result.status_code
 
 
@@ -20,7 +20,7 @@ def put_data(url, headers, payload):
 
 
 def delete_data(url, headers, payload):
-    result = requests.delete(url, data=json.dumps(payload), headers=headers, auth=('internal_test_user', 'internal_test_user'))
+    result = requests.delete(url, data=json.dumps(payload), auth=('internal_test_user', 'internal_test_user'))
     return (result.status_code)
 
 
@@ -31,8 +31,8 @@ def get_authorization_header():
     return headers
 
 
-def create_json_data():
-    with open(parent_dir + "/sample_data.json") as json_file:
+def create_json_data(file_path):
+    with open(parent_dir + file_path) as json_file:
         json_data = json.load(json_file)
     return json_data
 
@@ -61,7 +61,7 @@ def test_proxy_user_valid_permissions_create(app_url, headers, json_data):
     # Create App
     try:
         result_code = put_data(app_url, headers, json_data)
-        assert(result_code == 200 or result_code == 201)
+        assert(result_code == 200 or result_code == 201 or result_code == 204)
         print("Create Test: Pass")
     except (Exception) as e:
         print("The following error occurred: %s" %
@@ -87,7 +87,7 @@ def test_proxy_user_valid_permissions_delete(app_url, headers, json_data):
         time.sleep(5)
         # Delete App
         result_code = delete_data(app_url, headers, json_data)
-        assert(result_code == 200)
+        assert(result_code == 200 or result_code == 204)
         print("Delete Test: Pass\n")
     except (Exception) as e:
         print("The following error occurred: %s" %
@@ -145,7 +145,7 @@ def main(args):
                     'http://' + machine + ':4080/marathon/v2/apps/mongo/internal-test-team/test-app/',
                     'http://' + machine + ':4080/marathon/v2/apps/sortdb/internal-test-team/test-app/']
 
-    json_data = create_json_data()
+    json_data = create_json_data("/sample_data.json")
     headers = get_authorization_header()
 
     for app_url in app_url_list:
@@ -154,6 +154,47 @@ def main(args):
         test_proxy_user_valid_permissions_read(app_url, headers)
         test_proxy_user_valid_permissions_delete(app_url, headers, json_data)
 
+    chronos_common_access_url = ['http://chronos.dev.roger.dal.moz.com/',
+                                 'http://chronos.dev.roger.dal.moz.com/scheduler/jobs',
+                                 'http://chronos.dev.roger.dal.moz.com/scheduler/graph/csv' ]
+
+    for app_url in chronos_common_access_url:
+        print ("\nExecuting Test for {} endpoint \n".format(app_url))
+        test_proxy_user_valid_permissions_read(app_url, headers)
+
+    time.sleep(10)
+
+    json_data = create_json_data("/sample_chronos_data.json")
+    headers = get_authorization_header()
+
+    app_url = 'http://chronos.dev.roger.dal.moz.com/scheduler/iso8601'
+    print ("\nExecuting Test for {} endpoint \n".format(app_url))
+    test_proxy_user_valid_permissions_create(app_url, headers, json_data)
+
+    time.sleep(10)
+
+    json_data = create_json_data("/sample_dependency.json")
+    app_url = 'http://chronos.dev.roger.dal.moz.com/scheduler/dependency'
+    print ("\nExecuting Test for {} endpoint \n".format(app_url))
+    test_proxy_user_valid_permissions_create(app_url, headers, json_data)
+
+    app_url = 'http://chronos.dev.roger.dal.moz.com/scheduler/job/internal-test-team'
+    print ("\nExecuting Test for {} endpoint \n".format(app_url))
+    test_proxy_user_valid_permissions_create(app_url, headers, json_data)
+
+    app_url = 'http://chronos.dev.roger.dal.moz.com/scheduler/job/stat/internal-test-team'
+    print ("\nExecuting Test for {} endpoint \n".format(app_url))
+    test_proxy_user_valid_permissions_read(app_url, headers)
+
+    app_url = 'http://chronos.dev.roger.dal.moz.com/scheduler/job/internal-test-team'
+    print ("\nExecuting Test for {} endpoint \n".format(app_url))
+    test_proxy_user_valid_permissions_delete(app_url, headers, json_data)
+
+    app_url = 'http://chronos.dev.roger.dal.moz.com/scheduler/job/internal-test-team-dependency'
+    print ("\nExecuting Test for {} endpoint \n".format(app_url))
+    test_proxy_user_valid_permissions_delete(app_url, headers, json_data)
+
+    json_data = create_json_data("/sample_data.json")
     app_url = 'http://' + machine + ':4080/marathon/v2/apps/internal-test-team/'
     print ("\nExecuting Test for Invalid End Point: {}\n".format(app_url))
     test_invalid_end_points(app_url, headers, json_data)
