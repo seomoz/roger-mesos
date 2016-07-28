@@ -7,18 +7,21 @@ import os
 import requests
 import base64
 import time
+import argparse
 from testutils import TestUtils
 
+def parse_args():
+    parser = argparse.ArgumentParser(description="Execute chronos tests")
+    parser.add_argument('chronos_url', metavar='url', type=str, help="chronos url against which the tests needs to execute")
+    return parser
 
 def main(args):
 
-    if len(args) < 2:
-        print("Please provide environment, then retry.\nExiting...")
-        sys.exit(0)
-
+    parser = parse_args()
+    args = parser.parse_args()
     utilsObj = TestUtils()
 
-    chronos_url = args[(len(args) - 1)]
+    chronos_url = args.chronos_url
     chronos_common_access_url = [chronos_url,
                                  chronos_url + '/scheduler/jobs',
                                  chronos_url + '/scheduler/graph/csv']
