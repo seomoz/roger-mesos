@@ -16,8 +16,7 @@ env MESOSPHERE_KEYSTORE_PASS={{ ssl_keystore_pass }}
 exec /usr/bin/marathon {% if (ssl_keystore_pass is defined) and not(ssl_keystore_pass | trim =='') %}--disable_http{% endif %}
 
 post-start script
-  sleep 30
+  sleep 60
   curl -X POST -H "Content-Type: application/x-www-form-urlencoded" -u {{ marathon_admin_user }}:{{ marathon_admin_password }} --data "logger=mesosphere.marathon.example&level=OFF" http://{{ marathon_webui_host }}/logging
-  curl -X POST -H "Content-Type: application/x-www-form-urlencoded" -u {{ marathon_admin_user }}:{{ marathon_admin_password }} --data "logger=mesosphere.marathon.example.plugin.javaauth&level=OFF" http://{{ marathon_webui_host }}/logging  
 end script
 
