@@ -3,6 +3,7 @@
 [machines:vars]
 marathon_auth_enable=true
 nginx_auth_enable=true
+marathon_webui_host=localmesos01:4080/marathon
 
 [machines]
 localmesos01 env=test base_data_dir=/data shared_mount=/vagrant
