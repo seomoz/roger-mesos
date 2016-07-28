@@ -8,9 +8,8 @@
   "name": "internal-test-team-dependency",
   "owner": "sambit@moz.com",
   "parents": [
-    "internal-test-team"
+    "internal-test-team-sample-chronos-job"
   ],
   "retries": 2,
   "successCount": 100
 }
-
