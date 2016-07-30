@@ -28,6 +28,12 @@ class TestUtils:
         headers = {"Content-Type": "application/json", "Authorization": encoded}
         return headers
 
+    def get_authorization_header_non_json(self):
+        encoded = base64.b64encode(b'internal_test_user:internal_test_user')
+        encoded = "Basic " + encoded
+        headers = {"Content-Type": "application/x-www-form-urlencoded", "Authorization": encoded}
+        return headers
+
     def create_json_data(self, file_path):
         parent_dir = os.path.abspath(os.path.join(
             os.path.dirname(os.path.realpath(__file__)), os.pardir, "test"))
@@ -46,10 +52,22 @@ class TestUtils:
                   e, file=sys.stderr)
             print("Invalid Body Test Failed")
 
+    def test_proxy_user_valid_permissions_create_non_json_body(self, app_url, headers, json_data):
+        # Create App
+        try:
+            result = requests.post(app_url, headers=headers, data=json_data)
+            result_code = result.status_code
+            assert(result_code == 200 or result_code == 201 or result_code == 204)
+            print("Create Test: Pass")
+        except (Exception) as e:
+            print("The following error occurred: %s" %
+                  e, file=sys.stderr)
+            print("Create Failed")
+
     def test_proxy_user_valid_permissions_create_no_body(self, app_url, headers):
         # Create App
         try:
-            result = requests.put(app_url, headers=headers)
+            result = requests.post(app_url, headers=headers)
             result_code = result.status_code
             assert(result_code == 200 or result_code == 201 or result_code == 204)
             print("Create Test: Pass")

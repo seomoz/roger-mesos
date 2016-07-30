@@ -40,14 +40,15 @@ def main(args):
     print ("\nExecuting Test for Invalid End Point: {}\n".format(app_url))
     utilsObj.test_invalid_end_points(app_url, headers, json_data)
 
-    json_data = ""
-    print ("\nExecuting PUT With Non JSON Body:\n")
-    app_url = marathon_url + '/v2/apps/internal-test-team/'
-    utilsObj.test_proxy_user_valid_permissions_create(app_url, headers, json_data)
-
-    print ("\nExecuting PUT Without Body:\n")
-    app_url = marathon_url + '/v2/apps/internal-test-team/'
+    print ("\nExecuting POST Without Body:\n")
+    app_url = marathon_url + '/logging'
     utilsObj.test_proxy_user_valid_permissions_create_no_body(app_url, headers)
+
+    headers = utilsObj.get_authorization_header_non_json()
+    json_data = "abc=xyz.com&level=OFF"
+    print ("\nExecuting POST With Non JSON Body:\n")
+    app_url = marathon_url + '/logging'
+    utilsObj.test_proxy_user_valid_permissions_create_non_json_body(app_url, headers, json_data)
 
     print("\nAll Tests Passed \n")
 
