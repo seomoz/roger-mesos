@@ -65,7 +65,7 @@ def main(args):
 
     json_data = "notjson"
     app_url = chronos_url + '/scheduler/iso8601'
-    print ("\nExecuting Test for Invalid Body \n")
+    print ("\nExecuting Test for Non JSON Body \n")
     utilsObj.test_proxy_user_invalid_body(app_url, headers, json_data)
 
     json_data = utilsObj.create_json_data("/sample_chronos_data.json")
