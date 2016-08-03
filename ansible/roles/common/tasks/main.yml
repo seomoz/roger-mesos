@@ -32,3 +32,12 @@
   ignore_errors: yes
   tags:
     - configuration
+
+- name: Add cluster peers to /etc/hosts
+  lineinfile: dest=/etc/hosts regexp='.*{{ item }}$' line="{{ hostvars[item]['cluster_ip'] }} {{ item }}" state=present
+  when: hostvars[item]['cluster_ip'] is defined
+  with_items: groups['machines']
+  become: yes
+  tags:
+    - bamboo
+    - etc_hosts

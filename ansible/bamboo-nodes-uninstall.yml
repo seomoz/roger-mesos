@@ -1,0 +1,17 @@
+---
+# Main task for deleting up bamboo and haproxy on masters.
+
+- hosts: bamboo_servers
+  serial: "{{ serial_var | default(1) }}"
+
+  vars_prompt:
+    - name: "confirm_bamboo_delete"
+      prompt: "Do you want to delete bamboo and haproxy ?"
+      default: "no"
+
+    - name: "reconfirm_bamboo_delete"
+      prompt: "Please reconfirm if you want to delete bamboo and haproxy ?"
+      default: "no"
+
+  roles:
+    - { role: bamboo-uninstall, when: confirm_bamboo_delete == 'yes' and reconfirm_bamboo_delete == 'yes' }

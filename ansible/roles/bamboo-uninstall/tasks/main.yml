@@ -1,0 +1,62 @@
+# Uninstall Bamboo and HAProxy
+
+- name: Stop bamboo service
+  service: name=bamboo-server enabled=yes
+  become: yes
+  notify: stop bamboo
+  tags:
+    - bamboo-uninstall
+
+- name: Stop haproxy service
+  service: name=haproxy enabled=yes
+  become: yes
+  notify: stop haproxy
+  tags:
+    - bamboo-uninstall
+
+- name: Remove local HAProxy as 127.0.0.2 in /etc/hosts
+  when: haproxy_local is defined
+  lineinfile: dest=/etc/hosts regexp='.*{{ haproxy_local }}$' line="127.0.0.2 {{ haproxy_local }}" state=absent
+  become: yes
+  tags:
+    - bamboo-uninstall
+    - etc_hosts
+
+- name: Remove local HAProxy as 127.0.0.3 in /etc/hosts
+  when: haproxy_local_addl is defined
+  lineinfile: dest=/etc/hosts regexp='.*{{ haproxy_local_addl }}$' line="127.0.0.3 {{ haproxy_local_addl }}" state=absent
+  become: yes
+  tags:
+    - bamboo-uninstall
+    - etc_hosts
+
+- name: Remove bamboo-server conf
+  file: path=/etc/init/bamboo-server.conf state=absent
+  become: yes
+  tags:
+   - bamboo-uninstall
+
+- name: Uninstall HAproxy 1.5
+  apt: name=haproxy=1.5* state=absent
+  become: yes
+  notify: stop bamboo
+  tags:
+    - bamboo-uninstall
+
+- name: Uninstall Bamboo package if it exists
+  apt: name=bamboo state=absent purge=yes
+  become: yes
+  tags:
+    - bamboo-uninstall
+
+- name: Remove Haproxy repo
+  apt_repository: repo='ppa:vbernat/haproxy-1.5' state=absent update_cache=yes
+  become: yes
+  tags:
+    - bamboo-uninstall
+
+- name: Delete bamboo directory
+  file: path={{ bamboo_dir }} state=absent owner=root
+  become: yes
+  tags:
+    - bamboo-uninstall
