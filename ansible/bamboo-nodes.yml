@@ -2,6 +2,7 @@
 # Main task for setting up bamboo nodes on a cluster.
 
 - hosts: bamboo_servers
+  serial: "{{ serial_var | default(1) }}"
 
   # To avoid these prompts supply the values from the command line using ansible playbook extra vars "-e". Example:
   #     $ anisble-playbook -i /path/to/inventory -e "marathon_bamboo_user=username" -e "marathon_bamboo_pass=password" bamboo-nodes.yml
