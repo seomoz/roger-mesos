@@ -6,11 +6,11 @@
 
   vars_prompt:
     - name: "confirm_bamboo_delete"
-      prompt: "Do you want to delete bamboo and haproxy ?"
+      prompt: "Do you want to delete bamboo and haproxy?"
       default: "no"
 
     - name: "reconfirm_bamboo_delete"
-      prompt: "Please reconfirm if you want to delete bamboo and haproxy ?"
+      prompt: "Please reconfirm if you want to delete bamboo and haproxy?"
       default: "no"
 
   roles:

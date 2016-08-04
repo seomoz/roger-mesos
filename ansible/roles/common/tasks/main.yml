@@ -39,5 +39,4 @@
   with_items: groups['machines']
   become: yes
   tags:
-    - bamboo
     - etc_hosts
