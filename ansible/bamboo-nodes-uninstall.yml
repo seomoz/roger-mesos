@@ -8,10 +8,12 @@
     - name: "confirm_bamboo_delete"
       prompt: "Do you want to delete bamboo and haproxy?"
       default: "no"
+      private: no
 
     - name: "reconfirm_bamboo_delete"
       prompt: "Please reconfirm if you want to delete bamboo and haproxy?"
       default: "no"
+      private: no
 
   roles:
     - { role: bamboo-uninstall, when: confirm_bamboo_delete == 'yes' and reconfirm_bamboo_delete == 'yes' }
