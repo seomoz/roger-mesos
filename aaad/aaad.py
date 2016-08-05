@@ -88,7 +88,7 @@ class AuthHandler(BaseHTTPRequestHandler):
         if not allowed_namespaces:    #Empty list
             return ""
 
-        response = framework.filterBody(body, allowed_namespaces, resource)
+        response = framework.filterResponseBody(body, allowed_namespaces, resource)
         return response
 
     def authenticate_request(self, user, password):

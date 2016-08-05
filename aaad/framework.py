@@ -9,6 +9,6 @@ class Framework(object):
     __metaclass__ = ABCMeta
 
     @abstractmethod
-    def filterBody(self, body, allowed_namespaces, request_uri):
+    def filterResponseBody(self, body, allowed_namespaces, request_uri):
         pass
 

@@ -12,7 +12,7 @@ class Chronos(Framework):
     def getName(self):
         return "Chronos"
 
-    def filterBody(self, body, allowed_namespaces, request_uri):
+    def filterResponseBody(self, body, allowed_namespaces, request_uri):
         filtered_response = []
         try:
             jobs = json.loads(body)

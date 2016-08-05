@@ -17,8 +17,19 @@ end
 
 local res = ngx.location.capture(ngx.var.location_endpoint, { copy_all_vars = true })
 
-local data = res.body
+if res.status == ngx.HTTP_FORBIDDEN then
+    ngx.exit(res.status)
+end
 
+if res.status == ngx.HTTP_UNAUTHORIZED then
+    ngx.exit(res.status)
+end
+
+if res.status ~= ngx.HTTP_OK then
+    ngx.exit(ngx.HTTP_INTERNAL_SERVER_ERROR)
+end
+
+local data = res.body
 
 ngx.req.set_header("auth_action", "filter_response")
 local resp = ngx.location.capture("/auth-proxy", {body=data})

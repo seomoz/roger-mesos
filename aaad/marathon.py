@@ -12,7 +12,7 @@ class Marathon(Framework):
     def getName(self):
         return "Marathon"
 
-    def filterBody(self, body, allowed_namespaces, request_uri):
+    def filterResponseBody(self, body, allowed_namespaces, request_uri):
         uri_pattern = re.compile("^{}$".format("/marathon/*v2/apps"))
         uri_match = uri_pattern.match(request_uri)
         if uri_match:
