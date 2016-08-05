@@ -9,7 +9,7 @@ upstream chronos {
 }
 
 server {
-        listen {{nginx_proxy_port}};
+        listen {{ nginx_proxy_port }};
         server_name server.alias;
         root html;
         index index.html index.htm;
@@ -58,6 +58,52 @@ server {
                 proxy_pass_header Authorization;
         }
 
+        location /marathon_internal {
+                proxy_set_header Host $host;
+                proxy_pass http://marathon/$marathon_endpoint;
+                internal;
+        }
+
+        location /marathon/v2/apps {
+                satisfy all;
+                auth_basic "Restricted";
+                auth_basic_user_file {{nginx_conf_dir}}/{{nginx_basic_auth_file_name}};
+                set $auth_action '';
+                set $marathon_endpoint 'v2/apps';
+                set $location_endpoint '/marathon_internal';
+                lua_use_default_type off;
+                access_by_lua_file '/usr/local/openresty/nginx/auth_request_and_filter_response.lua';
+        }
+
+        location /marathon/v2/groups {
+                satisfy all;
+                auth_basic "Restricted";
+                auth_basic_user_file {{nginx_conf_dir}}/{{nginx_basic_auth_file_name}};
+                set $auth_action '';
+                set $marathon_endpoint 'v2/groups';
+                set $location_endpoint '/marathon_internal';
+                lua_use_default_type off;
+                access_by_lua_file '/usr/local/openresty/nginx/auth_request_and_filter_response.lua';
+
+        }
+
+        location /chronos_internal {
+                proxy_set_header Host $host;
+                proxy_pass http://chronos/$chronos_endpoint;
+                internal;
+        }
+
+        location /chronos/scheduler/jobs {
+                satisfy all;
+                auth_basic "Restricted";
+                auth_basic_user_file {{nginx_conf_dir}}/{{nginx_basic_auth_file_name}};
+                set $chronos_endpoint 'scheduler/jobs';
+                set $location_endpoint '/chronos_internal';
+                lua_use_default_type off;
+                access_by_lua_file '/usr/local/openresty/nginx/auth_request_and_filter_response.lua';
+
+        }
+
         location /chronos/ping {
                  auth_basic Off;
                  proxy_pass http://chronos/ping;
@@ -91,7 +137,7 @@ server {
         }
 
 	location = /auth-proxy {
-                proxy_pass http://localhost:{{nginx_aaad_port}};
+                proxy_pass http://localhost:{{ nginx_aaad_port }};
                 proxy_set_header URI $request_uri;
                 proxy_set_header method $request_method;
                 proxy_pass_request_headers on;
