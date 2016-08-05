@@ -1,5 +1,6 @@
 ngx.req.read_body()
 local data = ngx.req.get_body_data()
+ngx.req.set_header("auth_action", "auth")
 local res = ngx.location.capture("/auth-proxy", {body=data})
 
 if res.status == ngx.HTTP_OK then

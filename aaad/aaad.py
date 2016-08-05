@@ -6,9 +6,11 @@ Listen = ('localhost', 8888)
 import threading
 import logging
 import argparse
+import utils
 from SocketServer import ThreadingMixIn
 from authenticators import FileAuthenticator
 from authorizers import FileAuthorizer
+from frameworkUtils import FrameworkUtils
 
 
 class AuthHTTPServer(ThreadingMixIn, HTTPServer, ):
@@ -17,6 +19,7 @@ class AuthHTTPServer(ThreadingMixIn, HTTPServer, ):
 class AuthHandler(BaseHTTPRequestHandler):
     ctx = {}
     authenticator = None
+    frameworkUtils = FrameworkUtils()
 
     def do_GET(self):
 
@@ -26,6 +29,7 @@ class AuthHandler(BaseHTTPRequestHandler):
         resource = self.headers.get('URI')
         action = self.headers.get('method')
         client_ip = self.headers.get('X-Forwarded-For')
+        auth_action = self.headers.get("auth_action", "")
 
         # Carry out Basic Authentication
         if auth_header is None or not auth_header.lower().strip().startswith('basic '):
@@ -54,6 +58,14 @@ class AuthHandler(BaseHTTPRequestHandler):
 
         content_type = self.headers.getheader("content-type", "")
 
+        if auth_action == "filter_response":
+            filtered_response = self.filter_response(body, resource, act_as_user, permissions)
+            self.send_response(200)
+            self.end_headers()
+            self.wfile.write(filtered_response)
+            self.wfile.close()
+            return True
+
         if not self.authenticate_request(user, password):
             self.send_response(401)
             self.end_headers()
@@ -63,11 +75,21 @@ class AuthHandler(BaseHTTPRequestHandler):
             self.send_response(403)
             self.end_headers()
             return False
-
+        
         self.log_message(ctx['action'])  # Continue request processing
         self.send_response(200)
         self.end_headers()
         return True
+
+    def filter_response(self, body, resource, act_as_user, permissions):
+        framework = self.frameworkUtils.getFramework(resource)
+        allowed_namespaces = utils.getAllowedNamespacePatterns(act_as_user, permissions)
+
+        if not allowed_namespaces:    #Empty list
+            return ""
+
+        response = framework.filterResponseBody(body, allowed_namespaces, resource)
+        return response
 
     def authenticate_request(self, user, password):
         ctx = self.ctx
@@ -159,6 +181,7 @@ if __name__ == '__main__':
     FORMAT = "[%(asctime)-15s] %(levelname)s - %(name)s - IP:%(clientip)s User:%(user)s ActAs:%(act_as)s - %(message)s"
     logging.basicConfig(level=level, format=FORMAT)
     logger = logging.getLogger("AAAd")
+    permissions = utils.parse_permissions_file(permissions_file)
     server = AuthHTTPServer(Listen, AuthHandler)
     signal.signal(signal.SIGINT, exit_handler)
     server.serve_forever()
