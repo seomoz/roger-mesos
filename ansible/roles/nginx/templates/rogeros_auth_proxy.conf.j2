@@ -58,13 +58,13 @@ server {
                 proxy_pass_header Authorization;
         }
 
-        location /marathon_internal {
+        location = /marathon_internal {
                 proxy_set_header Host $host;
                 proxy_pass http://marathon/$marathon_endpoint;
                 internal;
         }
 
-        location /marathon/v2/apps {
+        location = /marathon/v2/apps {
                 satisfy all;
                 auth_basic "Restricted";
                 auth_basic_user_file {{nginx_conf_dir}}/{{nginx_basic_auth_file_name}};
@@ -75,7 +75,7 @@ server {
                 access_by_lua_file '/usr/local/openresty/nginx/auth_request_and_filter_response.lua';
         }
 
-        location /marathon/v2/groups {
+        location = /marathon/v2/groups {
                 satisfy all;
                 auth_basic "Restricted";
                 auth_basic_user_file {{nginx_conf_dir}}/{{nginx_basic_auth_file_name}};
@@ -87,13 +87,13 @@ server {
 
         }
 
-        location /chronos_internal {
+        location = /chronos_internal {
                 proxy_set_header Host $host;
                 proxy_pass http://chronos/$chronos_endpoint;
                 internal;
         }
 
-        location /chronos/scheduler/jobs {
+        location = /chronos/scheduler/jobs {
                 satisfy all;
                 auth_basic "Restricted";
                 auth_basic_user_file {{nginx_conf_dir}}/{{nginx_basic_auth_file_name}};
