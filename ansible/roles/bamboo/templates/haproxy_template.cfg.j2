@@ -47,6 +47,11 @@ frontend http-in
 
         acl host_chronos hdr_beg(host) -i chronos.
         use_backend chronos if host_chronos
+{% endraw %}
+{% if additional_haproxy_cfg_config_bind_80 is defined %}
+
+        {{ additional_haproxy_cfg_config_bind_80 }}{% endif %}
+{% raw %}
         {{ $acls := .Acls }}{{ $backendrules := .BackendRules }}{{ $services := .Services }}{{ range $index, $app := .Apps }} {{ if hasKey $services $app.Id }} {{ $service := getService $services $app.Id }}
         acl {{ $app.EscapedId }}-aclrule {{ $service.Acl}}
         use_backend {{ $app.EscapedId }}-cluster if {{ $app.EscapedId }}-aclrule
