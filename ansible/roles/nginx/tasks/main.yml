@@ -100,6 +100,7 @@
     tags:
       - install
       - nginx
+      - permissions-sync
 
   - name: Copy permissions file from local src to nginx conf when nginx_auth_permissions_local_path is defined
     when: nginx_auth_enable is defined and nginx_auth_enable|bool and
@@ -110,6 +111,7 @@
     tags:
       - install
       - nginx
+      - permissions-sync
 
   - name: Copy default nginx user-permissions.json file if neither nginx_auth_permissions_local_path nor auth_permissions_gspreadsheets are defined, and there isn't already a permissions file
     when: nginx_auth_enable is defined and nginx_auth_enable|bool and
@@ -122,6 +124,7 @@
     tags:
       - install
       - nginx
+      - permissions-sync
 
   - name: Copy AAA daemon to nginx conf directory for now
     copy: src=../../../../aaad dest={{nginx_conf_dir}}  mode=0655
