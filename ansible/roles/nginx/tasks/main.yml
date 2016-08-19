@@ -167,6 +167,7 @@
   - name: symlink proxy config to default site
     file: src="{{nginx_conf_dir}}/sites-available/rogeros_auth_proxy.conf" dest="{{nginx_conf_dir}}/sites-enabled/default" state=link
     become: yes
+    when: not ansible_check_mode
     tags:
       - install
       - nginx

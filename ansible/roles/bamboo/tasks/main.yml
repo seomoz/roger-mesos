@@ -45,6 +45,7 @@
 - name: Install the Bamboo package - bamboo_{{ bamboo_version }}
   apt: deb="{{ bamboo_tmp_dir }}/bamboo_{{ bamboo_version }}-1_all.deb"
   become: yes
+  when: not ansible_check_mode
   notify: restart bamboo
   tags:
     - bamboo
