@@ -50,7 +50,7 @@ class AuthHandler(BaseHTTPRequestHandler):
         info = {'clientip': str(client_ip), 'user': str(user), 'act_as': str(act_as_user)}
         self.info = info
         logger.debug("\n{}".format(self.headers), extra = info)
-        if action.lower() == "get":
+        if action.lower() in [ "get", "head", "connect", "trace" ]:
             logger.info("{} {}".format(action, resource), extra = info)
         else:
             logger.warning("{} {}".format(action, resource), extra = info)
