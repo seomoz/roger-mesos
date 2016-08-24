@@ -50,7 +50,10 @@ class AuthHandler(BaseHTTPRequestHandler):
         info = {'clientip': str(client_ip), 'user': str(user), 'act_as': str(act_as_user)}
         self.info = info
         logger.debug("\n{}".format(self.headers), extra = info)
-        logger.info("{} {}".format(action, resource), extra = info)
+        if action.lower() == "get":
+            logger.info("{} {}".format(action, resource), extra = info)
+        else:
+            logger.warning("{} {}".format(action, resource), extra = info)
 
         content_len = int(self.headers.getheader('content-length', 0))
         body = self.rfile.read(content_len)
