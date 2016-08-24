@@ -37,6 +37,13 @@
     - packages
     - chronos
 
+- name: Configure Chronos upstart job
+  template: src=chronos.upstart.conf.j2 dest=/etc/init/chronos.conf owner=root group=root mode=0644
+  become: yes
+  notify: restart chronos
+  tags:
+    - chronos
+
 - name: Configure Chronos commandline flags
   template: src=chronos-flags/{{item}}.j2 dest={{ chronos_args_directory }}/{{item}} owner=root group=root mode=0644
   with_items: chronos_args_files

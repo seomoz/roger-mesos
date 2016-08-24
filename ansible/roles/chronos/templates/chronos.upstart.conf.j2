@@ -1,0 +1,19 @@
+description "Chronos scheduler for Mesos"
+
+start on runlevel [2345]
+stop on runlevel [!2345]
+
+respawn
+respawn limit 10 5
+
+pre-start script
+
+  iptables -C INPUT -p tcp --dport {{ chronos_http_port }} -s localhost -j ACCEPT || iptables -A INPUT -p tcp --dport {{ chronos_http_port }} -s localhost -j ACCEPT
+  {% for host in groups['chronos_servers'] %}
+  iptables -C INPUT -p tcp --dport {{ chronos_http_port }} -s {{ host }} -j ACCEPT || iptables -A INPUT -p tcp --dport {{ chronos_http_port }} -s {{ host }} -j ACCEPT
+  {% endfor %}
+  iptables -C INPUT -p tcp --dport {{ chronos_http_port }} -j REJECT || iptables -A INPUT -p tcp --dport {{ chronos_http_port }} -j REJECT
+
+end script
+
+exec /usr/bin/chronos
