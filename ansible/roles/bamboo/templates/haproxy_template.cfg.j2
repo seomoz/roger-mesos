@@ -141,7 +141,7 @@ backend marathon
 {% if nginx_auth_enable is defined and nginx_auth_enable|bool %}        reqirep ^([^\ :]*)\ /(.*)     \1\ /marathon/\2
 {% endif %}
 {% for host in groups['marathon_servers'] %}
-        server {% if nginx_auth_enable is defined and nginx_auth_enable|bool %}{{ host }}-4080 {{ host }}:4080{% else %}{{ host }}-8080 {{ host }}:8080{% endif %} check inter 10s fall 1 rise 3
+        server {% if nginx_auth_enable is defined and nginx_auth_enable|bool %}{{ host }}-{{ nginx_http_port }} {{ host }}:{{ nginx_http_port }}{% else %}{{ host }}-{{ marathon_http_port }} {{ host }}:{{ marathon_http_port }}{% endif %} check inter 10s fall 1 rise 3
 {% endfor %}
 
 backend chronos
@@ -154,7 +154,7 @@ backend chronos
 {% if nginx_auth_enable is defined and nginx_auth_enable|bool %}        reqirep ^([^\ :]*)\ /(.*)     \1\ /chronos/\2
 {% endif %}
 {% for host in groups['chronos_servers'] %}
-        server {% if nginx_auth_enable is defined and nginx_auth_enable|bool %}{{ host }}-4080 {{ host }}:4080{% else %}{{ host }}-4400 {{ host }}:4400{% endif %} check inter 10s fall 1 rise 3
+        server {% if nginx_auth_enable is defined and nginx_auth_enable|bool %}{{ host }}-{{ nginx_http_port }} {{ host }}:{{ nginx_http_port }}{% else %}{{ host }}-{{ chronos_http_port }} {{ host }}:{{ chronos_http_port }}{% endif %} check inter 10s fall 1 rise 3
 {% endfor %}
 # End Backend section for masters
 {% if additional_haproxy_cfg_content is defined %}{{ additional_haproxy_cfg_content }}{% endif %}

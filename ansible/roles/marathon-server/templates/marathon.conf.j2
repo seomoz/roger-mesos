@@ -13,6 +13,16 @@ env MESOSPHERE_KEYSTORE_PATH={{ ssl_keystore_path }}
 env MESOSPHERE_KEYSTORE_PASS={{ ssl_keystore_pass }}
 {% endif %}
 
+pre-start script
+
+  iptables -C INPUT -p tcp --dport {{ marathon_http_port }} -s localhost -j ACCEPT || iptables -A INPUT -p tcp --dport {{ marathon_http_port }} -s localhost -j ACCEPT
+  {% for host in groups['marathon_servers'] %}
+  iptables -C INPUT -p tcp --dport {{ marathon_http_port }} -s {{ host }} -j ACCEPT || iptables -A INPUT -p tcp --dport {{ marathon_http_port }} -s {{ host }} -j ACCEPT
+  {% endfor %}
+  iptables -C INPUT -p tcp --dport {{ marathon_http_port }} -j REJECT || iptables -A INPUT -p tcp --dport {{ marathon_http_port }} -j REJECT
+
+end script
+
 exec /usr/bin/marathon {% if (ssl_keystore_pass is defined) and not(ssl_keystore_pass | trim =='') %}--disable_http{% endif %}
 
 post-start script
