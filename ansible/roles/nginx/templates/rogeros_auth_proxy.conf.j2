@@ -9,10 +9,75 @@ upstream chronos {
 }
 
 server {
+       listen 80;
+       server_name marathon.* chronos.* marathons.* chronoss.*;
+       rewrite ^ https://$host$request_uri permanent;
+}
+
+server {
+        listen 443 ssl;
+        server_name marathon.* marathons.*;
+
+        ssl on;
+        #access_log      /var/log/upstart/nginx.log;
+        #error_log       /var/log/upstart/nginx.log;
+
+        ssl_certificate         {{ nginx_certs_dir }}/nginx.in.crt;
+        ssl_certificate_key     {{ nginx_certs_dir }}/nginx.in.key;
+        ssl_protocols           TLSv1 TLSv1.1 TLSv1.2;
+        ssl_ciphers             HIGH:!aNULL:!MD5;
+
+
+        #proxy_ssl_trusted_certificate /etc/ssl/certs/trusted_ca_cert.crt;
+
+        #proxy_ssl_verify        on;
+        #proxy_ssl_verify_depth  2;
+        #proxy_ssl_session_reuse on;
+
+        location / {
+              rewrite ^/(.*)$ /marathon/$1 break;
+              proxy_pass http://127.0.0.1:{{ nginx_proxy_port }};
+              proxy_redirect     off;
+              proxy_set_header   Host             $host;
+              proxy_set_header   X-Real-IP        $remote_addr;
+              proxy_set_header   X-Forwarded-For  $proxy_add_x_forwarded_for;
+        }
+}
+
+server {
+        listen 443;
+        server_name chronos.* chronoss.*;
+
+        ssl on;
+        #access_log      /var/log/upstart/nginx.log;
+        #error_log       /var/log/upstart/nginx.log;
+
+        ssl_certificate         {{ nginx_certs_dir }}/nginx.in.crt;
+        ssl_certificate_key     {{ nginx_certs_dir }}/nginx.in.key;
+        ssl_protocols           TLSv1 TLSv1.1 TLSv1.2;
+        ssl_ciphers             HIGH:!aNULL:!MD5;
+
+
+        #proxy_ssl_trusted_certificate /etc/ssl/certs/trusted_ca_cert.crt;
+
+        #proxy_ssl_verify        on;
+        #proxy_ssl_verify_depth  2;
+        #proxy_ssl_session_reuse on;
+
+        location / {
+              rewrite ^/(.*)$ /chronos/$1 break;
+              proxy_pass http://127.0.0.1:{{ nginx_proxy_port }};
+              proxy_redirect     off;
+              proxy_set_header   Host             $host;
+              proxy_set_header   X-Real-IP        $remote_addr;
+              proxy_set_header   X-Forwarded-For  $proxy_add_x_forwarded_for;
+        }
+}
+
+server {
         #listen {{ nginx_proxy_port }} ssl;
         listen {{ nginx_proxy_port }};
-        #error_page 497  https://$host;
-        server_name server.alias;
+        #error_page 497 https://$host$request_uri;
         root html;
         index index.html index.htm;
 
@@ -154,11 +219,11 @@ server {
                 internal;
         }
 
-	location = /auth-proxy {
+        location = /auth-proxy {
                 proxy_pass http://localhost:{{ nginx_aaad_port }};
                 proxy_set_header URI $request_uri;
                 proxy_set_header method $request_method;
                 proxy_pass_request_headers on;
-	}
+        }
 
 }
