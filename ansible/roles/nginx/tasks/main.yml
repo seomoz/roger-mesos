@@ -30,7 +30,7 @@
   - name: configure and install nginx with auth_request module
     command: chdir={{tmp_dir}}/{{nginx_pkg}} {{item}}
     with_items:
-      - ./configure --with-http_auth_request_module
+      - ./configure --with-http_auth_request_module --with-stream --with-stream_ssl_module  
       - make
       - make install
     become: yes
@@ -42,6 +42,7 @@
     file: path={{ item }} state=directory owner=root
     with_items:
       - "{{ nginx_conf_dir }}"
+      - "{{ nginx_certs_dir }}"
       - "{{ nginx_chronos_auth_dir }}"
       - "{{ nginx_chronos_auth_views_dir }}"
       - "{{ nginx_chronos_auth_templates_dir }}"
@@ -169,6 +170,22 @@
 
   - name: symlink proxy config to default site
     file: src="{{nginx_conf_dir}}/sites-available/rogeros_auth_proxy.conf" dest="{{nginx_conf_dir}}/sites-enabled/default" state=link
+    become: yes
+    when: not ansible_check_mode
+    tags:
+      - install
+      - nginx
+
+  - name: symlink nginx certificate key file
+    file: src="{{ certs_dir }}/ssl.in.key" dest="{{nginx_certs_dir}}/nginx.in.key" state=link
+    become: yes
+    when: not ansible_check_mode
+    tags:
+      - install
+      - nginx
+
+  - name: symlink nginx certificate file 
+    file: src="{{ certs_dir }}/ssl.in.crt" dest="{{nginx_certs_dir}}/nginx.in.crt" state=link
     become: yes
     when: not ansible_check_mode
     tags:

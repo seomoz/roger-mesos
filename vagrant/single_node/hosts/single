@@ -4,6 +4,7 @@
 marathon_auth_enable=false
 nginx_auth_enable=true
 marathon_webui_host=localmesos01:4080/marathon
+generate_certs=true
 
 [machines]
 localmesos01 env=test base_data_dir=/data shared_mount=/vagrant

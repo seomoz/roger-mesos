@@ -9,10 +9,28 @@ upstream chronos {
 }
 
 server {
+        #listen {{ nginx_proxy_port }} ssl;
         listen {{ nginx_proxy_port }};
+        #error_page 497  https://$host;
         server_name server.alias;
         root html;
         index index.html index.htm;
+
+        #ssl on;
+        #access_log      /var/log/upstart/nginx.log;
+        #error_log       /var/log/upstart/nginx.log;
+
+        #ssl_certificate         {{ nginx_certs_dir }}/nginx.in.crt;
+        #ssl_certificate_key     {{ nginx_certs_dir }}/nginx.in.key;
+        #ssl_protocols           TLSv1 TLSv1.1 TLSv1.2;
+        #ssl_ciphers             HIGH:!aNULL:!MD5;
+
+
+        #proxy_ssl_trusted_certificate /etc/ssl/certs/trusted_ca_cert.crt;
+
+        #proxy_ssl_verify        on;
+        #proxy_ssl_verify_depth  2;
+        #proxy_ssl_session_reuse on;
 
         location /marathon/ping {
                  auth_basic Off;
