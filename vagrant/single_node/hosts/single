@@ -4,6 +4,8 @@
 marathon_auth_enable=false
 nginx_auth_enable=true
 marathon_webui_host=localmesos01:4080/marathon
+chronos_webui_host=localhost
+chronos_webui_port=4400
 
 [machines]
 localmesos01 env=test base_data_dir=/data shared_mount=/vagrant
@@ -12,13 +14,13 @@ localmesos01 env=test base_data_dir=/data shared_mount=/vagrant
 machines
 
 [masters]
-localmesos01
+localmesos01 is_in_masters=true
 
 [zookeeper]
 localmesos01 zk_id=1
 
 [slaves]
-localmesos01
+localmesos01 is_in_slaves=true
 
 [docker_machines:children]
 slaves
