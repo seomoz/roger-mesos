@@ -20,9 +20,7 @@ def generate_http_basic_auth_file(permissions_file, output_file):
     with htpasswd.Basic(output_file) as htpasswd_file:
         for username in permissions.keys():
             user_data = permissions[username]
-            type = "user"    #Default type
-            if "type" in user_data:
-                type = user_data["type"]
+            type = user_data.get('type', 'user')
             if type == "user":
                 htpasswd_file.add(username, username)
             
