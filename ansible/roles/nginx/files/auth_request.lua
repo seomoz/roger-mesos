@@ -1,7 +1,7 @@
 ngx.req.read_body()
 local data = ngx.req.get_body_data()
 ngx.req.set_header("auth_action", "auth")
-local res = ngx.location.capture("/auth-proxy", {body=data})
+local res = ngx.location.capture("/auth", {body=data})
 
 if res.status == ngx.HTTP_OK then
     ngx.exit(ngx.OK)
@@ -16,4 +16,3 @@ if res.status == ngx.HTTP_UNAUTHORIZED then
 end
 
 ngx.exit(ngx.HTTP_INTERNAL_SERVER_ERROR)
-

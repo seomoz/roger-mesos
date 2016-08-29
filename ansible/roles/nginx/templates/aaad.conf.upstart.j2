@@ -5,6 +5,9 @@ start on runlevel [234]
 stop on runlevel [0156]
 
 chdir {{nginx_conf_dir}}/aaad
-exec python {{nginx_conf_dir}}/aaad/aaad.py {{nginx_conf_dir}}/permissions.yml
-respawn
 
+env HTPASSWD_FILE={{ nginx_conf_dir }}/{{ nginx_basic_auth_file_name }}
+env SECRET_KEY={{ aaadsid_secret_key }}
+env SESSION_TIMEOUT_SECONDS={{ aaadsid_timeout_seconds }}
+exec python {{ nginx_conf_dir }}/aaad/aaad.py {{ nginx_conf_dir }}/permissions.yml
+respawn

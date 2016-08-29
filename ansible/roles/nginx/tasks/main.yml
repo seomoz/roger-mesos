@@ -30,7 +30,7 @@
   - name: configure and install nginx with auth_request module
     command: chdir={{tmp_dir}}/{{nginx_pkg}} {{item}}
     with_items:
-      - ./configure --with-http_auth_request_module --with-stream --with-stream_ssl_module  
+      - ./configure --with-http_auth_request_module --with-stream --with-stream_ssl_module
       - make
       - make install
     become: yes
@@ -46,11 +46,22 @@
       - "{{ nginx_chronos_auth_dir }}"
       - "{{ nginx_chronos_auth_views_dir }}"
       - "{{ nginx_chronos_auth_templates_dir }}"
+      - "{{ nginx_auth_login_dir }}"
     when: nginx_auth_enable is defined and nginx_auth_enable|bool
     become: yes
     tags:
       - install
       - nginx
+      - login
+
+  - name: Synchronize login pages
+    synchronize: src=login/ dest={{ nginx_auth_login_dir }} recursive=yes delete=yes
+    become: yes
+    notify: restart nginx
+    tags:
+      - install
+      - nginx
+      - login
 
   - name: Synchronize Chronos overridden view files
     synchronize: src=chronos_overrides/views/ dest={{ nginx_chronos_auth_views_dir }} recursive=yes delete=yes
@@ -67,6 +78,7 @@
     tags:
       - install
       - nginx
+      - lua
 
   - name: Copy Lua Auth and Filter Response Script file
     copy: src=../files/auth_request_and_filter_response.lua dest={{ nginx_auth_script_dir }} mode=0644
@@ -75,6 +87,7 @@
     tags:
       - install
       - nginx
+      - lua
 
   - name: Copy Chronos overridden template file
     copy: src=chronos_overrides/templates/job_persistence_error.hbs dest={{ nginx_chronos_auth_templates_dir }} mode=0644
@@ -91,6 +104,7 @@
     tags:
       - install
       - nginx
+      - error403
 
   - name: Copy basic auth credentials file to the nginx conf
     copy: src={{ creds_dir }}/{{nginx_basic_auth_file_name}} dest="{{nginx_conf_dir}}/{{nginx_basic_auth_file_name}}"  mode=0644
@@ -127,9 +141,18 @@
       - nginx
       - permissions-sync
 
+  - name: Do a pip install passlib (for aaad htpasswd check during authentication)
+    pip: name=passlib
+    become: yes
+    notify: restart aaad
+    tags:
+      - install
+      - aaad
+
   - name: Copy AAA daemon to nginx conf directory for now
     copy: src=../../../../aaad dest={{nginx_conf_dir}}  mode=0655
     become: yes
+    notify: restart aaad
     tags:
       - install
       - nginx
@@ -159,7 +182,11 @@
       - nginx
 
   - name: copy proxy config to sites-available
-    template: src=rogeros_auth_proxy.conf.j2 dest="{{nginx_conf_dir}}/sites-available/rogeros_auth_proxy.conf" mode=0644
+    template: src={{ item }}.j2 dest="{{nginx_conf_dir}}/sites-available/{{ item }}" mode=0644
+    with_items:
+      - rogeros_auth_proxy.conf
+      - auth_location.conf
+      - login_locations.conf
     become: yes
     notify: restart nginx
     tags:
@@ -184,7 +211,7 @@
       - install
       - nginx
 
-  - name: symlink nginx certificate file 
+  - name: symlink nginx certificate file
     file: src="{{ certs_dir }}/ssl.in.crt" dest="{{nginx_certs_dir}}/nginx.in.crt" state=link
     become: yes
     when: not ansible_check_mode
@@ -219,3 +246,4 @@
     become: yes
     tags:
       - nginx
+      - lua

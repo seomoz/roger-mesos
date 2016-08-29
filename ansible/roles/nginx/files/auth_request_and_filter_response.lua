@@ -1,7 +1,7 @@
 ngx.req.read_body()
 local req_data = ngx.req.get_body_data()
 ngx.req.set_header("auth_action", "auth")
-local req_res = ngx.location.capture("/auth-proxy", {body=req_data})
+local req_res = ngx.location.capture("/auth", {body=req_data})
 
 if req_res.status == ngx.HTTP_FORBIDDEN then
     ngx.exit(req_res.status)
@@ -32,10 +32,10 @@ end
 local data = res.body
 
 ngx.req.set_header("auth_action", "filter_response")
-local resp = ngx.location.capture("/auth-proxy", {body=data})
+local resp = ngx.location.capture("/auth", {body=data})
 
 if resp.status == ngx.HTTP_OK then
-    ngx.header["Content-Type"] = "application/json; qs=2"  
+    ngx.header["Content-Type"] = "application/json; qs=2"
     ngx.header["Pragma"] = "no-cache"
     ngx.header["Expires"] = 0
     ngx.header["Connection"] = "close"
@@ -54,5 +54,3 @@ if resp.status == ngx.HTTP_UNAUTHORIZED then
 end
 
 ngx.exit(resp.status)
-
-

@@ -11,7 +11,16 @@ from SocketServer import ThreadingMixIn
 from authenticators import FileAuthenticator
 from authorizers import FileAuthorizer
 from frameworkUtils import FrameworkUtils
+import cgi
+import urlparse
+from datetime import datetime
+import crypt_utils
+from Cookie import SimpleCookie
 
+session_timeout_seconds = int(os.getenv('SESSION_TIMEOUT_SECONDS', 120))
+secret_key = os.getenv('SECRET_KEY', 'test_key_NOT_a_secret')
+session_id_key = os.getenv('SESSION_ID_KEY', 'aaadsid')
+htpasswd_file = os.getenv('HTPASSWD_FILE', '')
 
 class AuthHTTPServer(ThreadingMixIn, HTTPServer, ):
     pass
@@ -31,33 +40,62 @@ class AuthHandler(BaseHTTPRequestHandler):
         client_ip = self.headers.get('X-Forwarded-For')
         auth_action = self.headers.get("auth_action", "")
 
-        # Carry out Basic Authentication
-        if auth_header is None or not auth_header.lower().strip().startswith('basic '):
-            self.send_response(401)
-            self.end_headers()
-            return False
+        self.info = { 'clientip': str(client_ip) }
 
-        auth_decoded = base64.b64decode(auth_header[6:])
-        user, password = auth_decoded.split(':', 2)
+        user = None
+        password = None
+        act_as_user = None
+        sid = None
+
+        # Read the seesion id cookie if available
+        cookie_str = self.headers.get('Cookie')
+        if cookie_str:
+            cookie_obj = SimpleCookie(cookie_str)
+            sid_morsel = cookie_obj.get(session_id_key, None)
+            if sid_morsel is not None:
+                sid = sid_morsel.value
+                if sid == '0':
+                    sid = None
+            else:
+                sid = None
+        else:
+            sid = None
+
+        if sid: # If session_id_key cookie exists use that
+            decoded = self.decode_sessionid(sid)
+            if not decoded:
+                self.send_response(401)
+                self.send_header('Set-Cookie', '{}=0'.format(session_id_key)) # remove session id cookie
+                self.end_headers()
+                return
+            user = decoded['user']
+            password = decoded['password']
+            act_as_user = decoded['act_as_user']
+        else: # Else attempt Basic Authentication
+            if auth_header is None or not auth_header.lower().strip().startswith('basic '):
+                self.send_response(401)
+                self.send_header('Set-Cookie', '{}=0'.format(session_id_key)) # remove session id cookie
+                self.end_headers()
+                return
+            auth_decoded = base64.b64decode(auth_header[6:])
+            user, password = auth_decoded.split(':', 2)
+            if self.headers.get('act-as-user'):
+                act_as_user = self.headers.get('act-as-user')
+            else:
+                act_as_user = user
+
         ctx['user'] = user
         ctx['pass'] = password
-
-        if self.headers.get('act-as-user'):
-            act_as_user = self.headers.get('act-as-user')
-        else:
-            act_as_user = user
-
-        info = {'clientip': str(client_ip), 'user': str(user), 'act_as': str(act_as_user)}
-        self.info = info
-        logger.debug("\n{}".format(self.headers), extra = info)
+        self.info.update({ 'user': str(user), 'act_as': str(act_as_user) })
+        logger.debug("\n{}".format(self.headers), extra = self.info)
         if action.lower() in [ "get", "head", "connect", "trace" ]:
-            logger.info("{} {}".format(action, resource), extra = info)
+            logger.info("{} {}".format(action, resource), extra = self.info)
         else:
-            logger.warning("{} {}".format(action, resource), extra = info)
+            logger.warning("{} {}".format(action, resource), extra = self.info)
 
         content_len = int(self.headers.getheader('content-length', 0))
         body = self.rfile.read(content_len)
-        logger.debug("\n{}".format(body), extra = info)
+        logger.debug("\n{}".format(body), extra = self.info)
 
         content_type = self.headers.getheader("content-type", "")
 
@@ -67,22 +105,94 @@ class AuthHandler(BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(filtered_response)
             self.wfile.close()
-            return True
+            return
 
         if not self.authenticate_request(user, password):
             self.send_response(401)
+            self.send_header('Set-Cookie', '{}=0'.format(session_id_key)) # remove session id cookie
             self.end_headers()
-            return False
+            return
 
         if not self.authorize_request(user, act_as_user, action, resource, body, content_type):
             self.send_response(403)
+            self.send_header('Set-Cookie', '{}=0'.format(session_id_key)) # remove session id cookie
             self.end_headers()
-            return False
-        
+            return
+
         self.log_message(ctx['action'])  # Continue request processing
         self.send_response(200)
+        if not sid: # if sid was absent, let's add a sid
+            self.send_header('Set-Cookie', '{}={}'.format(session_id_key, self.encode_sessionid(user, password, act_as_user)))
         self.end_headers()
-        return True
+        return
+
+    def do_POST(self):
+        """
+            Adds a session id cookie for a valid user/pass combination.
+            This method adds a Set-Cookie header (from the form data) of the format:
+                'user|pass|actas|validity'
+            After doing this it responds with a 302 to the 'redirect' data in the form
+            or a 200 if no 'redirect' data exists.
+        """
+        ctx = self.ctx
+        ctx['action'] = 'getting basic http authorization header'
+        #auth_header = self.headers.get('Authorization')
+        resource = self.headers.get('URI')
+        action = self.headers.get('method')
+        client_ip = self.headers.get('X-Forwarded-For')
+
+        ctype, pdict = cgi.parse_header(self.headers.getheader('content-type'))
+        if ctype == 'multipart/form-data':
+            postvars = cgi.parse_multipart(self.rfile, pdict)
+        elif ctype == 'application/x-www-form-urlencoded':
+            length = int(self.headers.getheader('content-length'))
+            postvars = urlparse.parse_qs(self.rfile.read(length), keep_blank_values=1)
+        else:
+            postvars = {}
+
+        user = postvars.get('user', '')[0]
+        password = postvars.get('pass', '')[0]
+        act_as_user = postvars.get('act_as', '')[0]
+        if not act_as_user:
+            act_as_user = user
+        redirect = postvars.get('redirect', '')[0]
+        self.info = {'clientip': str(client_ip), 'user': str(user), 'act_as': str(act_as_user), 'redirect': str(redirect)}
+
+        if(redirect):
+            self.send_response(302)
+            self.send_header('Location', redirect)
+        else:
+            self.send_response(200)
+
+        if not self.authenticate_request(user, password):
+            self.send_header('Set-Cookie', '{}=0'.format(session_id_key)) # remove session id cookie
+        else:
+            # create and set a session id cookie
+            self.send_header('Set-Cookie', '{}={}'.format(session_id_key, self.encode_sessionid(user, password, act_as_user)))
+
+        self.end_headers()
+        return
+
+    def encode_sessionid(self, user, passw, actas):
+        sessionid = crypt_utils.encode(secret_key, '{}|{}|{}|{}'.format(user, passw, actas, self.get_now_in_seconds() + session_timeout_seconds))
+        return sessionid
+
+    def decode_sessionid(self, sessionid):
+        decoded = crypt_utils.decode(secret_key, sessionid)
+        [ user, password, actas, valid_until_s ] = decoded.split('|')
+        if not ( user or password or actas or valid_until_s ):
+            return None
+        valid_until = 0
+        try:
+            valid_until = float(valid_until_s)
+        except:
+            return None
+        if self.get_now_in_seconds() > valid_until:
+            return None
+        return { 'user': user, 'password': password, 'act_as_user': actas }
+
+    def get_now_in_seconds(self):
+        return (datetime.utcnow() - datetime(1970, 1, 1)).total_seconds()
 
     def filter_response(self, body, resource, act_as_user, permissions):
         framework = self.frameworkUtils.getFramework(resource)
@@ -97,7 +207,7 @@ class AuthHandler(BaseHTTPRequestHandler):
     def authenticate_request(self, user, password):
         ctx = self.ctx
         try:
-            if not FileAuthenticator(permissions_file).instance.authenticate(user, password):
+            if not FileAuthenticator(htpasswd_file).instance.authenticate(user, password):
                 return False
         except:
             self.auth_failed(ctx)
@@ -134,8 +244,7 @@ class AuthHandler(BaseHTTPRequestHandler):
             msg += ', login="%s"' % ctx['user']
 
         self.log_error(msg)
-        self.send_response(403)
-        self.end_headers()
+        return
 
     def log_message(self, format, *args):
         logger.debug("{}".format(args), extra = self.info)

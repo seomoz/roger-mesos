@@ -26,6 +26,7 @@ nginx_chronos_auth_dir: /usr/local/openresty/nginx/chronos/auth
 nginx_chronos_auth_views_dir: /usr/local/openresty/nginx/chronos/auth/chronos/scripts/views/
 nginx_chronos_auth_templates_dir: /usr/local/openresty/nginx/chronos/auth/chronos/scripts/templates/
 nginx_auth_script_dir: /usr/local/openresty/nginx/
+nginx_auth_login_dir: /usr/local/openresty/nginx/login
 
 generate_basic_auth_file: true
 
