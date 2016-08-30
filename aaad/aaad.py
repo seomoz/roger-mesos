@@ -56,10 +56,6 @@ class AuthHandler(BaseHTTPRequestHandler):
                 sid = sid_morsel.value
                 if sid == '0':
                     sid = None
-            else:
-                sid = None
-        else:
-            sid = None
 
         if sid: # If session_id_key cookie exists use that
             decoded = self.decode_sessionid(sid)
@@ -128,15 +124,14 @@ class AuthHandler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         """
-            Adds a session id cookie for a valid user/pass combination.
+            Adds a session id cookie for a valid user/pass/actas combination.
             This method adds a Set-Cookie header (from the form data) of the format:
                 'user|pass|actas|validity'
             After doing this it responds with a 302 to the 'redirect' data in the form
             or a 200 if no 'redirect' data exists.
         """
         ctx = self.ctx
-        ctx['action'] = 'getting basic http authorization header'
-        #auth_header = self.headers.get('Authorization')
+        ctx['action'] = 'creating new session'
         resource = self.headers.get('URI')
         action = self.headers.get('method')
         client_ip = self.headers.get('X-Forwarded-For')
@@ -164,13 +159,18 @@ class AuthHandler(BaseHTTPRequestHandler):
         else:
             self.send_response(200)
 
-        if not self.authenticate_request(user, password):
-            self.send_header('Set-Cookie', '{}=0'.format(session_id_key)) # remove session id cookie
-        else:
+        message = ''
+        file_authorizer = FileAuthorizer(permissions_file).instance
+        if self.authenticate_request(user, password) and act_as_user in file_authorizer.get_act_as_list(user):
             # create and set a session id cookie
             self.send_header('Set-Cookie', '{}={}'.format(session_id_key, self.encode_sessionid(user, password, act_as_user)))
+            message = 'Authenticated.'
+        else:
+            self.send_header('Set-Cookie', '{}=0'.format(session_id_key)) # remove session id cookie
+            message = 'Authentication Failed.'
 
         self.end_headers()
+        self.wfile.write(message)
         return
 
     def encode_sessionid(self, user, passw, actas):
