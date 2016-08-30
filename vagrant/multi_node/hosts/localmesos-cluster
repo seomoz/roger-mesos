@@ -1,8 +1,11 @@
 #inventory file for local multi-node cluster environment
 
 [machines:vars]
-marathon_auth_enable=true
+marathon_auth_enable=false
 nginx_auth_enable=true
+marathon_webui_host=localmesos02:4080/marathon
+generate_certs=true
+nginx_listen_on_host=0.0.0.0
 
 [machines]
 localmesos[02:04] env=test base_data_dir=/data shared_mount=/vagrant

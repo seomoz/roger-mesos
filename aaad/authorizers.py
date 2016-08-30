@@ -31,17 +31,17 @@ class FileAuthorizer:
                                 except (Exception) as e:
                                     logger.error("Request body is an invalid json")
                                     return False
-                
+
                                 attribute_rules = item[pattern]
                                 valid = self.validate_request_body(attribute_rules, template_data)
-                                return valid 
+                                return valid
                             else:
                                 return False
 
                         attribute_rules = item[pattern]
                         valid = self.validate_request_body(attribute_rules, template_data)
                         return valid
-                        
+
             return False
 
         def validate_request_body(self, attribute_rules, body):
@@ -66,6 +66,12 @@ class FileAuthorizer:
 
             return True
 
+        def get_act_as_list(self, user):
+            allowed_users_list = []
+            if user in self.data.keys():
+                utils.get_merged_data(user, allowed_users_list, [], self.data, '')
+            return allowed_users_list
+
         def authorize(self, user, act_as, resource, logging, info, data, content_type, action = "GET"):
             logger = logging.getLogger("Authorization")
             if not user or not act_as or not resource:
@@ -73,15 +79,14 @@ class FileAuthorizer:
 
             if user not in self.data.keys() or act_as not in self.data.keys():
                 logger.warning("Invalid user", extra = info)
-                return False            
+                return False
 
             if user != act_as:
                 if 'can_act_as' not in self.data[user]:
                     logger.warning("User act as failed", extra = info)
                     return False
 
-            allowed_users_list = []
-            utils.get_merged_data(user, allowed_users_list, [], self.data, '')
+            allowed_users_list = self.get_act_as_list(user)
 
             if act_as not in allowed_users_list:
                 logger.warning("User act as failed", extra = info)
@@ -90,7 +95,7 @@ class FileAuthorizer:
             allowed_users_list = []
             allowed_actions = []
             if 'action' in self.data[act_as] and self.data[act_as]['action'] != None:
-                for item in self.data[user]['action'][action]:
+                for item in self.data[act_as]['action'][action]:
                     temp_item = {}
                     if type(item) == str:
                         temp_item = {}
@@ -117,4 +122,3 @@ class FileAuthorizer:
             FileAuthorizer.instance = FileAuthorizer.__FileAuthorizer(filename)
         else:
             FileAuthorizer.instance.filename = filename
-

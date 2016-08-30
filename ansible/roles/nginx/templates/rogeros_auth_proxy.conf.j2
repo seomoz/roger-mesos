@@ -1,5 +1,3 @@
-# another virtual host using mix of IP-, name-, and port-based configuration
-#
 upstream marathon {
         server localhost:8080;
 }
@@ -8,6 +6,192 @@ upstream chronos {
         server localhost:4400;
 }
 
+server {
+       listen 80;
+       server_name marathon.* chronos.* marathons.* chronoss.*;
+       rewrite ^ https://$host$request_uri permanent;
+}
+
+server {
+        listen 443 ssl;
+        server_name marathon.* marathons.*;
+
+        ssl on;
+        #access_log      /var/log/upstart/nginx.log;
+        #error_log       /var/log/upstart/nginx.log;
+
+        ssl_certificate         {{ nginx_certs_dir }}/nginx.in.crt;
+        ssl_certificate_key     {{ nginx_certs_dir }}/nginx.in.key;
+        ssl_protocols           TLSv1 TLSv1.1 TLSv1.2;
+        ssl_ciphers             HIGH:!aNULL:!MD5;
+
+
+        #proxy_ssl_trusted_certificate /etc/ssl/certs/trusted_ca_cert.crt;
+
+        #proxy_ssl_verify        on;
+        #proxy_ssl_verify_depth  2;
+        #proxy_ssl_session_reuse on;
+
+        location / {
+              proxy_pass http://{{ nginx_listen_on_host|default('127.0.0.1', true) }}:7777/marathon$request_uri;
+              proxy_redirect     off;
+              proxy_set_header   Host             $host;
+              proxy_set_header   X-Real-IP        $remote_addr;
+              proxy_set_header   X-Forwarded-For  $proxy_add_x_forwarded_for;
+        }
+
+        include {{ nginx_conf_dir }}/sites-available/auth_location.conf;
+        include {{ nginx_conf_dir }}/sites-available/login_locations.conf;
+}
+
+server {
+        listen 443;
+        server_name chronos.* chronoss.*;
+
+        ssl on;
+        #access_log      /var/log/upstart/nginx.log;
+        #error_log       /var/log/upstart/nginx.log;
+
+        ssl_certificate         {{ nginx_certs_dir }}/nginx.in.crt;
+        ssl_certificate_key     {{ nginx_certs_dir }}/nginx.in.key;
+        ssl_protocols           TLSv1 TLSv1.1 TLSv1.2;
+        ssl_ciphers             HIGH:!aNULL:!MD5;
+
+
+        #proxy_ssl_trusted_certificate /etc/ssl/certs/trusted_ca_cert.crt;
+
+        #proxy_ssl_verify        on;
+        #proxy_ssl_verify_depth  2;
+        #proxy_ssl_session_reuse on;
+
+        location / {
+              proxy_pass http://{{ nginx_listen_on_host|default('127.0.0.1', true) }}:7777/chronos$request_uri;
+              proxy_set_header   Host             $host;
+              proxy_set_header   X-Real-IP        $remote_addr;
+              proxy_set_header   X-Forwarded-For  $proxy_add_x_forwarded_for;
+        }
+
+        include {{ nginx_conf_dir }}/sites-available/auth_location.conf;
+        include {{ nginx_conf_dir }}/sites-available/login_locations.conf;
+}
+
+server {
+        listen {{ nginx_listen_on_host|default('127.0.0.1', true) }}:7777;
+
+        location /marathon/ping {
+                 auth_basic Off;
+                 proxy_pass http://marathon/ping;
+        }
+
+        location /marathon/metrics {
+                auth_basic Off;
+                proxy_pass http://marathon/metrics;
+        }
+
+        location /marathon/ {
+                error_page 401 @error401;
+                access_by_lua_file '/usr/local/openresty/nginx/auth_request.lua';
+                proxy_pass http://marathon/;
+                add_header act-as-user $http_x_upstream_act_as_user;
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Scheme $scheme;
+                proxy_set_header Authorization $http_authorization;
+                proxy_pass_header Authorization;
+        }
+
+        location = /marathon_internal {
+                proxy_set_header Host $host;
+                proxy_pass http://marathon/$marathon_endpoint;
+                internal;
+        }
+
+        location = /marathon/v2/apps {
+                error_page 401 @error401;
+                set $auth_action '';
+                set $marathon_endpoint 'v2/apps';
+                set $location_endpoint '/marathon_internal';
+                lua_use_default_type off;
+                access_by_lua_file '/usr/local/openresty/nginx/auth_request_and_filter_response.lua';
+        }
+
+        location = /marathon/v2/groups {
+                error_page 401 @error401;
+                set $auth_action '';
+                set $marathon_endpoint 'v2/groups';
+                set $location_endpoint '/marathon_internal';
+                lua_use_default_type off;
+                access_by_lua_file '/usr/local/openresty/nginx/auth_request_and_filter_response.lua';
+
+        }
+
+        location = /chronos/scripts/views/job_detail_header_view.js {
+                auth_basic Off;
+                root /usr/local/openresty/nginx/chronos/auth;
+        }
+
+        location = /chronos/scripts/templates/job_persistence_error.hbs {
+                auth_basic Off;
+                root /usr/local/openresty/nginx/chronos/auth;
+        }
+
+        location = /chronos/scripts/views/job_detail_view.js {
+                auth_basic Off;
+                root /usr/local/openresty/nginx/chronos/auth;
+        }
+
+        location = /chronos_internal {
+                proxy_set_header Host $host;
+                proxy_pass http://chronos/$chronos_endpoint;
+                internal;
+        }
+
+        location = /chronos/scheduler/jobs {
+                error_page 401 @error401;
+                set $chronos_endpoint 'scheduler/jobs';
+                set $location_endpoint '/chronos_internal';
+                lua_use_default_type off;
+                access_by_lua_file '/usr/local/openresty/nginx/auth_request_and_filter_response.lua';
+        }
+
+        location /chronos/ping {
+                 auth_basic Off;
+                 proxy_pass http://chronos/ping;
+        }
+
+        location /chronos/metrics {
+                 auth_basic Off;
+                 proxy_pass http://chronos/metrics;
+        }
+
+        location /chronos/ {
+                error_page 401 @error401;
+                access_by_lua_file '/usr/local/openresty/nginx/auth_request.lua';
+                proxy_pass http://chronos/;
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Scheme $scheme;
+                add_header act-as-user $http_x_upstream_act_as_user;
+                proxy_set_header Authorization $http_authorization;
+                proxy_pass_header Authorization;
+                error_page 403 /403;
+        }
+
+        location = /403 {
+                root {{ nginx_chronos_auth_dir }};
+                internal;
+        }
+
+        location @error401 {
+                rewrite ^/.*/(.*)$ $scheme://$host/login redirect;
+        }
+
+        include {{ nginx_conf_dir }}/sites-available/auth_location.conf;
+}
+
+#### The server block below needs to be REMOVED once we have made the dns updates for marathon|chronos.*.roger ####
 server {
         listen {{ nginx_proxy_port }};
         server_name server.alias;
@@ -32,16 +216,14 @@ server {
 
         location /chronos/scripts/templates/job_persistence_error.hbs {
 
-            auth_basic Off;
-            root /usr/local/openresty/nginx/chronos/auth;
+                auth_basic Off;
+                root /usr/local/openresty/nginx/chronos/auth;
         }
 
         location /chronos/scripts/views/job_detail_view.js {
-
-            auth_basic Off;
-            root /usr/local/openresty/nginx/chronos/auth;
+                auth_basic Off;
+                root /usr/local/openresty/nginx/chronos/auth;
         }
-
 
         location /marathon/ {
                 satisfy all;
@@ -128,7 +310,6 @@ server {
                 proxy_set_header Authorization $http_authorization;
                 proxy_pass_header Authorization;
                 error_page 403 /403;
-
         }
 
         location = /403 {
@@ -136,11 +317,10 @@ server {
                 internal;
         }
 
-	location = /auth-proxy {
+        location = /auth {
                 proxy_pass http://localhost:{{ nginx_aaad_port }};
                 proxy_set_header URI $request_uri;
                 proxy_set_header method $request_method;
                 proxy_pass_request_headers on;
-	}
-
+        }
 }
