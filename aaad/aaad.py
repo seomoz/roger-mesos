@@ -20,6 +20,7 @@ from Cookie import SimpleCookie
 session_timeout_seconds = int(os.getenv('SESSION_TIMEOUT_SECONDS', 120))
 secret_key = os.getenv('SECRET_KEY', 'test_key_NOT_a_secret')
 session_id_key = os.getenv('SESSION_ID_KEY', 'aaadsid')
+session_id_domain = os.getenv('SESSION_ID_DOMAIN', None)
 htpasswd_file = os.getenv('HTPASSWD_FILE', '')
 
 class AuthHTTPServer(ThreadingMixIn, HTTPServer, ):
@@ -61,7 +62,7 @@ class AuthHandler(BaseHTTPRequestHandler):
             decoded = self.decode_sessionid(sid)
             if not decoded:
                 self.send_response(401)
-                self.send_header('Set-Cookie', '{}=0'.format(session_id_key)) # remove session id cookie
+                self.send_header('Set-Cookie', '{}=0; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;'.format(session_id_key)) # remove session id cookie
                 self.end_headers()
                 return
             user = decoded['user']
@@ -70,7 +71,7 @@ class AuthHandler(BaseHTTPRequestHandler):
         else: # Else attempt Basic Authentication
             if auth_header is None or not auth_header.lower().strip().startswith('basic '):
                 self.send_response(401)
-                self.send_header('Set-Cookie', '{}=0'.format(session_id_key)) # remove session id cookie
+                self.send_header('Set-Cookie', '{}=0; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;'.format(session_id_key)) # remove session id cookie
                 self.end_headers()
                 return
             auth_decoded = base64.b64decode(auth_header[6:])
@@ -105,13 +106,13 @@ class AuthHandler(BaseHTTPRequestHandler):
 
         if not self.authenticate_request(user, password):
             self.send_response(401)
-            self.send_header('Set-Cookie', '{}=0'.format(session_id_key)) # remove session id cookie
+            self.send_header('Set-Cookie', '{}=0; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;'.format(session_id_key)) # remove session id cookie
             self.end_headers()
             return
 
         if not self.authorize_request(user, act_as_user, action, resource, body, content_type):
             self.send_response(403)
-            self.send_header('Set-Cookie', '{}=0'.format(session_id_key)) # remove session id cookie
+            self.send_header('Set-Cookie', '{}=0; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;'.format(session_id_key)) # remove session id cookie
             self.end_headers()
             return
 
@@ -163,10 +164,13 @@ class AuthHandler(BaseHTTPRequestHandler):
         file_authorizer = FileAuthorizer(permissions_file).instance
         if self.authenticate_request(user, password) and act_as_user in file_authorizer.get_act_as_list(user):
             # create and set a session id cookie
-            self.send_header('Set-Cookie', '{}={}'.format(session_id_key, self.encode_sessionid(user, password, act_as_user)))
+            cookie_domain = ''
+            if session_id_domain:
+                cookie_domain = '; Domain={}'.format(session_id_domain)
+            self.send_header('Set-Cookie', '{}={}; Path=/; Secure; HttpOnly{}'.format(session_id_key, self.encode_sessionid(user, password, act_as_user), cookie_domain))
             message = 'Authenticated.'
         else:
-            self.send_header('Set-Cookie', '{}=0'.format(session_id_key)) # remove session id cookie
+            self.send_header('Set-Cookie', '{}=0; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;'.format(session_id_key)) # remove session id cookie
             message = 'Authentication Failed.'
 
         self.end_headers()
