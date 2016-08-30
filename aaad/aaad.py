@@ -214,7 +214,7 @@ class AuthHandler(BaseHTTPRequestHandler):
             if not FileAuthenticator(htpasswd_file).instance.authenticate(user, password):
                 return False
         except:
-            self.auth_failed(ctx)
+            logger.error("Error while calling Authenticator")
             return False
 
         return True
@@ -227,34 +227,12 @@ class AuthHandler(BaseHTTPRequestHandler):
                 return False
 
         except:
-            self.auth_failed(ctx)
+            logger.error("Error while calling Authorizer")
             return False
         return True
 
-    def auth_failed(self, ctx, errmsg=None):
-        msg = 'Error while ' + ctx['action']
-        if errmsg:
-            msg += ': ' + errmsg
-
-        ex, value, trace = sys.exc_info()
-
-        if ex != None:
-            msg += ": " + str(value)
-
-        if ctx.get('url'):
-            msg += ', server="%s"' % ctx['url']
-
-        if ctx.get('user'):
-            msg += ', login="%s"' % ctx['user']
-
-        self.log_error(msg)
-        return
-
     def log_message(self, format, *args):
         logger.debug("{}".format(args), extra = self.info)
-
-    def log_error(self, format, *args):
-        self.log_message(format, *args)
 
 def exit_handler(signal, frame):
     global Listen

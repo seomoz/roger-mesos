@@ -3,6 +3,7 @@
 [machines:vars]
 marathon_auth_enable=false
 nginx_auth_enable=true
+#nginx_listen_on_host=0.0.0.0
 marathon_webui_host=localmesos01:4080/marathon
 generate_certs=true
 chronos_webui_host=localhost

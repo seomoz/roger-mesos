@@ -33,7 +33,7 @@ server {
         #proxy_ssl_session_reuse on;
 
         location / {
-              proxy_pass http://127.0.0.1:7777/marathon$request_uri;
+              proxy_pass http://{{ nginx_listen_on_host|default('127.0.0.1', true) }}:7777/marathon$request_uri;
               proxy_redirect     off;
               proxy_set_header   Host             $host;
               proxy_set_header   X-Real-IP        $remote_addr;
@@ -65,7 +65,7 @@ server {
         #proxy_ssl_session_reuse on;
 
         location / {
-              proxy_pass http://127.0.0.1:7777/chronos$request_uri;
+              proxy_pass http://{{ nginx_listen_on_host|default('127.0.0.1', true) }}:7777/chronos$request_uri;
               proxy_set_header   Host             $host;
               proxy_set_header   X-Real-IP        $remote_addr;
               proxy_set_header   X-Forwarded-For  $proxy_add_x_forwarded_for;
@@ -76,7 +76,7 @@ server {
 }
 
 server {
-        listen 127.0.0.1:7777;
+        listen {{ nginx_listen_on_host|default('127.0.0.1', true) }}:7777;
 
         location /marathon/ping {
                  auth_basic Off;
