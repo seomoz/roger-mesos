@@ -3,3 +3,10 @@
   become: yes
   tags:
    - bamboo
+
+- name: restart rsylog
+  service: name=rsyslog state=restarted
+  become: yes
+  tags:
+   - ryslog
+   - haproxy-logs

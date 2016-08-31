@@ -6,9 +6,11 @@
     - "{{ bamboo_conf_dir }}"
     - "{{ bamboo_log_dir }}"
     - "{{ bamboo_tmp_dir }}"
+    - "{{ haproxy_log_dir }}"
   become: yes
   tags:
     - bamboo
+    - haproxy-logs
 
 - name: Copy bamboo deb file
   copy: src="large_files/bamboo_{{ bamboo_version }}-1_all.deb" dest={{ bamboo_tmp_dir }}
@@ -49,6 +51,14 @@
   notify: restart bamboo
   tags:
     - bamboo
+
+- name: Update the owner and group of HAProxy log dir
+  file: path={{ haproxy_log_dir }} owner=syslog group=syslog mode=0755
+  become: yes
+  notify: restart rsyslog
+  tags:
+    - bamboo
+    - haproxy-logs
 
 - name: Configure upstart
   template: src=upstart.j2 dest=/etc/init/bamboo-server.conf
@@ -103,6 +113,22 @@
   tags:
     - bamboo
     - etc_hosts
+
+- name: Copy Haproxy rsyslog config file
+  template: src="haproxy_rsyslog.j2" dest=/etc/rsyslog.d/49-haproxy.conf
+  become: yes
+  notify: restart rsyslog
+  tags:
+   - bamboo
+   - haproxy-logs
+
+- name: Copy Haproxy logrotate config file
+  template: src="haproxy_logrotate.j2" dest=/etc/logrotate.d/haproxy
+  become: yes
+  notify: restart rsyslog
+  tags:
+   - bamboo
+   - haproxy-logs
 
 - name: Enable bamboo service to start at boot
   service: name=bamboo-server enabled=yes
