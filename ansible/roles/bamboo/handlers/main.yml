@@ -8,5 +8,4 @@
   service: name=rsyslog state=restarted
   become: yes
   tags:
-   - ryslog
    - haproxy-logs
