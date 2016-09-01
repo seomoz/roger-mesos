@@ -72,6 +72,23 @@ class FileAuthorizer:
                 utils.get_merged_data(user, allowed_users_list, [], self.data, '')
             return allowed_users_list
 
+        def get_user_list(self, type=None):
+            if not type:
+                return self.data.keys()
+            users = []
+            for key, data in self.data.items():
+                if data.get('type', 'user') == type:
+                    users.append(key)
+            return users
+
+        def get_canactas_list(self, user):
+            actas_users = []
+            user_data = self.data.get(user)
+            print user_data
+            if user_data:
+                actas_users = user_data.get('can_act_as', [])
+            return actas_users + [user]
+
         def authorize(self, user, act_as, resource, logging, info, data, content_type, action = "GET"):
             logger = logging.getLogger("Authorization")
             if not user or not act_as or not resource:
