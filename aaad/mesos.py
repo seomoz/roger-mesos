@@ -16,13 +16,10 @@ def get_tasks_counts(master_url):
     return counts
 
 def get_tasks(master_url):
-    print("In get tasks")
     tasks = {}
     limit = int(sum(get_tasks_counts(master_url).values()))
     url = '{}/tasks?limit={}'.format(master_url, limit)
-    print("Url:{}".format(url))
     resp = requests.get('{}'.format(url))
-    print("Resp:{}".format(resp))
     data = resp.json()
     for task in data['tasks']:
         if task['state'] in ['TASK_RUNNING', 'TASK_STAGING', 'TASK_STARTING']:
