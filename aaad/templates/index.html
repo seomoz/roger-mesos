@@ -34,48 +34,20 @@
         minLength: 2
         });
     });
-    $(function() {
-        $( "#act_as" ).autocomplete({
-        source: function (request, response) {
-              $.ajax({
-                  url: $SCRIPT_ROOT + '/api/users/' + $( "#user" ).val() + '/can_act_as',
-                  dataType: "json",
-                  data:{
-                      term: request.term,
-                  },
-                  success: function (data){
-                      response(data);
-                  }
-              });
-          },
-          minLength: 0
-        });
-    });
     </script>
   </head>
   <body>
     <div class="formarea">
       <div class="heading">Welcome to RogerOS</div></p>
       {% if current_user.is_authenticated %}
-      <p>Hello <b>{{ current_user.get_username() }}</b>!</p>
-      {% if current_user.user != current_user.get_actas() %}<p>You are acting as <b>{{ current_user.get_actas() }}</b>.</p>{% endif %}
-      <p>Proceed to: <p>
-        <ul>
-          <li><a href="{{ url_for ('marathon') }}">Marathon</a></li>
-          <li><a href="{{ url_for ('chronos') }}">Chronos</a></li>
-        </ul>
-      <p>You may also <a href="{{ url_for ('logout') }}">log out<a>.</p>
+      <p>Hello <b>{{ current_user.get_username() }}</b> (<a href="{{ url_for ('logout') }}">log out<a>)!</p>
       {% else %}
-    <form action={{ url_for('login') }} method="post">
-
+      <form action={{ url_for('login') }} method="post">
         <div class="ui-widget">
             <input type="text" id="user" name="user" title="Your user name (usually firstname.lastname)" placeholder="user name" autofocus/>
         </div>
         <div>
             <input type="password" id="pass" name="pass" title="Your password" placeholder="password"/>
-        </div>
-        <div class="ui-widget">
-            <input type="text" id="act_as" name="act_as" title="Team or user to act as for application and resource access" placeholder="act as"/>
         </div>
         <div>
             <input type="hidden" id="redirect" name="redirect" value=""/>
@@ -83,9 +55,49 @@
         <div class="button">
             <button id="submit" type="submit">Log in</button>
         </div>
-    </form>
-    <script type="text/javascript">document.getElementById('redirect').value = getParameterByName('redirect_url');</script>
-    {% endif %}
+      </form>
+      {% endif %}
+      {% if current_user.is_authenticated and not request.cookies.get('actas') %}
+      <form action={{ url_for('login') }} method="post">
+        <div class="ui-widget">
+            <input type="text" id="act_as" name="act_as" title="Team or user to act as for application and resource access" placeholder="act as" autofocus/>
+        </div>
+        <div>
+            <input type="hidden" id="redirect" name="redirect" value=""/>
+        </div>
+        <div class="button">
+            <button id="submit" type="submit">Log in</button>
+        </div>
+        <script type="text/javascript">document.getElementById('redirect').value = getParameterByName('redirect_url');</script>
+        <script type="text/javascript">
+        $(function() {
+            $( "#act_as" ).autocomplete({
+            source: function (request, response) {
+                  $.ajax({
+                      url: $SCRIPT_ROOT + '/api/users/' + '{{ current_user.get_username() }}' + '/can_act_as',
+                      dataType: "json",
+                      data:{
+                          contains: request.term,
+                      },
+                      success: function (data){
+                          response(data);
+                      }
+                  });
+              },
+              minLength: 0
+            });
+        });</script>
+      </form>
+      {% endif %}
+      {% if current_user.is_authenticated and request.cookies.get('actas') %}
+      <p> You're acting as <b>{{ request.cookies.get('actas') }}</b>.</p>
+      <p>Proceed to: <p>
+        <ul>
+          <li><a href="{{ url_for ('marathon') }}">Marathon</a></li>
+          <li><a href="{{ url_for ('chronos') }}">Chronos</a></li>
+        </ul>
+      <p>You may also <a href="{{ url_for ('logout') }}">log out<a>.</p>
+      {% endif %}
   </div>
   </body>
 </html>

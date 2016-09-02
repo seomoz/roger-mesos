@@ -1,6 +1,6 @@
-from flask import Flask, jsonify, request, render_template, redirect
+from flask import Flask, jsonify, request, render_template, redirect, make_response
 from flask_restful import abort, Api, Resource
-from flask_login import login_user, logout_user, login_required
+from flask_login import login_user, logout_user, login_required, current_user
 from webargs import fields
 from webargs.flaskparser import use_args
 import os
@@ -34,27 +34,43 @@ def chronos():
     # authenticate
     return render_template('index.html')
 
-
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    resp = make_response(render_template('index.html'))
     if request.method == 'POST':
-        username = request.form['user']
-        actas = request.form['act_as']
-        passw = request.form['pass']
-        if username and actas and passw:
-            if (FileAuthenticator().instance.authenticate(username, passw) and
-                actas in FileAuthorizer().instance.get_canactas_list(username)):
-                session_user = SessionUser.get([username, actas])
+        resp = redirect(request.args.get('redirect') or request.args.get('next') or '/')
+        username = request.form.get('user')
+        passw = request.form.get('pass')
+        actas = None
+        if username and passw:
+            if (FileAuthenticator().instance.authenticate(username, passw)):
+                session_user = SessionUser.get(username)
                 if session_user:
                     login_user(session_user, remember=True)
-                    return redirect(request.args.get('redirect') or request.args.get('next') or '/')
+                    # if the user can act as only one user, auto update actas
+                    actaslist = FileAuthorizer().instance.get_canactas_list(current_user.get_username())
+                    if len(actaslist) == 1:
+                        actas = actaslist[0]
+        else:
+            actas = request.form.get('act_as')
 
-    return render_template('index.html', **locals())
+        if not actas: # try to get from request cookie
+            actas = request.cookies.get("actas")
+        if not actas: # try to get from header
+            actas = request.headers.get("act_as_user")
+
+        if (actas and current_user.is_authenticated and
+            actas in FileAuthorizer().instance.get_canactas_list(current_user.get_username())):
+            resp.set_cookie('actas', actas)
+
+    return resp
 
 @app.route('/logout')
 def logout():
     logout_user()
-    return redirect('/')
+    resp = make_response(render_template('index.html'))
+    resp.set_cookie('actas', '', expires=0)
+    return resp
 
 @login_manager.unauthorized_handler
 def unauthorized_callback():

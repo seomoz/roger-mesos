@@ -1,5 +1,6 @@
 from flask import Flask, jsonify
 from flask_restful import reqparse, Resource
+from flask_login import login_required
 from webargs import fields
 from webargs.flaskparser import use_args
 
@@ -29,7 +30,19 @@ class Groups(Resource):
         return jsonify(groups)
 
 class CanActAsUsers(Resource):
-    def get(self, user):
+    get_args = {
+        'contains': fields.Str(required=False)
+    }
+    @use_args(get_args)
+    @login_required
+    def get(self, args, user):
         file_authorizer = FileAuthorizer().instance
         actas_users = file_authorizer.get_canactas_list(user)
-        return jsonify(actas_users)
+        contains = args.get('contains')
+        if not contains:
+            return jsonify(actas_users)
+        filtered_users = []
+        for actas_user in actas_users:
+            if contains in actas_user:
+                filtered_users.append(actas_user)
+        return jsonify(filtered_users)
