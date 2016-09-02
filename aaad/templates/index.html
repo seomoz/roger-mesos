@@ -1,51 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.0/themes/base/jquery-ui.css">
+      <link rel="stylesheet" href="/static/style.css">
+      <link rel="stylesheet" href="//code.jquery.com/ui/1.12.0/themes/base/jquery-ui.css">
       <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
       <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
       <script src="https://code.jquery.com/ui/1.12.0/jquery-ui.js"></script>    <meta charset="utf-8">
     <title>Log in</title>
-    <style>
-      .heading {
-        align: center;
-        font: 1em sans-serif;
-        padding-left: 70px;
-        }
-      form {
-        margin: 0 auto;
-        width: 300px;
-        padding: 1em;
-        border: 1px solid #CCC;
-        border-radius: 1em;
-      }
-      div + div {
-        margin-top: 1em;
-      }
-      label {
-        display: inline-block;
-        width: 90px;
-        text-align: right;
-      }
-      input, textarea, button {
-        font: 1em sans-serif;
-        width: 300px;
-        -moz-box-sizing: border-box;
-             box-sizing: border-box;
-        border: 1px solid #999;
-      }
-      input:focus, textarea:focus {
-        border-color: #000;
-      }
-      textarea {
-        vertical-align: top;
-        height: 5em;
-        resize: vertical;
-      }
-      .button {
-        font: 1em sans-serif;
-      }
-    </style>
     <script type="text/javascript">
     function getParameterByName(name, url) {
       if (!url) url = window.location.href;
@@ -93,8 +54,20 @@
     </script>
   </head>
   <body>
+    <div class="formarea">
+      <div class="heading">Welcome to RogerOS</div></p>
+      {% if current_user.is_authenticated %}
+      <p>Hello <b>{{ current_user.get_username() }}</b>!</p>
+      {% if current_user.user != current_user.get_actas() %}<p>You are acting as <b>{{ current_user.get_actas() }}</b>.</p>{% endif %}
+      <p>Proceed to: <p>
+        <ul>
+          <li><a href="{{ url_for ('marathon') }}">Marathon</a></li>
+          <li><a href="{{ url_for ('chronos') }}">Chronos</a></li>
+        </ul>
+      <p>You may also <a href="{{ url_for ('logout') }}">log out<a>.</p>
+      {% else %}
     <form action={{ url_for('login') }} method="post">
-        <div class="heading">Welcome to RogerOS</div>
+
         <div class="ui-widget">
             <input type="text" id="user" name="user" title="Your user name (usually firstname.lastname)" placeholder="user name" autofocus/>
         </div>
@@ -112,5 +85,7 @@
         </div>
     </form>
     <script type="text/javascript">document.getElementById('redirect').value = getParameterByName('redirect_url');</script>
+    {% endif %}
+  </div>
   </body>
 </html>

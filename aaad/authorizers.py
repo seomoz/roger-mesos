@@ -4,6 +4,8 @@ import json
 import os
 import sys
 
+permissions_file = os.getenv('PERMISSIONS_FILE')
+
 class FileAuthorizer:
     class __FileAuthorizer:
 
@@ -66,28 +68,11 @@ class FileAuthorizer:
 
             return True
 
-        def get_act_as_list(self, user):
+        def __get_act_as_list(self, user):
             allowed_users_list = []
             if user in self.data.keys():
                 utils.get_merged_data(user, allowed_users_list, [], self.data, '')
             return allowed_users_list
-
-        def get_user_list(self, type=None):
-            if not type:
-                return self.data.keys()
-            users = []
-            for key, data in self.data.items():
-                if data.get('type', 'user') == type:
-                    users.append(key)
-            return users
-
-        def get_canactas_list(self, user):
-            actas_users = []
-            user_data = self.data.get(user)
-            print user_data
-            if user_data:
-                actas_users = user_data.get('can_act_as', [])
-            return actas_users + [user]
 
         def authorize(self, user, act_as, resource, logging, info, data, content_type, action = "GET"):
             logger = logging.getLogger("Authorization")
@@ -103,7 +88,7 @@ class FileAuthorizer:
                     logger.warning("User act as failed", extra = info)
                     return False
 
-            allowed_users_list = self.get_act_as_list(user)
+            allowed_users_list = self.__get_act_as_list(user)
 
             if act_as not in allowed_users_list:
                 logger.warning("User act as failed", extra = info)
@@ -133,9 +118,29 @@ class FileAuthorizer:
 
             return True
 
+        def get_user_list(self, type=None):
+            if not type:
+                return self.data.keys()
+            users = []
+            for key, data in self.data.items():
+                if data.get('type', 'user') == type:
+                    users.append(key)
+            return users
+
+        def get_canactas_list(self, user):
+            actas_users = []
+            for key in self.__get_act_as_list(user):
+                if (key != user and
+                  self.data.get(key).get('type', 'user') != 'internal'):
+                    actas_users.append(key)
+            return actas_users
+
+        def is_user_valid(self, user):
+            return user in self.data.keys()
+
     instance = None
-    def __init__(self, filename):
+    def __init__(self):
         if not FileAuthorizer.instance:
-            FileAuthorizer.instance = FileAuthorizer.__FileAuthorizer(filename)
+            FileAuthorizer.instance = FileAuthorizer.__FileAuthorizer(permissions_file)
         else:
-            FileAuthorizer.instance.filename = filename
+            FileAuthorizer.instance.filename = permissions_file

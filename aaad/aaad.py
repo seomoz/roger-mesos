@@ -21,7 +21,6 @@ session_timeout_seconds = int(os.getenv('SESSION_TIMEOUT_SECONDS', 120))
 secret_key = os.getenv('SECRET_KEY', 'test_key_NOT_a_secret')
 session_id_key = os.getenv('SESSION_ID_KEY', 'aaadsid')
 session_id_domain = os.getenv('SESSION_ID_DOMAIN', None)
-htpasswd_file = os.getenv('HTPASSWD_FILE', '')
 
 class AuthHTTPServer(ThreadingMixIn, HTTPServer, ):
     pass
@@ -211,7 +210,7 @@ class AuthHandler(BaseHTTPRequestHandler):
     def authenticate_request(self, user, password):
         ctx = self.ctx
         try:
-            if not FileAuthenticator(htpasswd_file).instance.authenticate(user, password):
+            if not FileAuthenticator().instance.authenticate(user, password):
                 return False
         except:
             logger.error("Error while calling Authenticator")
