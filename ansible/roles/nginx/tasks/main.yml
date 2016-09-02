@@ -117,6 +117,16 @@
       - nginx
       - permissions-sync
 
+  - name: Copy quota file to the nginx conf
+    copy: src={{ creds_dir }}/quotas_{{ env }}.yml dest="{{nginx_conf_dir}}/quotas.yml"  mode=0644
+    when: nginx_auth_enable is defined and nginx_auth_enable|bool
+    become: yes
+    notify: restart aaad
+    tags:
+      - install
+      - nginx
+      - permissions-sync
+
   - name: Copy permissions file from local src to nginx conf when nginx_auth_permissions_local_path is defined
     when: nginx_auth_enable is defined and nginx_auth_enable|bool and
           nginx_auth_permissions_local_path is defined and not(nginx_auth_permissions_local_path | trim == '')

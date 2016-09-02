@@ -3,6 +3,9 @@ import re
 import json
 import os
 import sys
+from validators import Validator
+
+validator = Validator()
 
 class FileAuthorizer:
     class __FileAuthorizer:
@@ -112,6 +115,14 @@ class FileAuthorizer:
             result = self.resource_check(resource, data, allowed_actions, content_type)
             if result == False:
                 logger.warning("Unauthorized [{}]".format(resource), extra = info)
+                return False
+
+            try:
+                if not validator.validate(act_as, action, data):
+                    logger.warning("Invalid request. [{}]".format(validator.message), extra = info)
+                    return False
+            except:
+                logger.error("Failed in request validation", extra = info)
                 return False
 
             return True
