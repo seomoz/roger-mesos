@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request, render_template, redirect, make_response
+from flask import Flask, jsonify, request, render_template, redirect, make_response, flash
 from flask_restful import abort, Api, Resource
 from flask_login import login_user, logout_user, login_required, current_user
 from webargs import fields
@@ -51,6 +51,8 @@ def login():
                     actaslist = FileAuthorizer().instance.get_canactas_list(current_user.get_username())
                     if len(actaslist) == 1:
                         actas = actaslist[0]
+            else:
+                flash('Authentication failed.')
         else:
             actas = request.form.get('act_as')
 
@@ -58,10 +60,12 @@ def login():
             actas = request.cookies.get("actas")
         if not actas: # try to get from header
             actas = request.headers.get("act_as_user")
-
-        if (actas and current_user.is_authenticated and
-            actas in FileAuthorizer().instance.get_canactas_list(current_user.get_username())):
-            resp.set_cookie('actas', actas)
+        elif current_user.is_authenticated:
+            if actas in FileAuthorizer().instance.get_canactas_list(current_user.get_username()):
+                resp.set_cookie('actas', actas)
+            else:
+                resp.set_cookie('actas', '', expires=0)
+                flash('{} is not authorized to act as {}.'.format(current_user.get_username(), actas))
 
     return resp
 
