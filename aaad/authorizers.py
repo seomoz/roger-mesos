@@ -119,7 +119,7 @@ class FileAuthorizer:
 
             try:
                 if not validator.validate(act_as, action, data):
-                    logger.warning("Invalid request. [{}]".format(validator.message), extra = info)
+                    logger.warning("Invalid request. Reasons - {}".format(validator.messages), extra = info)
                     return False
             except:
                 logger.error("Failed in request validation", extra = info)

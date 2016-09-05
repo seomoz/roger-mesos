@@ -15,7 +15,7 @@ master_url = os.getenv('MESOS_MASTER_URL', 'http://localhost:5050')
 class Validator:
 
     def __init__(self):
-        self.message = ""
+        self.messages = []
 
     def validate(self, act_as, action, request_body):
         return self.validate_resource_quotas(act_as, action, request_body)
@@ -62,17 +62,17 @@ class Validator:
         requested_mem = float(requested_resources.get("mem", 0.0))
         requested_disk = float(requested_resources.get("disk", 0.0))
         valid_quota_request = True
-        self.message = ""
+        self.messages = []
         if cpu_quota < (requested_cpu + total_allocated_cpu):
-            self.message = "Requested cpu: {} + current allocated cpu:{} for user:{} exceeds cpu quota:{}. ".format(requested_cpu, total_allocated_cpu, act_as, cpu_quota)
+            self.messages.append("Requested cpu: {} + current allocated cpu:{} for user:{} exceeds cpu quota:{}.".format(requested_cpu, total_allocated_cpu, act_as, cpu_quota))
             valid_quota_request = False
 
         if mem_quota < (requested_mem + total_allocated_mem):
-            self.message += "Requested memory: {} + current allocated memory:{} for user:{} exceeds memory quota:{}. ".format(requested_mem, total_allocated_mem, act_as, mem_quota)
+            self.messages.append("Requested memory: {} + current allocated memory:{} for user:{} exceeds memory quota:{}.".format(requested_mem, total_allocated_mem, act_as, mem_quota))
             valid_quota_request = False
 
         if disk_quota < (requested_disk + total_allocated_disk):
-            self.message += "Requested disk: {} + current_allocated disk:{} for user:{} exceeds disk quota:{}. ".format(requested_disk, total_allocated_disk, act_as, disk_quota)
+            self.messages.append("Requested disk: {} + current_allocated disk:{} for user:{} exceeds disk quota:{}.".format(requested_disk, total_allocated_disk, act_as, disk_quota))
             valid_quota_request = False
 
         return valid_quota_request
