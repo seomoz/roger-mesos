@@ -10,7 +10,7 @@ import yaml
 import re
 
 quota_file = os.getenv('QUOTA_FILE', '')
-master_url = os.getenv('MESOS_MASTER_URL', '')
+master_url = os.getenv('MESOS_MASTER_URL', 'http://localhost:5050')
 
 class Validator:
 
@@ -39,6 +39,9 @@ class Validator:
         if not action.lower() in [ "put", "post" ]:
             return True
 
+        if not quota_file:
+            return True
+
         requested_resources = self.get_requested_resources(request_body)
         tasks = mesos.get_tasks(master_url)
         pattern = re.compile(".*\.{}\..*".format(act_as))
@@ -52,22 +55,24 @@ class Validator:
         resource_quotas = ""
         resource_quotas = utils.parse_permissions_file(quota_file).get(act_as, {})
         resource_quotas = resource_quotas.get("resources", {})
-        cpu_quota = float(resource_quotas.get("cpu", 0.0))
+        cpu_quota = float(resource_quotas.get("cpus", 0.0))
         mem_quota = float(resource_quotas.get("mem", 0.0))
         disk_quota = float(resource_quotas.get("disk", 0.0))
         requested_cpu = float(requested_resources.get("cpus", 0.0))
         requested_mem = float(requested_resources.get("mem", 0.0))
         requested_disk = float(requested_resources.get("disk", 0.0))
+        valid_quota_request = True
+        self.message = ""
         if cpu_quota < (requested_cpu + total_allocated_cpu):
-            self.message = "Requested cpu: {} + current allocated cpu:{} for user:{} exceeds cpu quota:{}".format(requested_cpu, total_allocated_cpu, act_as, cpu_quota)
-            return False
+            self.message = "Requested cpu: {} + current allocated cpu:{} for user:{} exceeds cpu quota:{}. ".format(requested_cpu, total_allocated_cpu, act_as, cpu_quota)
+            valid_quota_request = False
 
         if mem_quota < (requested_mem + total_allocated_mem):
-            self.message = "Requested memory: {} + current allocated memory:{} for user:{} exceeds memory quota:{}".format(requested_mem, total_allocated_mem, act_as, mem_quota)
-            return False
+            self.message += "Requested memory: {} + current allocated memory:{} for user:{} exceeds memory quota:{}. ".format(requested_mem, total_allocated_mem, act_as, mem_quota)
+            valid_quota_request = False
 
         if disk_quota < (requested_disk + total_allocated_disk):
-            self.message = "Requested disk: {} + current_allocated disk:{} for user:{} exceeds disk quota:{}".format(requested_disk, total_allocated_disk, act_as, disk_quota)
-            return False
+            self.message += "Requested disk: {} + current_allocated disk:{} for user:{} exceeds disk quota:{}. ".format(requested_disk, total_allocated_disk, act_as, disk_quota)
+            valid_quota_request = False
 
-        return True
+        return valid_quota_request
