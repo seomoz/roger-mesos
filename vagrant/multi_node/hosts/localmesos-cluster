@@ -8,7 +8,7 @@ generate_certs=true
 nginx_listen_on_host=0.0.0.0
 
 [machines]
-localmesos[02:04] env=test base_data_dir=/data shared_mount=/vagrant
+localmesos[02:04] env=local base_data_dir=/data shared_mount=/vagrant
 
 [monitored:children]
 machines
