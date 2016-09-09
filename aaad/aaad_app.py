@@ -4,6 +4,7 @@ from flask_login import login_user, logout_user, login_required, current_user
 from webargs import fields
 from webargs.flaskparser import use_args
 import os
+import json
 
 from authenticators import FileAuthenticator
 from authorizers import FileAuthorizer
@@ -16,29 +17,43 @@ app.secret_key = os.environ['APP_SECRET_KEY']
 api = Api(app)
 login_manager.init_app(app)
 
-@app.route('/')
+@app.route('/auth')
 @login_required
-def default():
-    # authenticate
-    return render_template('index.html')
+def authorize():
+    '''
+    This method finds out if the current user is authorized to -
+        - perform the action specified in 'method' header
+        - on the resource specified in 'URI header'
+    The request body and content_type are also required for ths purpose.
 
-@app.route('/marathon')
-@login_required
-def marathon():
-    # authenticate
-    return render_template('index.html')
+    Note:
+    Because of the @login_required decorator authentication should be already complete
+    using one of the supported methods by the time we reach this method. So, let's just
+    worry about authorizaton.
+    '''
+    user = current_user.get_username()
+    actas = request.cookies.get("actas") # try to get it from cookie
+    if not actas:
+        actas = request.headers.get("act_as_user") # try to get from header
+    if not actas:
+        actas = user # default to the user
 
-@app.route('/chronos')
-@login_required
-def chronos():
-    # authenticate
-    return render_template('index.html')
+    resource = request.headers.get('URI','')
+    data = request.get_data()
+    content_type = request.headers.get('content-type', '')
+    action = request.headers.get('method', '')
+
+    client_ip = request.headers.get('X-Forwarded-For')
+    info = { 'clientip': str(client_ip), 'user': str(user), 'act_as': str(actas) }
+
+    if not FileAuthorizer().instance.authorize(user, actas, resource, app.logger, info, data, content_type, action):
+        abort(403)
+
+    return json.dumps({'success':True}), 200, {'ContentType':'application/json'}
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    resp = make_response(render_template('index.html'))
     if request.method == 'POST':
-        resp = redirect(request.args.get('redirect') or request.args.get('next') or '/')
         username = request.form.get('user')
         passw = request.form.get('pass')
         actas = None
@@ -51,8 +66,12 @@ def login():
                     actaslist = FileAuthorizer().instance.get_canactas_list(current_user.get_username())
                     if len(actaslist) == 1:
                         actas = actaslist[0]
+                else:
+                    flash('Something didn\'t work! Please re-try with the right credentials.')
+                    return make_response(render_template('index.html'))
             else:
                 flash('Authentication failed.')
+                return make_response(render_template('index.html'))
         else:
             actas = request.form.get('act_as')
 
@@ -60,14 +79,26 @@ def login():
             actas = request.cookies.get("actas")
         if not actas: # try to get from header
             actas = request.headers.get("act_as_user")
-        elif current_user.is_authenticated:
-            if actas in FileAuthorizer().instance.get_canactas_list(current_user.get_username()):
-                resp.set_cookie('actas', actas)
-            else:
-                resp.set_cookie('actas', '', expires=0)
-                flash('{} is not authorized to act as {}.'.format(current_user.get_username(), actas))
 
-    return resp
+        if current_user.is_authenticated:
+            if actas in FileAuthorizer().instance.get_canactas_list(current_user.get_username()):
+                # all's well, let's set cookie and redirect
+                resp = make_response(redirect(request.args.get('redirect') or request.args.get('next') or '/'))
+                resp.set_cookie('actas', actas)
+                return resp
+            else:
+                if actas:
+                    flash('Not authorized to act as {}.'.format(actas))
+                resp = make_response(render_template('index.html'))
+                resp.set_cookie('actas', '', expires=0)
+                return resp
+        else:
+            flash('Authentication required.')
+            return make_response(render_template('index.html'))
+
+    if not current_user.is_authenticated:
+        flash('Please log in.')
+    return make_response(render_template('index.html'))
 
 @app.route('/logout')
 def logout():
@@ -76,13 +107,9 @@ def logout():
     resp.set_cookie('actas', '', expires=0)
     return resp
 
-@login_manager.unauthorized_handler
-def unauthorized_callback():
-    return redirect('/login?next=' + request.path)
-
 api.add_resource(Users, '/api/users')
 api.add_resource(Groups, '/api/groups')
 api.add_resource(CanActAsUsers, '/api/users/<user>/can_act_as')
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, port=8888)

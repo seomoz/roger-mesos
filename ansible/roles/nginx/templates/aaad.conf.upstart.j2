@@ -11,7 +11,7 @@ env SECRET_KEY={{ aaadsid_secret_key }}
 env SESSION_TIMEOUT_SECONDS={{ aaadsid_timeout_seconds }}
 {% if aaadsid_domain is defined %}
 env SESSION_ID_DOMAIN={{ aaadsid_domain }}{% endif %}
-env MESOS_MASTER_URL={{ mesos_leader_ui_url }}
+env MESOS_MASTER_URL={{ mesos_leader_ui_url | default('http://127.0.0.1:5050') }}
 env QUOTA_FILE={{ nginx_conf_dir }}/quotas.yml
 
 exec python {{ nginx_conf_dir }}/aaad/aaad.py {{ nginx_conf_dir }}/permissions.yml

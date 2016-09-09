@@ -77,8 +77,8 @@ class FileAuthorizer:
                 utils.get_merged_data(user, allowed_users_list, [], self.data, '')
             return allowed_users_list
 
-        def authorize(self, user, act_as, resource, logging, info, data, content_type, action = "GET"):
-            logger = logging.getLogger("Authorization")
+        def authorize(self, user, act_as, resource, logger, info, data, content_type, action = "GET"):
+            #logger = logging.getLogger("Authorization")
             if not user or not act_as or not resource:
                 return False
 

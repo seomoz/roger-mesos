@@ -3,4 +3,5 @@ location = /auth {
         proxy_set_header URI $request_uri;
         proxy_set_header method $request_method;
         proxy_pass_request_headers on;
+        proxy_redirect http://localhost:{{ nginx_aaad_port }}/ /;
 }

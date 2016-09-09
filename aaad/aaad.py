@@ -222,7 +222,7 @@ class AuthHandler(BaseHTTPRequestHandler):
         ctx = self.ctx
         file_authorizer = FileAuthorizer(permissions_file).instance
         try:
-            if not file_authorizer.authorize(user, act_as_user, path, logging, self.info, data, content_type, action):
+            if not file_authorizer.authorize(user, act_as_user, path, logging.getLogger('Authorizaton'), self.info, data, content_type, action):
                 return False
 
         except:

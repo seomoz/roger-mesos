@@ -8,17 +8,17 @@ upstream chronos {
 
 server {
        listen 80;
-       server_name marathon.* chronos.* marathons.* chronoss.*;
-       rewrite ^ https://$host$request_uri permanent;
+       server_name marathon.* chronos.* marathons.* chronoss.* local*;
+       rewrite ^ https://$host$request_uri redirect;
 }
 
 server {
         listen 443 ssl;
-        server_name marathon.* marathons.*;
+        server_name marathon.* marathons.* localmesos01;
 
         ssl on;
-        #access_log      /var/log/upstart/nginx.log;
-        #error_log       /var/log/upstart/nginx.log;
+        access_log      /var/log/upstart/nginx.log;
+        error_log       /var/log/upstart/nginx.log;
 
         ssl_certificate         {{ nginx_certs_dir }}/nginx.in.crt;
         ssl_certificate_key     {{ nginx_certs_dir }}/nginx.in.key;
@@ -49,8 +49,8 @@ server {
         server_name chronos.* chronoss.*;
 
         ssl on;
-        #access_log      /var/log/upstart/nginx.log;
-        #error_log       /var/log/upstart/nginx.log;
+        access_log      /var/log/upstart/nginx.log;
+        error_log       /var/log/upstart/nginx.log;
 
         ssl_certificate         {{ nginx_certs_dir }}/nginx.in.crt;
         ssl_certificate_key     {{ nginx_certs_dir }}/nginx.in.key;
@@ -77,6 +77,9 @@ server {
 
 server {
         listen {{ nginx_listen_on_host|default('127.0.0.1', true) }}:7777;
+
+        access_log      /var/log/upstart/nginx.log;
+        error_log       /var/log/upstart/nginx.log;
 
         location /marathon/ping {
                  auth_basic Off;

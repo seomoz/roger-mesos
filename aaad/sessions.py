@@ -3,6 +3,7 @@ from flask import Request
 import ast
 import os
 from itsdangerous import URLSafeTimedSerializer
+import base64
 
 from authorizers import FileAuthorizer
 from authenticators import FileAuthenticator
@@ -21,7 +22,15 @@ SESSION_TIMEOUT_SECONDS = int(os.getenv('SESSION_TIMEOUT_SECONDS', 120))
 REMEMBER_COOKIE_DOMAIN = os.getenv('SESSION_ID_DOMAIN', None) # used by flask-login
 
 login_manager = LoginManager()
-login_manager.session_protection = 'strong'
+
+'''
+Note: With session_protection 'strong', this can fail in cases where this is
+used as a stand in authenticator/authorizer called as a sub request from a proxy
+This is because, the 'ip address' and 'user agent' are different.
+For more details see - https://flask-login.readthedocs.io/en/latest/#session-protection
+TODO: Update nginx configs to ensure client's ip and user agent are used in the sub request.
+'''
+login_manager.session_protection = 'basic'
 
 #Login_serializer used to encryt and decrypt the cookie token for the remember me option of flask-login
 login_serializer = URLSafeTimedSerializer(COOKIE_SECRET_KEY)
@@ -42,10 +51,6 @@ class SessionUser(UserMixin):
 
     def get_username(self):
         return self.user_id
-
-    def get_actas(self):
-        print 'actas: ', self.actas
-        return self.actas
 
     @staticmethod
     def get(user_id):
@@ -83,4 +88,21 @@ def load_token(token):
     #Check userpasshash and return user or None
     if user and data[1] == user.userpasshash:
         return user
+    return None
+
+@login_manager.request_loader
+def load_user_from_request(request):
+    '''
+    This callback is to support authentication using the Authorization header (basic auth)
+    '''
+    session_user = None
+    auth_header = request.headers.get('Authorization')
+    if auth_header:
+        auth_decoded = base64.b64decode(auth_header[6:]) #len('Basic ') = 6
+        user, passw = auth_decoded.split(':', 2)
+        if (FileAuthenticator().instance.authenticate(user, passw)):
+            session_user = SessionUser.get(user)
+        return session_user
+
+    # finally, return None if this did not login the user
     return None
