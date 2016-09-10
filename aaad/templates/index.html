@@ -101,7 +101,7 @@
         </div>
       </form>
       {% endif %}
-      {% if current_user.is_authenticated and not request.cookies.get('actas') %}
+      {% if current_user.is_authenticated and not actas %}
       <form action={{ url_for('login') }} method="post">
         <div class="ui-widget">
             <input type="text" id="act_as" name="act_as" title="Team or user to act as for application and resource access" placeholder="act as" autofocus/>
@@ -133,14 +133,13 @@
         });</script>
       </form>
       {% endif %}
-      {% if current_user.is_authenticated and request.cookies.get('actas') %}
-      <p> You're acting as <b>{{ request.cookies.get('actas') }}</b>.</p>
+      {% if current_user.is_authenticated and actas %}
+      <p> You're acting as <b>{{ actas }}</b> (<a href="{{ url_for('login', resetactas='true') }}">change</a>).</p>
       <p>Proceed to: <p>
         <ul>
           <li><a href="/marathon">Marathon</a></li>
           <li><a href="/chronos">Chronos</a></li>
         </ul>
-      <p>You may also <a href="{{ url_for ('logout') }}">log out<a>.</p>
       {% endif %}
       {% with messages = get_flashed_messages() %}{% if messages %}{% for message in messages %}<p>{{ message }}</p>{% endfor %}{% endif %}{% endwith %}
   </div>

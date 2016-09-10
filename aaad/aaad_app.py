@@ -93,10 +93,13 @@ def filter_response():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    actas = request.cookies.get("actas") # try loading from cookies
+    if not actas: # try to get from header
+        actas = request.headers.get("act_as_user")
+
     if request.method == 'POST':
         username = request.form.get('user')
         passw = request.form.get('pass')
-        actas = None
         if username and passw:
             if (FileAuthenticator().instance.authenticate(username, passw)):
                 session_user = SessionUser.get(username)
@@ -108,17 +111,12 @@ def login():
                         actas = actaslist[0]
                 else:
                     flash('Something didn\'t work! Please re-try with the right credentials.')
-                    return make_response(render_template('index.html'))
+                    return make_response(render_template('index.html', **locals()))
             else:
                 flash('Authentication failed.')
-                return make_response(render_template('index.html'))
+                return make_response(render_template('index.html', **locals()))
         else:
             actas = request.form.get('act_as')
-
-        if not actas: # try to get from request cookie
-            actas = request.cookies.get("actas")
-        if not actas: # try to get from header
-            actas = request.headers.get("act_as_user")
 
         if current_user.is_authenticated:
             if actas in FileAuthorizer().instance.get_canactas_list(current_user.get_username()):
@@ -129,21 +127,27 @@ def login():
             else:
                 if actas:
                     flash('Not authorized to act as {}.'.format(actas))
-                resp = make_response(render_template('index.html'))
+                actas = None
+                resp = make_response(render_template('index.html', **locals()))
                 resp.set_cookie('actas', '', expires=0)
                 return resp
         else:
             flash('Authentication required.')
-            return make_response(render_template('index.html'))
+            return make_response(render_template('index.html', **locals()))
+
+    if request.args.get('resetactas', 'false').lower() in ['true', '1', 'yes']:
+        actas = None
 
     if not current_user.is_authenticated:
         flash('Please log in.')
-    return make_response(render_template('index.html'))
+
+    return make_response(render_template('index.html', **locals()))
 
 @app.route('/logout')
 def logout():
     logout_user()
-    resp = make_response(render_template('index.html'))
+    actas = None
+    resp = make_response(render_template('index.html', **locals()))
     resp.set_cookie('actas', '', expires=0)
     return resp
 
