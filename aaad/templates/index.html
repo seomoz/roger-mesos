@@ -135,11 +135,6 @@
       {% endif %}
       {% if current_user.is_authenticated and actas %}
       <p> You're acting as <b>{{ actas }}</b> (<a href="{{ url_for('login', resetactas='true') }}">change</a>).</p>
-      <p>Proceed to: <p>
-        <ul>
-          <li><a href="/marathon">Marathon</a></li>
-          <li><a href="/chronos">Chronos</a></li>
-        </ul>
       {% endif %}
       {% with messages = get_flashed_messages() %}{% if messages %}{% for message in messages %}<p>{{ message }}</p>{% endfor %}{% endif %}{% endwith %}
   </div>
