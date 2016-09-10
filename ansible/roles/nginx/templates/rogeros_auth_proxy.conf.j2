@@ -83,6 +83,9 @@ server {
 
 server {
         listen {{ nginx_listen_on_host|default('127.0.0.1', true) }}:7777;
+        sub_filter '<body>' '<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script><script src="/static/aaad-ui.js"></script><body>' ;
+        sub_filter_types text/html;
+        sub_filter_once on;
 
         #access_log      /var/log/upstart/nginx.log;
         error_log       /var/log/upstart/nginx.log;

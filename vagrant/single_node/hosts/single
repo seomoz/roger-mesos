@@ -1,6 +1,9 @@
 # inventory file for 'single' environment
 
 [machines:vars]
+env_name=local
+env_color=gray
+env_border_color=black
 marathon_auth_enable=false
 nginx_auth_enable=true
 nginx_listen_on_host=0.0.0.0

@@ -27,10 +27,10 @@
       - packages
       - nginx
 
-  - name: configure and install nginx with auth_request module
+  - name: configure and install nginx and modules
     command: chdir={{tmp_dir}}/{{nginx_pkg}} {{item}}
     with_items:
-      - ./configure --with-http_auth_request_module --with-stream --with-stream_ssl_module
+      - ./configure --with-http_auth_request_module --with-stream --with-stream_ssl_module --with-http_sub_module
       - make
       - make install
     become: yes
@@ -169,6 +169,16 @@
             - "--exclude=/venv/"
             - "--exclude=*.pyc"
             - "--exclude=SET-ENV.sh"
+    become: yes
+    notify: restart aaad
+    tags:
+      - install
+      - nginx
+      - update
+      - aaad
+
+  - name: Template AAA ui js.j2 file to nginx conf directory for now
+    template: src=aaad-ui.js.j2 dest={{nginx_conf_dir}}/aaad/static/aaad-ui.js owner=root group=root mode=0644
     become: yes
     notify: restart aaad
     tags:

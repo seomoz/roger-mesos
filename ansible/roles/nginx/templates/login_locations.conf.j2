@@ -2,3 +2,7 @@ location ~ ^/(login|logout|api) {
         proxy_pass http://localhost:{{ nginx_aaad_port }}$request_uri;
         proxy_redirect http://localhost:{{ nginx_aaad_port }}/ /;
 }
+
+location /static { # this are the gets on the static styles, js etc. on aaad
+        root {{nginx_conf_dir}}/aaad;
+}
