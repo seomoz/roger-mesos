@@ -7,13 +7,22 @@ stop on runlevel [0156]
 chdir {{nginx_conf_dir}}/aaad
 
 env HTPASSWD_FILE={{ nginx_conf_dir }}/{{ nginx_basic_auth_file_name }}
-env SECRET_KEY={{ aaadsid_secret_key }}
+env PERMISSIONS_FILE={{ nginx_conf_dir }}/permissions.yml
+
+env APP_SECRET_KEY={{ aaad_app_secret_key }}
+
+env COOKIE_SECRET_KEY={{ aaadsid_secret_key }}
 env SESSION_TIMEOUT_SECONDS={{ aaadsid_timeout_seconds }}
-{% if aaadsid_domain is defined %}
-env SESSION_ID_DOMAIN={{ aaadsid_domain }}{% endif %}
+
 env MESOS_MASTER_URL={{ mesos_leader_ui_url | default('http://127.0.0.1:5050') }}
 env QUOTA_FILE={{ nginx_conf_dir }}/quotas.yml
 
-exec python {{ nginx_conf_dir }}/aaad/aaad.py {{ nginx_conf_dir }}/permissions.yml
+{% if aaadsid_domain is defined %}
+env SESSION_ID_DOMAIN={{ aaadsid_domain }}{% endif %}
+
+#exec python {{ nginx_conf_dir }}/aaad/aaad.py {{ nginx_conf_dir }}/permissions.yml
+
+env PYTHON_HOME={{ nginx_conf_dir }}/aaad/venv
+exec $PYTHON_HOME/bin/python {{ nginx_conf_dir }}/aaad/server.py
 
 respawn

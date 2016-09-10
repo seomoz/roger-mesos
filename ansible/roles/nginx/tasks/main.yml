@@ -151,8 +151,8 @@
       - nginx
       - permissions-sync
 
-  - name: Do a pip install passlib (for aaad htpasswd check during authentication)
-    pip: name=passlib
+  - name: Do a pip uninstall passlib (may have been added before for aaad htpasswd check during authentication)
+    pip: name=passlib state=absent
     become: yes
     notify: restart aaad
     tags:
@@ -169,14 +169,29 @@
             - "--exclude=/venv/"
             - "--exclude=*.pyc"
             - "--exclude=SET-ENV.sh"
-
-    #copy: src=../../../../aaad dest={{nginx_conf_dir}}  mode=0655
     become: yes
     notify: restart aaad
     tags:
       - install
       - nginx
       - update
+      - aaad
+
+  - name: Do a pip install virtualenv
+    pip: name=virtualenv
+    become: yes
+    tags:
+      - install
+      - aaad
+
+  - name: Set up virtualenv and install requirements for aaad
+    pip:
+      requirements: "{{nginx_conf_dir}}/aaad/requirements.txt"
+      virtualenv: "{{nginx_conf_dir}}/aaad/venv"
+      virtualenv_python: python2.7
+    become: yes
+    notify: restart aaad
+    tags:
       - aaad
 
   - name: Configure aaad upstart job
