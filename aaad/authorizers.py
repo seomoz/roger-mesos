@@ -1,6 +1,7 @@
 import utils
 import re
 import json
+import yaml
 import os
 import sys
 from validators import Validator
@@ -14,7 +15,7 @@ class FileAuthorizer:
 
         def __init__(self, filename):
             self.filename = filename
-            self.data = utils.parse_permissions_file(filename)
+            self.data = self._parse_permissions_file(filename)
 
         def resource_check(self, request_uri, body, allowed_actions, content_type):
             for item in allowed_actions:
@@ -71,10 +72,10 @@ class FileAuthorizer:
 
             return True
 
-        def __get_act_as_list(self, user):
+        def _get_act_as_list(self, user):
             allowed_users_list = []
             if user in self.data.keys():
-                utils.get_merged_data(user, allowed_users_list, [], self.data, '')
+                self._get_merged_data(user, allowed_users_list, [], self.data, '')
             return allowed_users_list
 
         def authorize(self, user, act_as, resource, logger, info, data, content_type, action = "GET"):
@@ -91,7 +92,7 @@ class FileAuthorizer:
                     logger.warning("User act as failed", extra = info)
                     return False
 
-            allowed_users_list = self.__get_act_as_list(user)
+            allowed_users_list = self._get_act_as_list(user)
 
             if act_as not in allowed_users_list:
                 logger.warning("User act as failed", extra = info)
@@ -112,7 +113,7 @@ class FileAuthorizer:
                     if not temp_item in allowed_actions:
                         allowed_actions.append(temp_item)
 
-            utils.get_merged_data(act_as, allowed_users_list, allowed_actions, self.data, action)
+            self._get_merged_data(act_as, allowed_users_list, allowed_actions, self.data, action)
 
             result = self.resource_check(resource, data, allowed_actions, content_type)
             if result == False:
@@ -140,7 +141,7 @@ class FileAuthorizer:
 
         def get_canactas_list(self, user):
             actas_users = []
-            for key in self.__get_act_as_list(user):
+            for key in self._get_act_as_list(user):
                 if (key != user and
                   self.data.get(key).get('type', 'user') != 'internal'):
                     actas_users.append(key)
@@ -148,6 +149,50 @@ class FileAuthorizer:
 
         def is_user_valid(self, user):
             return user in self.data.keys()
+
+        def filter_response(resource, data, actas):
+            framework = FrameworkUtils().getFramework(resource)
+            allowed_namespaces = self._get_allowed_namespace_patterns(actas, self.data)
+            if not allowed_namespaces:    #Empty list
+                return ""
+            return _filter_response_body(body, allowed_namespaces, resource)
+
+        def _parse_permissions_file(self, filename):
+            with open(filename, 'r') as data_file:
+                return yaml.load(data_file)
+            return ''
+
+        def _get_merged_data(self, user, allowed_users, allowed_actions, data, action):
+            if user in allowed_users:
+                return
+            allowed_users.append(user)
+            if action != '' and 'action' in data[user]:
+                if data[user]['action'] != None and action in data[user]['action']:
+                    for item in data[user]['action'][action]:
+                        temp_item = {}
+                        if type(item) == str:
+                            temp_item = {}
+                            temp_item[item] = {}
+                        else:
+                            if type(item) == dict:
+                                temp_item = item
+                        if not temp_item in allowed_actions:
+                            allowed_actions.append(temp_item)
+            if 'can_act_as' not in data[user]:
+                return
+            for u in data[user]['can_act_as']:
+                self._get_merged_data(u, allowed_users, allowed_actions, data, action)
+
+        def _get_allowed_namespace_patterns(self, act_as, permissions):
+            allowed_users_list = []
+            self._get_merged_data(act_as, allowed_users_list, [], permissions, '')
+            allowed_namespace_patterns = []
+            for user in allowed_users_list:
+                if 'allowed_names' in permissions[user]:
+                    for pattern in permissions[user]['allowed_names']:
+                        if not pattern in allowed_namespace_patterns:
+                            allowed_namespace_patterns.append(pattern)
+            return allowed_namespace_patterns
 
     instance = None
     def __init__(self):

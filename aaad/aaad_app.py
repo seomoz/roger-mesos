@@ -51,6 +51,26 @@ def authorize():
 
     return json.dumps({'success':True}), 200, {'ContentType':'application/json'}
 
+@app.route('/filter')
+@login_required
+def filter_response():
+    '''
+    This method filters the response (body) based on the access the current user has.
+    Should typically be called by the proxy (internal) and not from outside.
+    '''
+    user = current_user.get_username()
+    actas = request.cookies.get("actas") # try to get it from cookie
+    if not actas:
+        actas = request.headers.get("act_as_user") # try to get from header
+    if not actas:
+        actas = user # default to the user
+
+    resource = request.headers.get('URI','')
+    data = request.get_data()
+
+    response = Authorizer().instance.filter_response(resource, data, actas)
+    return Response(response=response, status=200, mimetype="application/json")
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':

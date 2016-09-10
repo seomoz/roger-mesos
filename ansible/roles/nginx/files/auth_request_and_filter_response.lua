@@ -32,7 +32,7 @@ end
 local data = res.body
 
 ngx.req.set_header("auth_action", "filter_response")
-local resp = ngx.location.capture("/auth", {body=data})
+local resp = ngx.location.capture("/filter", {body=data})
 
 if resp.status == ngx.HTTP_OK then
     ngx.header["Content-Type"] = "application/json; qs=2"
