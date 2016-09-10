@@ -5,6 +5,7 @@ from webargs import fields
 from webargs.flaskparser import use_args
 import os
 import json
+import logging
 
 from authenticators import FileAuthenticator
 from authorizers import FileAuthorizer
@@ -16,6 +17,21 @@ app = Flask(__name__)
 app.secret_key = os.environ['APP_SECRET_KEY']
 api = Api(app)
 login_manager.init_app(app)
+
+@app.before_first_request
+def setup_logging():
+    if not app.debug:
+        handler = logging.StreamHandler() # sys.stderr
+        formatter = logging.Formatter('[%(asctime)-15s] %(levelname)s - %(name)s - IP:%(clientip)s User:%(user)s ActAs:%(act_as)s - %(message)s')
+        handler.setFormatter(formatter)
+        app.logger.addHandler(handler)
+        log_levels = {'debug': logging.DEBUG,
+              'info': logging.INFO,
+              'warning': logging.WARNING,
+              'error': logging.ERROR,
+              'critical': logging.CRITICAL}
+        log_level = os.environ.get('LOG_LEVEL', 'warning')
+        app.logger.setLevel(log_levels.get(log_level, logging.NOTSET))
 
 @app.route('/auth')
 @login_required
@@ -42,9 +58,13 @@ def authorize():
     data = request.get_data()
     content_type = request.headers.get('content-type', '')
     action = request.headers.get('method', '')
-
     client_ip = request.headers.get('X-Forwarded-For')
     info = { 'clientip': str(client_ip), 'user': str(user), 'act_as': str(actas) }
+
+    if action.lower() in [ "get", "head", "connect", "trace" ]:
+        app.logger.info("{} {}".format(action, resource), extra = info)
+    else:
+        app.logger.warning("{} {}".format(action, resource), extra = info)
 
     if not FileAuthorizer().instance.authorize(user, actas, resource, app.logger, info, data, content_type, action):
         abort(403)

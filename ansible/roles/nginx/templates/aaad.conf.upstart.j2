@@ -20,7 +20,7 @@ env QUOTA_FILE={{ nginx_conf_dir }}/quotas.yml
 {% if aaadsid_domain is defined %}
 env SESSION_ID_DOMAIN={{ aaadsid_domain }}{% endif %}
 
-#exec python {{ nginx_conf_dir }}/aaad/aaad.py {{ nginx_conf_dir }}/permissions.yml
+env LOG_LEVEL={{ log_level | default('warning')}}
 
 env PYTHON_HOME={{ nginx_conf_dir }}/aaad/venv
 exec $PYTHON_HOME/bin/python {{ nginx_conf_dir }}/aaad/server.py
