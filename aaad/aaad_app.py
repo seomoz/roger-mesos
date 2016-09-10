@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request, render_template, redirect, make_response, flash
+from flask import Flask, jsonify, request, render_template, redirect, make_response, flash, Response
 from flask_restful import abort, Api, Resource
 from flask_login import login_user, logout_user, login_required, current_user
 from webargs import fields
@@ -68,7 +68,7 @@ def filter_response():
     resource = request.headers.get('URI','')
     data = request.get_data()
 
-    response = Authorizer().instance.filter_response(resource, data, actas)
+    response = FileAuthorizer().instance.filter_response(resource, data, actas)
     return Response(response=response, status=200, mimetype="application/json")
 
 @app.route('/login', methods=['GET', 'POST'])

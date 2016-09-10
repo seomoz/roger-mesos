@@ -5,6 +5,7 @@ import yaml
 import os
 import sys
 from validators import Validator
+from frameworkUtils import FrameworkUtils
 
 validator = Validator()
 
@@ -150,12 +151,12 @@ class FileAuthorizer:
         def is_user_valid(self, user):
             return user in self.data.keys()
 
-        def filter_response(resource, data, actas):
+        def filter_response(self, resource, data, actas):
             framework = FrameworkUtils().getFramework(resource)
             allowed_namespaces = self._get_allowed_namespace_patterns(actas, self.data)
             if not allowed_namespaces:    #Empty list
                 return ""
-            return _filter_response_body(body, allowed_namespaces, resource)
+            return framework.filterResponseBody(data, allowed_namespaces, resource)
 
         def _parse_permissions_file(self, filename):
             with open(filename, 'r') as data_file:
