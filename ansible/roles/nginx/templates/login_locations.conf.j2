@@ -2,15 +2,3 @@ location ~ ^/(login|logout|api) {
         proxy_pass http://localhost:{{ nginx_aaad_port }}$request_uri;
         proxy_redirect http://localhost:{{ nginx_aaad_port }}/ /;
 }
-
-location /static { # this are the gets on the static styles, js etc. on aaad
-        root {{nginx_conf_dir}}/aaad;
-}
-
-#location = /login.html {
-#        proxy_set_header Host $host;
-#        proxy_set_header X-Real-IP $remote_addr;
-#        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-#        proxy_set_header X-Scheme $scheme;
-#        root {{ nginx_auth_login_dir }};
-#}
