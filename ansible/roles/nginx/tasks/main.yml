@@ -46,7 +46,6 @@
       - "{{ nginx_chronos_auth_dir }}"
       - "{{ nginx_chronos_auth_views_dir }}"
       - "{{ nginx_chronos_auth_templates_dir }}"
-      - "{{ nginx_auth_login_dir }}"
     when: nginx_auth_enable is defined and nginx_auth_enable|bool
     become: yes
     tags:
@@ -54,8 +53,8 @@
       - nginx
       - login
 
-  - name: Synchronize login pages
-    synchronize: src=login/ dest={{ nginx_auth_login_dir }} recursive=yes delete=yes
+  - name: Remove login pages (this was used in the past)
+    file: path={{ nginx_auth_login_dir }} state=absent
     become: yes
     notify: restart nginx
     tags:

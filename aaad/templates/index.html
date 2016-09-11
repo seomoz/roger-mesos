@@ -105,7 +105,7 @@
       {% if current_user.is_authenticated and not actas %}
       <form action={{ url_for('login') }} method="post">
         <div class="ui-widget">
-            <input type="text" id="act_as" name="act_as" title="Team or user to act as for application and resource access" placeholder="act as" autofocus/>
+            <input type="text" id="act_as" name="act_as" title="Team or user to act as for application and resource access" placeholder="act as (start typing or use arrow keys)" autofocus/>
         </div>
         <div>
             <input type="hidden" id="redirect" name="redirect" value=""/>
