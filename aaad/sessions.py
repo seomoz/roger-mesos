@@ -104,5 +104,5 @@ def load_user_from_request(request):
             session_user = SessionUser.get(user)
         return session_user
 
-    # finally, return None if this did not login the user
+    # finally, return None if this did not log in the user
     return None
