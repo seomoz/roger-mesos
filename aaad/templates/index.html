@@ -95,7 +95,7 @@
             <input type="password" id="pass" name="pass" title="Your password" placeholder="password"/>
         </div>
         <div>
-            <input type="hidden" id="redirect" name="redirect" value=""/>
+            <input type="hidden" id="redirect" name="redirect" value="{% if redirect_url %}{{ redirect_url }}{% endif %}"/>
         </div>
         <div class="button">
             <button id="submit" type="submit">Log in</button>
@@ -108,12 +108,11 @@
             <input type="text" id="act_as" name="act_as" title="Team or user to act as for application and resource access" placeholder="act as (start typing or use arrow keys)" autofocus/>
         </div>
         <div>
-            <input type="hidden" id="redirect" name="redirect" value=""/>
+            <input type="hidden" id="redirect" name="redirect" value="{% if redirect_url %}{{ redirect_url }}{% endif %}"/>
         </div>
         <div class="button">
             <button id="submit" type="submit">Proceed</button>
         </div>
-        <script type="text/javascript">document.getElementById('redirect').value = getParameterByName('redirect_url');</script>
         <script type="text/javascript">
         $(function() {
             $( "#act_as" ).autocomplete({

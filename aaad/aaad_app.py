@@ -48,11 +48,7 @@ def authorize():
     worry about authorizaton.
     '''
     user = current_user.get_username()
-    actas = request.cookies.get("actas") # try to get it from cookie
-    if not actas:
-        actas = request.headers.get("act_as_user") # try to get from header
-    if not actas:
-        actas = user # default to the user
+    actas = _find_actas(request)
 
     resource = request.headers.get('URI','')
     data = request.get_data()
@@ -79,11 +75,7 @@ def filter_response():
     Should typically be called by the proxy (internal) and not from outside.
     '''
     user = current_user.get_username()
-    actas = request.cookies.get("actas") # try to get it from cookie
-    if not actas:
-        actas = request.headers.get("act_as_user") # try to get from header
-    if not actas:
-        actas = user # default to the user
+    actas = _find_actas(request)
 
     resource = request.headers.get('URI','')
     data = request.get_data()
@@ -93,11 +85,10 @@ def filter_response():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    actas = request.cookies.get("actas") # try loading from cookie
-    if not actas: # try to get from header
-        actas = request.headers.get("act_as_user")
-
+    actas = request.cookies.get("actas") or request.headers.get("act_as_user")
+    redirect_url = request.args.get('next', '/')
     if request.method == 'POST':
+        redirect_url = request.form.get('redirect', redirect_url)
         username = request.form.get('user')
         passw = request.form.get('pass')
         if username and passw:
@@ -121,7 +112,7 @@ def login():
         if current_user.is_authenticated:
             if actas in FileAuthorizer().instance.get_canactas_list(current_user.get_username()):
                 # all's well, let's set cookie and redirect
-                resp = make_response(redirect(request.args.get('redirect') or request.args.get('next') or '/'))
+                resp = make_response(redirect(redirect_url or '/'))
                 resp.set_cookie('actas', actas)
                 return resp
             else:
@@ -150,6 +141,11 @@ def logout():
     resp = make_response(render_template('index.html', **locals()))
     resp.set_cookie('actas', '', expires=0)
     return resp
+
+def _find_actas(request):
+    return ( request.cookies.get("actas") or
+             request.headers.get("act_as_user") or
+             current_user.get_username() )
 
 api.add_resource(Users, '/api/users')
 api.add_resource(Groups, '/api/groups')

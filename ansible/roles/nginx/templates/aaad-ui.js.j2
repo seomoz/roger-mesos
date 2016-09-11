@@ -14,5 +14,5 @@ function getCookieValue(a) {
     return b ? b.pop() : '';
 }
 function onActAsChangeClick() {
-    window.location.href = '/login?resetactas=true&next=' + window.location.href;
+    window.location.href = '/login?resetactas=true&next=' + encodeURIComponent(window.location.href);
 }
