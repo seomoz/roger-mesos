@@ -137,6 +137,7 @@ def login():
 def logout():
     logout_user()
     actas = None
+    flash('You\'re logged out. Thank you for visiting!')
     resp = make_response(render_template('index.html', **locals()))
     resp.set_cookie('actas', '', expires=0)
     return resp

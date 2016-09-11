@@ -1,66 +1,57 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <style>
-      .heading {
-        align: center;
-        font: 1em sans-serif;
-        padding-left: 70px;
-        }
-      .formarea {
-        margin: 0 auto;
-        width: 300px;
-        padding: 1em;
-        border: 1px solid #CCC;
-        border-radius: 1em;
-      }
-      div + div {
-        margin-top: 1em;
-      }
-      label {
-        display: inline-block;
-        width: 90px;
-        text-align: right;
-      }
-      .flashes {
-        display: inline-block;
-        width: 90px;
-        text-align: right;
-      }
-      input, textarea, button {
-        font: 1em sans-serif;
-        width: 300px;
-        -moz-box-sizing: border-box;
-             box-sizing: border-box;
-        border: 1px solid #999;
-      }
-      input:focus, textarea:focus {
-        border-color: #000;
-      }
-      textarea {
-        vertical-align: top;
-        height: 5em;
-        resize: vertical;
-      }
-      .button {
-        font: 1em sans-serif;
-      }
-    </style>
     <link rel="stylesheet" href="//code.jquery.com/ui/1.12.0/themes/base/jquery-ui.css" />
     <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
     <script src="https://code.jquery.com/ui/1.12.0/jquery-ui.js"></script>
+    <style>
+    body {
+      background-image: url('/static/roger-blue.png');
+      background-size: 5%;
+    }
+    * {
+      font: 1em sans-serif;
+    }
+    .heading {
+      text-align: center;
+      font: 1em sans-serif;
+      padding: 1em;
+      }
+    .formarea {
+      margin: 0 auto;
+      width: 300px;
+      padding: 1em;
+      padding-top: 0;
+      border: 1px solid #CCC;
+      border-radius: 1em;
+      background-color: #FFF;
+    }
+    div + div {
+      margin-top: 1em;
+    }
+    .flashes {
+      display: inline-block;
+      width: 90px;
+      text-align: right;
+    }
+    input, button {
+      font: 1em sans-serif;
+      width: 300px;
+      -moz-box-sizing: border-box;
+           box-sizing: border-box;
+      border: 1px solid #999;
+    }
+    input:focus {
+      border-color: #000;
+    }
+    .button {
+      font: 1em sans-serif;
+    }
+    </style>
     <meta charset="utf-8">
     <title>Log in</title>
     <script type="text/javascript">
-    function getParameterByName(name, url) {
-      if (!url) url = window.location.href;
-      name = name.replace(/[\[\]]/g, "\\$&");
-      var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"), results = regex.exec(url);
-      if (!results) return null;
-      if (!results[2]) return '';
-      return decodeURIComponent(results[2].replace(/\+/g, " "));
-    }
     $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
     $(function() {
         $( "#user" ).autocomplete({
@@ -83,7 +74,7 @@
   </head>
   <body>
     <div class="formarea">
-      <div class="heading">Welcome to RogerOS</div></p>
+      <div class="heading"><img width="25px" src="/static/roger-blue.png"/>-: Welcome to RogerOS :-<img width="25px" src="/static/roger-blue.png"/></div>
       {% if current_user.is_authenticated %}
       <p>Hello <b>{{ current_user.get_username() }}</b> (<a href="{{ url_for ('logout') }}">log out<a>)!</p>
       {% else %}
@@ -91,14 +82,14 @@
         <div class="ui-widget">
             <input type="text" id="user" name="user" title="Your user name (usually firstname.lastname)" placeholder="user name" autofocus/>
         </div>
-        <div>
+        <div class="ui-widget">
             <input type="password" id="pass" name="pass" title="Your password" placeholder="password"/>
         </div>
-        <div>
+        <div class="ui-helper-hidden">
             <input type="hidden" id="redirect" name="redirect" value="{% if redirect_url %}{{ redirect_url }}{% endif %}"/>
         </div>
         <div class="button">
-            <button id="submit" type="submit">Log in</button>
+            <button class="ui-button" id="submit" type="submit">Log in</button>
         </div>
       </form>
       {% endif %}
@@ -111,7 +102,7 @@
             <input type="hidden" id="redirect" name="redirect" value="{% if redirect_url %}{{ redirect_url }}{% endif %}"/>
         </div>
         <div class="button">
-            <button id="submit" type="submit">Proceed</button>
+            <button class="ui-button" id="submit" type="submit">Proceed</button>
         </div>
         <script type="text/javascript">
         $(function() {
