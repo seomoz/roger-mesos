@@ -1,6 +1,6 @@
 import os
 import cherrypy
-from aaad_app import app
+from aaad import app
 
 if __name__ == '__main__':
 
