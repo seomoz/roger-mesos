@@ -1,7 +1,7 @@
 $(document).ready(function(){
-  var $elm = '<div style="position: fixed; width:100%; top: 0; z-index:32767; text-align: center;"><div id="aaaddropdown" style="padding: 5px; background-color: {{ env_color }}; border-bottom: 4px solid {{ env_border_color }}; display:none; text-align: center">' +
-             '<p>Welcome to RogerOS! You\'re logged into the <b>{{ env_name }}</b> environment as <b>' + getCookieValue("actas") +
-             '</b> <a href="#" onclick="onActAsChangeClick();return false;">[change]</a> | <a href="/logout">[log out].</a></p></div>' +
+  var $elm = '<div style="position: fixed; width:100%; top: 0; z-index:32767; text-align: center;"><div id="aaaddropdown" style="padding: 5px; background-color: {{ env_color }}; border-bottom: 2px solid {{ env_border_color }}; display:none; text-align: center">' +
+             'Welcome to RogerOS! You\'re logged into the <b>{{ env_name }}</b> environment as <b>' + getCookieValue("actas") +
+             '</b> <a href="#" onclick="onActAsChangeClick();return false;">[change]</a> | <a href="/logout">[log out].</a></div>' +
              '<div id="aaadselector" style="display: inline-block; padding:0; background-color: {{ env_color }}; border-bottom-left-radius: 5px; border-bottom-right-radius: 5px; cursor: pointer;">' +
              '<img width="25px" src="/static/roger-blue.png"/>-: {{ env_name }} :-<img width="25px" src="/static/roger-blue.png"/></div></div>'
   $( "body" ).append($elm)
