@@ -93,7 +93,7 @@ def filter_response():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    actas = request.cookies.get("actas") # try loading from cookies
+    actas = request.cookies.get("actas") # try loading from cookie
     if not actas: # try to get from header
         actas = request.headers.get("act_as_user")
 
