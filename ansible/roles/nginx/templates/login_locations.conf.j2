@@ -4,5 +4,6 @@ location ~ ^/(login|logout|api) {
 }
 
 location /static { # this are the gets on the static styles, js etc. on aaad
-        root {{nginx_conf_dir}}/aaad;
+        include {{ nginx_conf_dir }}/mime.types;
+        root {{ nginx_conf_dir }}/aaad;
 }
