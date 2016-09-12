@@ -8,14 +8,14 @@ upstream chronos {
 
 server {
        listen 80;
-       server_name “~^marathon.+$” ;
-       rewrite ^ https://$host$request_uri redirect;
+       server_name ~^marathon.+$ ;
+       rewrite ^ https://marathon-{{env_name}}-roger.{{cert_subdomain}}$request_uri redirect;
 }
 
 server {
        listen 80;
-       server_name “~^chronos.+$” ;
-       rewrite ^ https://$host$request_uri redirect;
+       server_name ~^chronos.+$ ;
+       rewrite ^ https://chronos-{{env_name}}-roger.{{cert_subdomain}}$request_uri redirect;
 }
 
 server {
