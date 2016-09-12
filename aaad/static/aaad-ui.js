@@ -7,10 +7,14 @@ $(document).ready(function(){
   $(aaadselector).click(function () {
     $(aaaddropdown).slideToggle(300);
   });
-  if (getCookieValue("actas") && $('aaaddropdown').css('display') != 'none') {
-    // If the user is (or was) already logged in and dropdown is visible, let's toggle dropdown to hide in a few seconds
+
+  if (getCookieValue("actas")) {
+    // If the user is (or was) already logged in let's check in a few seconds...
     setTimeout(function(){
-      $(aaaddropdown).slideToggle(300)
+      // ... and if dropdown is still visible, let's slideToggle to hide it
+      if($('#aaaddropdown').css('display') != 'none') {
+        $(aaaddropdown).slideToggle(300);
+      }
     }, 5000);
   }
 });
