@@ -1,0 +1,28 @@
+@import url('/static/aaad-vars.css');
+#aaadcontainer {
+  position: fixed;
+  width: 100%;
+  top: 0;
+  left: 0;
+  margin: 0;
+  z-index: 32767;
+  text-align: center;
+}
+#aaaddropdown {
+  padding: 5px;
+  background-color: var(--env-bg-color);
+  border-bottom: 2px solid var(--env-border-color);
+  text-align: center;
+}
+#aaadselector {
+  display: inline-block;
+  margin: 0;
+  padding: 0;
+  background-color: var(--env-bg-color);
+  border-bottom-left-radius: 5px;
+  border-bottom-right-radius: 5px;
+  cursor: pointer;
+}
+.rogermascotimg {
+  width: 25px;
+}

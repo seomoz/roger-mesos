@@ -176,10 +176,21 @@
       - update
       - aaad
 
-  - name: Template AAA ui js.j2 file to nginx conf directory for now
-    template: src=aaad-ui.js.j2 dest={{nginx_conf_dir}}/aaad/static/aaad-ui.js owner=root group=root mode=0644
+  - name: Template AAAD environment specific files file to nginx conf directory for now
+    template: src="{{item}}.j2" dest="{{nginx_conf_dir}}/aaad/static/{{item}}" owner=root group=root mode=0644
+    with_items:
+      - "aaad-vars.css"
     become: yes
     notify: restart aaad
+    tags:
+      - install
+      - nginx
+      - update
+      - aaad
+
+  - name: Update env name in aaad-js file
+    lineinfile: dest="{{nginx_conf_dir}}/aaad/static/aaad-ui.js" regexp="^\$env_name = " line="$env_name = '{{ env_name }}'"
+    become: yes
     tags:
       - install
       - nginx

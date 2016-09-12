@@ -1,23 +1,31 @@
+@import url('/static/aaad-vars.css');
 body {
   background-image: url('/static/roger-blue.png');
   background-size: 5%;
-}
-* {
   font: 1em sans-serif;
 }
 .heading {
   text-align: center;
   font: 1em sans-serif;
   padding: 1em;
+  display: inline-block;
   }
+.welcome {
+  border-radius: .5em;
+  width:100%;
+  background-color: var(--env-bg-color);
+}
 .formarea {
   margin: 0 auto;
+  margin-top: 75px;
   width: 300px;
   padding: 1em;
   padding-top: 0;
-  border: 1px solid #CCC;
+  border: 1px solid var(--env-border-color);
   border-radius: 1em;
   background-color: #FFF;
+  text-align: center;
+  box-shadow: 10px 20px 30px #CCC;
 }
 div + div {
   margin-top: 1em;
@@ -30,13 +38,16 @@ div + div {
 input, button {
   font: 1em sans-serif;
   width: 300px;
-  -moz-box-sizing: border-box;
-       box-sizing: border-box;
   border: 1px solid #999;
+  border-radius: .5em;
+}
+button {
+  width: 200px;
 }
 input:focus {
   border-color: #000;
 }
 .button {
   font: 1em sans-serif;
+  border-radius: 1em;
 }
