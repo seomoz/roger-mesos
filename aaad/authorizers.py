@@ -90,7 +90,7 @@ class FileAuthorizer:
             allowed_users_list = []
             allowed_actions = []
             if 'action' in self.data[act_as] and self.data[act_as]['action'] != None:
-                for item in self.data[user]['action'][action]:
+                for item in self.data[act_as]['action'][action]:
                     temp_item = {}
                     if type(item) == str:
                         temp_item = {}
