@@ -7,6 +7,16 @@ upstream chronos {
 }
 
 server {
+      listen 80 default_server;
+      server_name _ ;
+{% if env_name == 'local' %}
+      rewrite ^ https://$host$request_uri redirect;
+{% else %}
+      return 444;
+{% endif %}
+}
+
+server {
        listen 80;
        server_name ~^marathon.+$ ;
        rewrite ^ https://marathon-{{env_name}}-roger.{{cert_subdomain}}$request_uri redirect;
