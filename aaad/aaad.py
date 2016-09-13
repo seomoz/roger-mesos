@@ -21,7 +21,7 @@ login_manager.init_app(app)
 def setup_logging():
     if not app.debug:
         handler = logging.StreamHandler() # sys.stderr
-        formatter = logging.Formatter('[%(asctime)-15s] %(levelname)s - %(name)s - IP:%(clientip)s User:%(user)s ActAs:%(act_as)s - %(message)s')
+        formatter = logging.Formatter('[%(asctime)-15s] %(levelname)s - %(name)s - %(module)s - %(process)d - %(thread)d - %(message)s')
         handler.setFormatter(formatter)
         app.logger.addHandler(handler)
         log_levels = {'debug': logging.DEBUG,
