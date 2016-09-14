@@ -7,18 +7,34 @@ upstream chronos {
 }
 
 server {
+      listen 80 default_server;
+      server_name _ ;
+{% if env_name == 'local' %}
+      rewrite ^ https://$host$request_uri redirect;
+{% else %}
+      return 444;
+{% endif %}
+}
+
+server {
        listen 80;
-       server_name marathon.* chronos.* marathons.* chronoss.*;
-       rewrite ^ https://$host$request_uri permanent;
+       server_name ~^marathon.+$ ;
+       rewrite ^ https://marathon-{{env_name}}-roger.{{cert_subdomain}}$request_uri redirect;
+}
+
+server {
+       listen 80;
+       server_name ~^chronos.+$ ;
+       rewrite ^ https://chronos-{{env_name}}-roger.{{cert_subdomain}}$request_uri redirect;
 }
 
 server {
         listen 443 ssl;
-        server_name marathon.* marathons.*;
+        server_name ~^marathon.+$ ;
 
         ssl on;
         #access_log      /var/log/upstart/nginx.log;
-        #error_log       /var/log/upstart/nginx.log;
+        error_log       /var/log/upstart/nginx.log;
 
         ssl_certificate         {{ nginx_certs_dir }}/nginx.in.crt;
         ssl_certificate_key     {{ nginx_certs_dir }}/nginx.in.key;
@@ -46,11 +62,11 @@ server {
 
 server {
         listen 443;
-        server_name chronos.* chronoss.*;
+        server_name ~^chronos.+$ ;
 
         ssl on;
         #access_log      /var/log/upstart/nginx.log;
-        #error_log       /var/log/upstart/nginx.log;
+        error_log       /var/log/upstart/nginx.log;
 
         ssl_certificate         {{ nginx_certs_dir }}/nginx.in.crt;
         ssl_certificate_key     {{ nginx_certs_dir }}/nginx.in.key;
@@ -77,6 +93,12 @@ server {
 
 server {
         listen {{ nginx_listen_on_host|default('127.0.0.1', true) }}:7777;
+        sub_filter '</body>' '<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script><script src="/static/aaad-ui.js"></script></body>' ;
+        sub_filter_types text/html;
+        sub_filter_once on;
+
+        #access_log      /var/log/upstart/nginx.log;
+        error_log       /var/log/upstart/nginx.log;
 
         location /marathon/ping {
                  auth_basic Off;
@@ -317,10 +339,5 @@ server {
                 internal;
         }
 
-        location = /auth {
-                proxy_pass http://localhost:{{ nginx_aaad_port }};
-                proxy_set_header URI $request_uri;
-                proxy_set_header method $request_method;
-                proxy_pass_request_headers on;
-        }
+        include {{ nginx_conf_dir }}/sites-available/auth_location.conf;
 }

@@ -27,10 +27,10 @@
       - packages
       - nginx
 
-  - name: configure and install nginx with auth_request module
+  - name: configure and install nginx and modules
     command: chdir={{tmp_dir}}/{{nginx_pkg}} {{item}}
     with_items:
-      - ./configure --with-http_auth_request_module --with-stream --with-stream_ssl_module
+      - ./configure --with-http_auth_request_module --with-stream --with-stream_ssl_module --with-http_sub_module
       - make
       - make install
     become: yes
@@ -46,7 +46,6 @@
       - "{{ nginx_chronos_auth_dir }}"
       - "{{ nginx_chronos_auth_views_dir }}"
       - "{{ nginx_chronos_auth_templates_dir }}"
-      - "{{ nginx_auth_login_dir }}"
     when: nginx_auth_enable is defined and nginx_auth_enable|bool
     become: yes
     tags:
@@ -54,8 +53,8 @@
       - nginx
       - login
 
-  - name: Synchronize login pages
-    synchronize: src=login/ dest={{ nginx_auth_login_dir }} recursive=yes delete=yes
+  - name: Remove login pages (this was used in the past)
+    file: path={{ nginx_auth_login_dir }} state=absent
     become: yes
     notify: restart nginx
     tags:
@@ -151,22 +150,68 @@
       - nginx
       - permissions-sync
 
-  - name: Do a pip install passlib (for aaad htpasswd check during authentication)
-    pip: name=passlib
+  - name: Do a pip uninstall passlib (may have been added before for aaad htpasswd check during authentication)
+    pip: name=passlib state=absent
     become: yes
     notify: restart aaad
     tags:
       - install
       - aaad
 
-  - name: Copy AAA daemon to nginx conf directory for now
-    copy: src=../../../../aaad dest={{nginx_conf_dir}}  mode=0655
+  - name: Synchronize AAA daemon to nginx conf directory for now
+    synchronize:
+      src: ../../../../aaad/
+      dest: "{{nginx_conf_dir}}/aaad/"
+      recursive: yes
+      delete: yes
+      rsync_opts:
+            - "--exclude=/venv/"
+            - "--exclude=*.pyc"
+            - "--exclude=SET-ENV.sh"
     become: yes
     notify: restart aaad
     tags:
       - install
       - nginx
       - update
+      - aaad
+
+  - name: Template AAAD environment specific files file to nginx conf directory for now
+    template: src="{{item}}.j2" dest="{{nginx_conf_dir}}/aaad/static/{{item}}" owner=root group=root mode=0644
+    with_items:
+      - "aaad-vars.css"
+    become: yes
+    notify: restart aaad
+    tags:
+      - install
+      - nginx
+      - update
+      - aaad
+
+  - name: Update env name in aaad-js file
+    lineinfile: dest="{{nginx_conf_dir}}/aaad/static/aaad-ui.js" regexp="^\$env_name = " line="$env_name = '{{ env_name }}'"
+    become: yes
+    tags:
+      - install
+      - nginx
+      - update
+      - aaad
+
+  - name: Do a pip install virtualenv
+    pip: name=virtualenv
+    become: yes
+    tags:
+      - install
+      - aaad
+
+  - name: Set up virtualenv and install requirements for aaad
+    pip:
+      requirements: "{{nginx_conf_dir}}/aaad/requirements.txt"
+      virtualenv: "{{nginx_conf_dir}}/aaad/venv"
+      virtualenv_python: python2.7
+    become: yes
+    notify: restart aaad
+    tags:
       - aaad
 
   - name: Configure aaad upstart job
@@ -208,15 +253,25 @@
   - name: symlink proxy config to default site
     file: src="{{nginx_conf_dir}}/sites-available/rogeros_auth_proxy.conf" dest="{{nginx_conf_dir}}/sites-enabled/default" state=link
     become: yes
-    when: not ansible_check_mode
+    when: ansible_check_mode is not defined or not ansible_check_mode
     tags:
       - install
       - nginx
 
+  - name: create self-signed SSL cert
+    command: openssl req -new -nodes -x509 -subj "/C=US/ST=Washington/L=Seattle/O=IT/CN=${ansible_fqdn}"
+      -days 365 -keyout "{{ certs_dir }}/ssl.in.key" -out "{{ certs_dir }}/ssl.in.crt" -extensions v3_ca creates="{{ certs_dir }}/ssl.in.crt"
+    become: yes
+    when: gen_self_signed_cert is defined and gen_self_signed_cert|bool
+    tags:
+      - install
+      - nginx
+      - self-signed-ssl-cert
+
   - name: symlink nginx certificate key file
     file: src="{{ certs_dir }}/ssl.in.key" dest="{{nginx_certs_dir}}/nginx.in.key" state=link
     become: yes
-    when: not ansible_check_mode
+    when: ansible_check_mode is not defined or not ansible_check_mode
     tags:
       - install
       - nginx
@@ -224,7 +279,7 @@
   - name: symlink nginx certificate file
     file: src="{{ certs_dir }}/ssl.in.crt" dest="{{nginx_certs_dir}}/nginx.in.crt" state=link
     become: yes
-    when: not ansible_check_mode
+    when: ansible_check_mode is not defined or not ansible_check_mode
     tags:
       - install
       - nginx

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.0/themes/base/jquery-ui.css" />
+    <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.0/jquery-ui.js"></script>
+    <link rel="stylesheet" href="/static/aaad.css" />
+    <meta charset="utf-8">
+    <title>Log in</title>
+    <script type="text/javascript">
+    $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
+    $(function() {
+        $( "#user" ).autocomplete({
+        source: function (request, response) {
+              $.ajax({
+                  url: '{{ url_for ('users') }}',
+                  dataType: "json",
+                  data:{
+                      startswith: request.term,
+                  },
+                  success: function (data){
+                      response(data);
+                  }
+              });
+          },
+        minLength: 2
+        });
+    });
+    </script>
+  </head>
+  <body>
+    <div class="formarea">
+      <div class="heading">
+      <table class="welcome"><tbody><tr>
+        <td><img width="25px" src="/static/roger-blue.png"/></td>
+        <td>Welcome to RogerOS</td>
+        <td><img width="25px" src="/static/roger-blue.png"/></td>
+      </tr></tbody></table></div>
+      {% if current_user.is_authenticated %}
+      <p>Hello <b>{{ current_user.get_username() }}</b> (<a href="{{ url_for ('logout') }}">log out</a>)!</p>
+      {% else %}
+      <form action={{ url_for('login') }} method="post">
+        <div class="ui-widget">
+            <input type="text" id="user" name="user" title="Your user name (usually firstname.lastname)" placeholder="user name" autofocus/>
+        </div>
+        <div class="ui-widget">
+            <input type="password" id="pass" name="pass" title="Your password" placeholder="password"/>
+        </div>
+        <div class="ui-helper-hidden">
+            <input type="hidden" id="redirect" name="redirect" value="{% if redirect_url %}{{ redirect_url }}{% endif %}"/>
+        </div>
+        <div class="button">
+            <button class="ui-button" id="submit" type="submit">Log in</button>
+        </div>
+      </form>
+      {% endif %}
+      {% if current_user.is_authenticated and not actas %}
+      <form action={{ url_for('login') }} method="post">
+        <div class="ui-widget">
+            <input type="text" id="act_as" name="act_as" title="Team or user to act as for application and resource access" placeholder="act as (start typing or use arrow keys)" autofocus/>
+        </div>
+        <div>
+            <input type="hidden" id="redirect" name="redirect" value="{% if redirect_url %}{{ redirect_url }}{% endif %}"/>
+        </div>
+        <div class="button">
+            <button class="ui-button" id="submit" type="submit">Proceed</button>
+        </div>
+        <script type="text/javascript">
+        $(function() {
+            $( "#act_as" ).autocomplete({
+            source: function (request, response) {
+                  $.ajax({
+                      url: $SCRIPT_ROOT + '/api/users/' + '{{ current_user.get_username() }}' + '/can_act_as',
+                      dataType: "json",
+                      data:{
+                          contains: request.term,
+                      },
+                      success: function (data){
+                          response(data);
+                      }
+                  });
+              },
+              minLength: 0
+            });
+        });</script>
+      </form>
+      {% endif %}
+      {% if current_user.is_authenticated and actas %}
+      <p> You're acting as <b>{{ actas }}</b> (<a href="{{ url_for('login', resetactas='true') }}">change</a>).</p>
+      {% endif %}
+      {% with messages = get_flashed_messages() %}{% if messages %}{% for message in messages %}<p>{{ message }}</p>{% endfor %}{% endif %}{% endwith %}
+  </div>
+  <script src="/static/aaad-ui.js"></script>
+  </body>
+</html>

@@ -1,0 +1,6 @@
+/* This file can be replaced with file that has env specific variables */
+:root {
+  --env-bg-color: gray;
+  --env-border-color: black;
+  --env-dd-text-color: white;
+}

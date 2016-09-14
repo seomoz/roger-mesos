@@ -1,0 +1,6 @@
+/* These are css vars for the *{{ env_name }}* environment */
+:root {
+  --env-bg-color: {{ env_color }};
+  --env-border-color: {{ env_border_color }};
+  --env-dd-text-color: {{ env_dd_text_color | default('white') }};
+}

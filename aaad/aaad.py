@@ -1,281 +1,158 @@
-import sys, os, signal, base64
-from BaseHTTPServer import HTTPServer, BaseHTTPRequestHandler
-
-Listen = ('localhost', 8888)
-
-import threading
+from flask import Flask, jsonify, request, render_template, redirect, make_response, flash, Response
+from flask_restful import abort, Api, Resource
+from flask_login import login_user, logout_user, login_required, current_user
+from webargs import fields
+from webargs.flaskparser import use_args
+import os
+import json
 import logging
-import argparse
-import utils
-from SocketServer import ThreadingMixIn
+
 from authenticators import FileAuthenticator
 from authorizers import FileAuthorizer
-from frameworkUtils import FrameworkUtils
-import cgi
-import urlparse
-from datetime import datetime
-import crypt_utils
-from Cookie import SimpleCookie
+from resources import Users, Groups, CanActAsUsers
+from sessions import login_manager, SessionUser
 
-session_timeout_seconds = int(os.getenv('SESSION_TIMEOUT_SECONDS', 120))
-secret_key = os.getenv('SECRET_KEY', 'test_key_NOT_a_secret')
-session_id_key = os.getenv('SESSION_ID_KEY', 'aaadsid')
-session_id_domain = os.getenv('SESSION_ID_DOMAIN', None)
-htpasswd_file = os.getenv('HTPASSWD_FILE', '')
+app = Flask(__name__)
+app.config.from_object('config')
 
-class AuthHTTPServer(ThreadingMixIn, HTTPServer, ):
-    pass
+api = Api(app)
+login_manager.init_app(app)
 
-class AuthHandler(BaseHTTPRequestHandler):
-    ctx = {}
-    authenticator = None
-    frameworkUtils = FrameworkUtils()
+COOKIE_DOMAIN = os.getenv('SESSION_ID_DOMAIN', None)
 
-    def do_GET(self):
+@app.before_first_request
+def setup_logging():
+    if not app.debug:
+        handler = logging.StreamHandler() # sys.stderr
+        formatter = logging.Formatter('[%(asctime)-15s] %(levelname)s - %(name)s - %(module)s:%(lineno)s - %(funcName)s - %(message)s')
+        handler.setFormatter(formatter)
+        app.logger.addHandler(handler)
+        log_levels = {'debug': logging.DEBUG,
+              'info': logging.INFO,
+              'warning': logging.WARNING,
+              'error': logging.ERROR,
+              'critical': logging.CRITICAL}
+        log_level = os.environ.get('LOG_LEVEL', 'warning')
+        app.logger.setLevel(log_levels.get(log_level, logging.NOTSET))
 
-        ctx = self.ctx
-        ctx['action'] = 'getting basic http authorization header'
-        auth_header = self.headers.get('Authorization')
-        resource = self.headers.get('URI')
-        action = self.headers.get('method')
-        client_ip = self.headers.get('X-Forwarded-For')
-        auth_action = self.headers.get("auth_action", "")
+@app.route('/auth')
+@login_required
+def authorize():
+    '''
+    This method finds out if the current user is authorized to -
+        - perform the action specified in 'method' header
+        - on the resource specified in 'URI header'
+    The request body and content_type are also required for ths purpose.
 
-        self.info = { 'clientip': str(client_ip) }
+    Note:
+    Because of the @login_required decorator authentication should be already complete
+    using one of the supported methods by the time we reach this method. So, let's just
+    worry about authorizaton.
+    '''
+    user = current_user.get_username()
+    actas = _find_actas(request)
 
-        user = None
-        password = None
-        act_as_user = None
-        sid = None
+    resource = request.headers.get('URI','')
+    data = request.get_data()
+    content_type = request.headers.get('content-type', '')
+    action = request.headers.get('method', '')
+    client_ip = request.headers.get('X-Forwarded-For')
+    info = { 'clientip': str(client_ip), 'user': str(user), 'act_as': str(actas) }
 
-        # Read the seesion id cookie if available
-        cookie_str = self.headers.get('Cookie')
-        if cookie_str:
-            cookie_obj = SimpleCookie(cookie_str)
-            sid_morsel = cookie_obj.get(session_id_key, None)
-            if sid_morsel is not None:
-                sid = sid_morsel.value
-                if sid == '0':
-                    sid = None
+    if action.lower() in [ "get", "head", "connect", "trace" ]:
+        app.logger.info("{} {}".format(action, resource), extra = info)
+    else:
+        app.logger.warning("{} {}".format(action, resource), extra = info)
 
-        if sid: # If session_id_key cookie exists use that
-            decoded = self.decode_sessionid(sid)
-            if not decoded:
-                self.send_response(401)
-                self.send_header('Set-Cookie', '{}=0; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;'.format(session_id_key)) # remove session id cookie
-                self.end_headers()
-                return
-            user = decoded['user']
-            password = decoded['password']
-            act_as_user = decoded['act_as_user']
-        else: # Else attempt Basic Authentication
-            if auth_header is None or not auth_header.lower().strip().startswith('basic '):
-                self.send_response(401)
-                self.send_header('Set-Cookie', '{}=0; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;'.format(session_id_key)) # remove session id cookie
-                self.end_headers()
-                return
-            auth_decoded = base64.b64decode(auth_header[6:])
-            user, password = auth_decoded.split(':', 2)
-            if self.headers.get('act-as-user'):
-                act_as_user = self.headers.get('act-as-user')
+    if not FileAuthorizer().instance.authorize(user, actas, resource, app.logger, info, data, content_type, action):
+        abort(403)
+
+    return json.dumps({'success':True}), 200, {'ContentType':'application/json'}
+
+@app.route('/filter')
+@login_required
+def filter_response():
+    '''
+    This method filters the response (body) based on the access the current user has.
+    Should typically be called by the proxy (internal) and not from outside.
+    '''
+    user = current_user.get_username()
+    actas = _find_actas(request)
+
+    resource = request.headers.get('URI','')
+    data = request.get_data()
+
+    response = FileAuthorizer().instance.filter_response(resource, data, actas)
+    return Response(response=response, status=200, mimetype="application/json")
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    actas = request.cookies.get("actas") or request.headers.get("act_as_user")
+    redirect_url = request.args.get('next', '/')
+    if request.method == 'POST':
+        redirect_url = request.form.get('redirect', redirect_url) # Note: if auth succeeds we re-direct to this else we render it to index.html if auth fails
+        username = request.form.get('user')
+        passw = request.form.get('pass')
+        if username and passw:
+            if (FileAuthenticator().instance.authenticate(username, passw)):
+                session_user = SessionUser.get(username)
+                if session_user:
+                    login_user(session_user, remember=True)
+                    # if the user can act as only one user, auto update actas
+                    actaslist = FileAuthorizer().instance.get_canactas_list(current_user.get_username())
+                    if len(actaslist) == 1:
+                        actas = actaslist[0]
+                else:
+                    flash('Something didn\'t work! Please re-try with the right credentials.')
+                    return make_response(render_template('index.html', **locals()))
             else:
-                act_as_user = user
-
-        ctx['user'] = user
-        ctx['pass'] = password
-        self.info.update({ 'user': str(user), 'act_as': str(act_as_user) })
-        logger.debug("\n{}".format(self.headers), extra = self.info)
-        if action.lower() in [ "get", "head", "connect", "trace" ]:
-            logger.info("{} {}".format(action, resource), extra = self.info)
+                flash('Authentication failed.')
+                return make_response(render_template('index.html', **locals()))
         else:
-            logger.warning("{} {}".format(action, resource), extra = self.info)
+            actas = request.form.get('act_as')
 
-        content_len = int(self.headers.getheader('content-length', 0))
-        body = self.rfile.read(content_len)
-        logger.debug("\n{}".format(body), extra = self.info)
-
-        content_type = self.headers.getheader("content-type", "")
-
-        if auth_action == "filter_response":
-            filtered_response = self.filter_response(body, resource, act_as_user, permissions)
-            self.send_response(200)
-            self.end_headers()
-            self.wfile.write(filtered_response)
-            self.wfile.close()
-            return
-
-        if not self.authenticate_request(user, password):
-            self.send_response(401)
-            self.send_header('Set-Cookie', '{}=0; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;'.format(session_id_key)) # remove session id cookie
-            self.end_headers()
-            return
-
-        if not self.authorize_request(user, act_as_user, action, resource, body, content_type):
-            self.send_response(403)
-            self.send_header('Set-Cookie', '{}=0; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;'.format(session_id_key)) # remove session id cookie
-            self.end_headers()
-            return
-
-        self.log_message(ctx['action'])  # Continue request processing
-        self.send_response(200)
-        if not sid: # if sid was absent, let's add a sid
-            self.send_header('Set-Cookie', '{}={}'.format(session_id_key, self.encode_sessionid(user, password, act_as_user)))
-        self.end_headers()
-        return
-
-    def do_POST(self):
-        """
-            Adds a session id cookie for a valid user/pass/actas combination.
-            This method adds a Set-Cookie header (from the form data) of the format:
-                'user|pass|actas|validity'
-            After doing this it responds with a 302 to the 'redirect' data in the form
-            or a 200 if no 'redirect' data exists.
-        """
-        ctx = self.ctx
-        ctx['action'] = 'creating new session'
-        resource = self.headers.get('URI')
-        action = self.headers.get('method')
-        client_ip = self.headers.get('X-Forwarded-For')
-
-        ctype, pdict = cgi.parse_header(self.headers.getheader('content-type'))
-        if ctype == 'multipart/form-data':
-            postvars = cgi.parse_multipart(self.rfile, pdict)
-        elif ctype == 'application/x-www-form-urlencoded':
-            length = int(self.headers.getheader('content-length'))
-            postvars = urlparse.parse_qs(self.rfile.read(length), keep_blank_values=1)
+        if current_user.is_authenticated:
+            if actas in FileAuthorizer().instance.get_canactas_list(current_user.get_username()):
+                # all's well, let's set cookie and redirect
+                resp = make_response(redirect(redirect_url or '/'))
+                resp.set_cookie('actas', actas, domain=COOKIE_DOMAIN)
+                return resp
+            else:
+                if actas:
+                    flash('Not authorized to act as {}.'.format(actas))
+                actas = None
+                resp = make_response(render_template('index.html', **locals()))
+                resp.set_cookie('actas', '', expires=0, domain=COOKIE_DOMAIN)
+                return resp
         else:
-            postvars = {}
+            flash('Authentication required.')
+            return make_response(render_template('index.html', **locals()))
 
-        user = postvars.get('user', '')[0]
-        password = postvars.get('pass', '')[0]
-        act_as_user = postvars.get('act_as', '')[0]
-        if not act_as_user:
-            act_as_user = user
-        redirect = postvars.get('redirect', '')[0]
-        self.info = {'clientip': str(client_ip), 'user': str(user), 'act_as': str(act_as_user), 'redirect': str(redirect)}
+    if request.args.get('resetactas', 'false').lower() in ['true', '1', 'yes']:
+        actas = None
 
-        if(redirect):
-            self.send_response(302)
-            self.send_header('Location', redirect)
-        else:
-            self.send_response(200)
+    if not current_user.is_authenticated:
+        flash('Please log in.')
 
-        message = ''
-        file_authorizer = FileAuthorizer(permissions_file).instance
-        if self.authenticate_request(user, password) and act_as_user in file_authorizer.get_act_as_list(user):
-            # create and set a session id cookie
-            cookie_domain = ''
-            if session_id_domain:
-                cookie_domain = '; Domain={}'.format(session_id_domain)
-            self.send_header('Set-Cookie', '{}={}; Path=/; Secure; HttpOnly{}'.format(session_id_key, self.encode_sessionid(user, password, act_as_user), cookie_domain))
-            message = 'Authenticated.'
-        else:
-            self.send_header('Set-Cookie', '{}=0; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;'.format(session_id_key)) # remove session id cookie
-            message = 'Authentication Failed.'
+    return make_response(render_template('index.html', **locals()))
 
-        self.end_headers()
-        self.wfile.write(message)
-        return
+@app.route('/logout')
+def logout():
+    logout_user()
+    actas = None
+    flash('You\'re logged out. Thank you for visiting!')
+    resp = make_response(render_template('index.html', **locals()))
+    resp.set_cookie('actas', '', expires=0, domain=COOKIE_DOMAIN)
+    return resp
 
-    def encode_sessionid(self, user, passw, actas):
-        sessionid = crypt_utils.encode(secret_key, '{}|{}|{}|{}'.format(user, passw, actas, self.get_now_in_seconds() + session_timeout_seconds))
-        return sessionid
+def _find_actas(request):
+    return ( request.cookies.get("actas") or
+             request.headers.get("act_as_user") or
+             current_user.get_username() )
 
-    def decode_sessionid(self, sessionid):
-        decoded = crypt_utils.decode(secret_key, sessionid)
-        [ user, password, actas, valid_until_s ] = decoded.split('|')
-        if not ( user or password or actas or valid_until_s ):
-            return None
-        valid_until = 0
-        try:
-            valid_until = float(valid_until_s)
-        except:
-            return None
-        if self.get_now_in_seconds() > valid_until:
-            return None
-        return { 'user': user, 'password': password, 'act_as_user': actas }
-
-    def get_now_in_seconds(self):
-        return (datetime.utcnow() - datetime(1970, 1, 1)).total_seconds()
-
-    def filter_response(self, body, resource, act_as_user, permissions):
-        framework = self.frameworkUtils.getFramework(resource)
-        allowed_namespaces = utils.getAllowedNamespacePatterns(act_as_user, permissions)
-
-        if not allowed_namespaces:    #Empty list
-            return ""
-
-        response = framework.filterResponseBody(body, allowed_namespaces, resource)
-        return response
-
-    def authenticate_request(self, user, password):
-        ctx = self.ctx
-        try:
-            if not FileAuthenticator(htpasswd_file).instance.authenticate(user, password):
-                return False
-        except:
-            logger.error("Error while calling Authenticator")
-            return False
-
-        return True
-
-    def authorize_request(self, user, act_as_user, action, path, data, content_type):
-        ctx = self.ctx
-        file_authorizer = FileAuthorizer(permissions_file).instance
-        try:
-            if not file_authorizer.authorize(user, act_as_user, path, logging, self.info, data, content_type, action):
-                return False
-
-        except:
-            logger.error("Error while calling Authorizer")
-            return False
-        return True
-
-    def log_message(self, format, *args):
-        logger.debug("{}".format(args), extra = self.info)
-
-def exit_handler(signal, frame):
-    global Listen
-
-    if isinstance(Listen, basestring):
-        try:
-            os.unlink(Listen)
-        except:
-            ex, value, trace = sys.exc_info()
-            logger.error('Failed to remove socket "%s": %s\n' %
-                             (Listen, str(value)))
-    sys.exit(0)
-
-def parse_args():
-    parser = argparse.ArgumentParser(prog='AAAd Daemon', description="Audits every request, " \
-                 "authenticates user and checks if user is authorized")
-    parser.add_argument('perm_file', metavar='perm_file', help="Permissions file")
-    parser.add_argument('-l', '--log-level', metavar='log_level', help="Log Level. Example: 'debug' or 'info'")
-    return parser
+api.add_resource(Users, '/api/users')
+api.add_resource(Groups, '/api/groups')
+api.add_resource(CanActAsUsers, '/api/users/<user>/can_act_as')
 
 if __name__ == '__main__':
-
-    log_levels = {'debug': logging.DEBUG,
-          'info': logging.INFO,
-          'warning': logging.WARNING,
-          'error': logging.ERROR,
-          'critical': logging.CRITICAL}
-
-    parser = parse_args()
-    args = parser.parse_args()
-    permissions_file = args.perm_file
-    if not os.path.exists(permissions_file):
-        sys.exit("Permissions file - {} does not exist".format(permissions_file))
-    log_level = "warning"
-    if args.log_level:
-        log_level = args.log_level.lower()
-    if log_level not in log_levels.keys():
-         sys.exit("LOG LEVEL is not valid. Allowed levels {}.".format(log_levels.keys()))
-    level = log_levels.get(log_level, logging.NOTSET)
-    FORMAT = "[%(asctime)-15s] %(levelname)s - %(name)s - IP:%(clientip)s User:%(user)s ActAs:%(act_as)s - %(message)s"
-    logging.basicConfig(level=level, format=FORMAT)
-    logger = logging.getLogger("AAAd")
-    permissions = utils.parse_permissions_file(permissions_file)
-    server = AuthHTTPServer(Listen, AuthHandler)
-    signal.signal(signal.SIGINT, exit_handler)
-    server.serve_forever()
+    app.run(debug=True, port=8888)

@@ -25,7 +25,6 @@ class Chronos(Framework):
                         if result:
                             if not job in filtered_response:
                                 filtered_response.append(job)
-                     
             return json.dumps(filtered_response)
         except (Exception) as e:
             return ""

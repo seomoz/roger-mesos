@@ -1,11 +1,9 @@
-location = /login { # this is to allow a login link
-        rewrite ^ /login.html?$args&redirect_url=$scheme://$host/ redirect;
+location ~ ^/(login|logout|api) {
+        proxy_pass http://localhost:{{ nginx_aaad_port }}$request_uri;
+        proxy_redirect http://localhost:{{ nginx_aaad_port }}/ /;
 }
 
-location = /login.html {
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Scheme $scheme;
-        root {{ nginx_auth_login_dir }};
+location /static { # this are the gets on the static styles, js etc. on aaad
+        include {{ nginx_conf_dir }}/mime.types;
+        root {{ nginx_conf_dir }}/aaad;
 }

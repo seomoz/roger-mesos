@@ -47,9 +47,7 @@ class Marathon(Framework):
                             if result:
                                 if not app in filtered_apps:
                                     filtered_apps.append(app)
-       
             filtered_response['apps'] = filtered_apps
-
             return json.dumps(filtered_response)
         except (Exception) as e:
             return ""
@@ -58,7 +56,6 @@ class Marathon(Framework):
         response = {}
         filtered_apps = []
         filtered_groups = []
-        
         try:
             data = json.loads(body)
             if 'apps' in data.keys():
@@ -72,19 +69,16 @@ class Marathon(Framework):
 
             response['apps'] = filtered_apps
             response['groups'] = filtered_groups
-
             return json.dumps(response)
-
         except (Exception) as e:
             return ""
-   
+
     def matchPattern(self, id_to_match, allowed_namespaces):
         for namespace in allowed_namespaces:
             pattern = re.compile("^{}$".format(namespace))
             result = pattern.match(id_to_match)
             if result:
                 return True
-
         return False
 
     def filterApps(self, apps_list, allowed_namespaces):
@@ -95,7 +89,6 @@ class Marathon(Framework):
                 match_app_id = self.matchPattern(app_id, allowed_namespaces)
                 if match_app_id and (not item in allowed_apps):
                     allowed_apps.append(item)
-
         return allowed_apps
 
     def filterGroups(self, groups_list, allowed_namespaces):
@@ -112,18 +105,14 @@ class Marathon(Framework):
                    filtered_groups = []
                    if 'apps' in item and item['apps']:         #Check to see if item['apps'] is not empty
                        filtered_apps = self.filterApps(item['apps'], allowed_namespaces)
-                
                    if 'groups' in item and item['groups']:      #Check to see if item['groups'] is not empty
                        filtered_groups = self.filterGroups(item['groups'], allowed_namespaces)
-
                    if filtered_apps or filtered_groups:    #Either filtered apps or groups is not empty
                        for elem in item.keys():
                            if elem != 'apps' and elem != 'groups':
                                filtered_item[elem] = item[elem]
-
                        filtered_item['apps'] = filtered_apps
                        filtered_item['groups'] = filtered_groups
                        allowed_groups.append(filtered_item)
 
         return allowed_groups
-
