@@ -27,6 +27,6 @@ exec /usr/bin/marathon {% if (ssl_keystore_pass is defined) and not(ssl_keystore
 
 post-start script
   sleep 60
-  curl -X POST -H "Content-Type: application/x-www-form-urlencoded" -u {{ marathon_admin_user }}:{{ marathon_admin_password }} --data "logger=mesosphere.marathon.example&level=OFF" {% if bamboo_marathon_proxy_scheme is defined %}{{ bamboo_marathon_proxy_scheme }}{% else %}http{% endif %}://{{ marathon_webui_host }}/logging
+  curl -X POST -H "Content-Type: application/x-www-form-urlencoded" -u {{ marathon_admin_user }}:{{ marathon_admin_password }} --data "logger=mesosphere.marathon.example&level=OFF" {{ bamboo_marathon_proxy_scheme|default('http') }}://{{ marathon_webui_host }}/logging
 end script
 

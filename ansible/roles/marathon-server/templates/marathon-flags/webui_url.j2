@@ -1,1 +1,1 @@
-{% if bamboo_marathon_proxy_scheme is defined %}{{ bamboo_marathon_proxy_scheme }}{% else %}http{% endif %}://{{ marathon_webui_host }}:{{ marathon_webui_port }}/
+{{ bamboo_marathon_proxy_scheme|default('http') }}://{{ marathon_webui_host }}:{{ marathon_webui_port }}/
