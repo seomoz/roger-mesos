@@ -6,6 +6,8 @@ import re
 def get_metrics_snapshot(master_url):
     url = '{}/metrics/snapshot'.format(master_url)
     resp = requests.get('{}'.format(url))
+    if not resp.status_code // 100 == 2:
+        raise ValueError('Got a non-2xx response ({}) from {}.'.format(resp.status_code), url)
     return resp.json()
 
 def get_tasks_counts(master_url):
@@ -17,9 +19,12 @@ def get_tasks_counts(master_url):
 
 def get_tasks(master_url):
     tasks = {}
-    limit = int(sum(get_tasks_counts(master_url).values()))
+    tasks_count = get_tasks_counts(master_url)
+    limit = int(sum(tasks_count.values()))
     url = '{}/tasks?limit={}'.format(master_url, limit)
     resp = requests.get('{}'.format(url))
+    if not resp.status_code // 100 == 2:
+        raise ValueError('Got a non-2xx response ({}) from {}.'.format(resp.status_code), url)
     data = resp.json()
     for task in data['tasks']:
         if task['state'] in ['TASK_RUNNING', 'TASK_STAGING', 'TASK_STARTING']:

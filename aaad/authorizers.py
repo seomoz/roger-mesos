@@ -7,8 +7,6 @@ import sys
 from validators import Validator
 from frameworkUtils import FrameworkUtils
 
-validator = Validator()
-
 permissions_file = os.getenv('PERMISSIONS_FILE')
 
 class FileAuthorizer:
@@ -36,7 +34,7 @@ class FileAuthorizer:
                                 try:
                                     template_data = json.loads(body)
                                 except (Exception) as e:
-                                    logger.error("Request body is an invalid json")
+                                    logger.error("Request body is an invalid json - {}".format(str(e)))
                                     return False
 
                                 attribute_rules = item[pattern]
@@ -122,11 +120,12 @@ class FileAuthorizer:
                 return False
 
             try:
+                validator = Validator()
                 if not validator.validate(act_as, action, data):
                     logger.warning("Invalid request. Reasons - {}".format(validator.messages), extra = info)
                     return False
-            except:
-                logger.error("Failed in request validation", extra = info)
+            except (Exception) as e:
+                logger.error("Failed in request validation - {}".format(str(e)), extra = info)
                 return False
 
             return True
