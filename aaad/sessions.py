@@ -18,12 +18,6 @@ References:
     * http://flask-security.readthedocs.io/en/latest/features.html
 '''
 
-# secret key used for the session user cookie
-COOKIE_SECRET_KEY = os.environ['COOKIE_SECRET_KEY']
-SESSION_MAXAGE_SECONDS = int(os.getenv('SESSION_MAXAGE_SECONDS', 120))
-
-REMEMBER_COOKIE_DOMAIN = os.getenv('SESSION_ID_DOMAIN', None) # used by flask-login
-
 login_manager = LoginManager()
 
 '''
@@ -35,8 +29,9 @@ TODO: Update nginx configs to ensure client's ip and user agent are used in the 
 '''
 login_manager.session_protection = 'basic'
 
-#Login_serializer used to encryt and decrypt the cookie token for the remember me option of flask-login
-login_serializer = URLSafeTimedSerializer(COOKIE_SECRET_KEY)
+SESSION_MAXAGE_SECONDS = int(os.getenv('SESSION_MAXAGE_SECONDS', 120)) # should be same as the flask app's REMEMBER_COOKIE_DURATION setting
+SESSION_TOKEN_SECRET_KEY = os.environ['SESSION_TOKEN_SECRET_KEY'] # secret key used for the session user cookie
+login_serializer = URLSafeTimedSerializer(SESSION_TOKEN_SECRET_KEY) #Login_serializer used to encryt and decrypt the cookie token for the remember me option of flask-login
 
 class SessionUser(UserMixin):
     actas = ''

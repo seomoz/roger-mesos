@@ -13,9 +13,12 @@ from resources import Users, Groups, CanActAsUsers
 from sessions import login_manager, SessionUser
 
 app = Flask(__name__)
-app.secret_key = os.environ['APP_SECRET_KEY']
+app.config.from_object('config')
+
 api = Api(app)
 login_manager.init_app(app)
+
+COOKIE_DOMAIN = os.getenv('SESSION_ID_DOMAIN', None)
 
 @app.before_first_request
 def setup_logging():
@@ -112,14 +115,14 @@ def login():
             if actas in FileAuthorizer().instance.get_canactas_list(current_user.get_username()):
                 # all's well, let's set cookie and redirect
                 resp = make_response(redirect(redirect_url or '/'))
-                resp.set_cookie('actas', actas)
+                resp.set_cookie('actas', actas, domain=COOKIE_DOMAIN)
                 return resp
             else:
                 if actas:
                     flash('Not authorized to act as {}.'.format(actas))
                 actas = None
                 resp = make_response(render_template('index.html', **locals()))
-                resp.set_cookie('actas', '', expires=0)
+                resp.set_cookie('actas', '', expires=0, domain=COOKIE_DOMAIN)
                 return resp
         else:
             flash('Authentication required.')
@@ -139,7 +142,7 @@ def logout():
     actas = None
     flash('You\'re logged out. Thank you for visiting!')
     resp = make_response(render_template('index.html', **locals()))
-    resp.set_cookie('actas', '', expires=0)
+    resp.set_cookie('actas', '', expires=0, domain=COOKIE_DOMAIN)
     return resp
 
 def _find_actas(request):
