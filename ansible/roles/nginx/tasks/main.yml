@@ -197,6 +197,16 @@
       - update
       - aaad
 
+  - name: Update aaad cookie name in aaad-js file
+    lineinfile: dest="{{nginx_conf_dir}}/aaad/static/aaad-ui.js" regexp="^\$actas_cookie_name = " line="$actas_cookie_name = '{{ actas_cookie_name }}'"
+    when: actas_cookie_name is defined
+    become: yes
+    tags:
+      - install
+      - nginx
+      - update
+      - aaad
+
   - name: Do a pip install virtualenv
     pip: name=virtualenv
     become: yes
