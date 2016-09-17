@@ -1,5 +1,5 @@
 aaad_app_secret_key: use-a-secret-key-for-flask
 aaadsid_secret_key: use-another-secret-key-for-login-sessions
-aaadsid_maxage_seconds: 120 # This is the maxage for a login.
+aaadsid_rem_cookie_duration_seconds: 120 # This is the remember cookie duration.
 #aaadsid_domain: .example.com # Optional. This is the (sub)domain session related cookies will be applied to.
 #cert_subdomain: example.com # Optional. This is the (sub)domain for which the https cert is valid.

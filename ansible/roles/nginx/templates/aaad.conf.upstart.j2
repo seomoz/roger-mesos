@@ -11,7 +11,7 @@ env PERMISSIONS_FILE={{ nginx_conf_dir }}/permissions.yml
 env APP_SECRET_KEY={{ aaad_app_secret_key }}
 
 env SESSION_TOKEN_SECRET_KEY={{ aaadsid_secret_key }}
-env SESSION_MAXAGE_SECONDS={{ aaadsid_maxage_seconds }}
+env REMEMBER_COOKIE_DURATION_SECONDS={{ aaadsid_rem_cookie_duration_seconds }}
 
 env MESOS_MASTER_URL={{ mesos_leader_ui_url | default('http://127.0.0.1:5050') }}
 env QUOTA_FILE={{ nginx_conf_dir }}/quotas.yml

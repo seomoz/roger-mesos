@@ -77,24 +77,23 @@ class FileAuthorizer:
                 self._get_merged_data(user, allowed_users_list, [], self.data, '')
             return allowed_users_list
 
-        def authorize(self, user, act_as, resource, logger, info, data, content_type, action = "GET"):
-            #logger = logging.getLogger("Authorization")
+        def authorize(self, user, act_as, resource, logger, data, content_type, action = "GET"):
             if not user or not act_as or not resource:
                 return False
 
             if user not in self.data.keys() or act_as not in self.data.keys():
-                logger.warning("Invalid user", extra = info)
+                logger.warning("Invalid user [{}] or act as user [{}]".format(user, act_as))
                 return False
 
             if user != act_as:
                 if 'can_act_as' not in self.data[user]:
-                    logger.warning("User act as failed", extra = info)
+                    logger.warning("User {} not authorized to act as {}".format(user, act_as))
                     return False
 
             allowed_users_list = self._get_act_as_list(user)
 
             if act_as not in allowed_users_list:
-                logger.warning("User act as failed", extra = info)
+                logger.warning("User {} not authorized to act as {}".format(user, act_as))
                 return False
 
             allowed_users_list = []
@@ -116,16 +115,16 @@ class FileAuthorizer:
 
             result = self.resource_check(resource, data, allowed_actions, content_type)
             if result == False:
-                logger.warning("Unauthorized [{}]".format(resource), extra = info)
+                logger.warning("User {} acting as {} is not authorized to access [{}]".format(user, act_as, resource))
                 return False
 
             try:
                 validator = Validator()
                 if not validator.validate(act_as, action, data):
-                    logger.warning("Invalid request. Reasons - {}".format(validator.messages), extra = info)
+                    logger.warning("Invalid request. Reasons - {}".format(validator.messages))
                     return False
             except (Exception) as e:
-                logger.error("Failed in request validation - {}".format(str(e)), extra = info)
+                logger.error("Failed in request validation - {}".format(str(e)))
                 return False
 
             return True

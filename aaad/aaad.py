@@ -11,6 +11,7 @@ from authenticators import FileAuthenticator
 from authorizers import FileAuthorizer
 from resources import Users, Groups, CanActAsUsers
 from sessions import login_manager, SessionUser
+from logs import ContextualFilter
 
 app = Flask(__name__)
 app.config.from_object('config')
@@ -24,8 +25,10 @@ ACTAS_COOKIE_NAME = os.getenv('ACTAS_COOKIE_NAME', 'aaadactas')
 @app.before_first_request
 def setup_logging():
     if not app.debug:
+        context_provider = ContextualFilter()
+        app.logger.addFilter(context_provider)
         handler = logging.StreamHandler() # sys.stderr
-        formatter = logging.Formatter('[%(asctime)-15s] %(levelname)s - %(name)s - %(module)s:%(lineno)s - %(funcName)s - %(message)s')
+        formatter = logging.Formatter('[%(asctime)-15s] %(levelname)s - ip:%(ip)s - user:%(user_id)s - %(method)s|%(url)s - module:%(module)s|%(lineno)s|%(funcName)s - %(message)s')
         handler.setFormatter(formatter)
         app.logger.addHandler(handler)
         log_levels = {'debug': logging.DEBUG,
@@ -57,15 +60,14 @@ def authorize():
     data = request.get_data()
     content_type = request.headers.get('content-type', '')
     action = request.headers.get('method', '')
-    client_ip = request.headers.get('X-Forwarded-For')
-    info = { 'clientip': str(client_ip), 'user': str(user), 'act_as': str(actas) }
+    #client_ip = request.headers.get('X-Forwarded-For')
 
     if action.lower() in [ "get", "head", "connect", "trace" ]:
-        app.logger.info("{} {}".format(action, resource), extra = info)
+        app.logger.info("Received {} on {} with user acting as {}".format(action, resource, actas))
     else:
-        app.logger.warning("{} {}".format(action, resource), extra = info)
+        app.logger.warning("Received {} on {} with user acting as {}".format(action, resource, actas))
 
-    if not FileAuthorizer().instance.authorize(user, actas, resource, app.logger, info, data, content_type, action):
+    if not FileAuthorizer().instance.authorize(user, actas, resource, app.logger, data, content_type, action):
         abort(403)
 
     return json.dumps({'success':True}), 200, {'ContentType':'application/json'}
