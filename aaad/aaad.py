@@ -11,6 +11,7 @@ from authenticators import FileAuthenticator
 from authorizers import FileAuthorizer
 from resources import Users, Groups, CanActAsUsers
 from sessions import login_manager, SessionUser
+from logs import ContextualFilter
 
 app = Flask(__name__)
 app.config.from_object('config')
@@ -19,12 +20,15 @@ api = Api(app)
 login_manager.init_app(app)
 
 COOKIE_DOMAIN = os.getenv('SESSION_ID_DOMAIN', None)
+ACTAS_COOKIE_NAME = os.getenv('ACTAS_COOKIE_NAME', 'aaadactas')
 
 @app.before_first_request
 def setup_logging():
     if not app.debug:
+        context_provider = ContextualFilter()
+        app.logger.addFilter(context_provider)
         handler = logging.StreamHandler() # sys.stderr
-        formatter = logging.Formatter('[%(asctime)-15s] %(levelname)s - %(name)s - %(module)s:%(lineno)s - %(funcName)s - %(message)s')
+        formatter = logging.Formatter('[%(asctime)-15s] %(levelname)s - ip:%(ip)s - user:%(user_id)s - %(method)s:%(url)s - module:%(module)s|%(lineno)s|%(funcName)s - %(message)s')
         handler.setFormatter(formatter)
         app.logger.addHandler(handler)
         log_levels = {'debug': logging.DEBUG,
@@ -50,22 +54,24 @@ def authorize():
     worry about authorizaton.
     '''
     user = current_user.get_username()
-    actas = _find_actas(request)
+    actas = _find_actas_from_request(request) or current_user.get_username()
 
     resource = request.headers.get('URI','')
     data = request.get_data()
     content_type = request.headers.get('content-type', '')
     action = request.headers.get('method', '')
-    client_ip = request.headers.get('X-Forwarded-For')
-    info = { 'clientip': str(client_ip), 'user': str(user), 'act_as': str(actas) }
 
     if action.lower() in [ "get", "head", "connect", "trace" ]:
-        app.logger.info("{} {}".format(action, resource), extra = info)
+        app.logger.info("Received {} on {} with user acting as {}".format(action, resource, actas))
     else:
-        app.logger.warning("{} {}".format(action, resource), extra = info)
+        app.logger.warning("Received {} on {} with user acting as {}".format(action, resource, actas))
 
-    if not FileAuthorizer().instance.authorize(user, actas, resource, app.logger, info, data, content_type, action):
-        abort(403)
+    auth_result = FileAuthorizer().instance.authorize(user=user, act_as=actas, resource=resource, data=data, content_type=content_type, action=action)
+    if not auth_result:
+        if not auth_result.messages:
+            abort(403)
+        else:
+            return json.dumps({'success':False, 'messages':auth_result.messages}), 403, {'ContentType':'application/json'}
 
     return json.dumps({'success':True}), 200, {'ContentType':'application/json'}
 
@@ -77,7 +83,7 @@ def filter_response():
     Should typically be called by the proxy (internal) and not from outside.
     '''
     user = current_user.get_username()
-    actas = _find_actas(request)
+    actas = _find_actas_from_request(request) or current_user.get_username()
 
     resource = request.headers.get('URI','')
     data = request.get_data()
@@ -87,7 +93,7 @@ def filter_response():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    actas = request.cookies.get("actas") or request.headers.get("act_as_user")
+    actas = request.cookies.get(ACTAS_COOKIE_NAME) or request.headers.get("act_as_user")
     redirect_url = request.args.get('next', '/')
     if request.method == 'POST':
         redirect_url = request.form.get('redirect', redirect_url) # Note: if auth succeeds we re-direct to this else we render it to index.html if auth fails
@@ -115,14 +121,14 @@ def login():
             if actas in FileAuthorizer().instance.get_canactas_list(current_user.get_username()):
                 # all's well, let's set cookie and redirect
                 resp = make_response(redirect(redirect_url or '/'))
-                resp.set_cookie('actas', actas, domain=COOKIE_DOMAIN)
+                resp.set_cookie(ACTAS_COOKIE_NAME, actas, domain=COOKIE_DOMAIN)
                 return resp
             else:
                 if actas:
                     flash('Not authorized to act as {}.'.format(actas))
                 actas = None
                 resp = make_response(render_template('index.html', **locals()))
-                resp.set_cookie('actas', '', expires=0, domain=COOKIE_DOMAIN)
+                _clear_cookies(resp)
                 return resp
         else:
             flash('Authentication required.')
@@ -142,13 +148,16 @@ def logout():
     actas = None
     flash('You\'re logged out. Thank you for visiting!')
     resp = make_response(render_template('index.html', **locals()))
-    resp.set_cookie('actas', '', expires=0, domain=COOKIE_DOMAIN)
+    _clear_cookies(resp)
     return resp
 
-def _find_actas(request):
-    return ( request.cookies.get("actas") or
-             request.headers.get("act_as_user") or
-             current_user.get_username() )
+def _clear_cookies(resp):
+    resp.set_cookie(ACTAS_COOKIE_NAME, '', expires=0, domain=COOKIE_DOMAIN)
+    resp.set_cookie(ACTAS_COOKIE_NAME, '', expires=0, domain=None)
+
+def _find_actas_from_request(request):
+    return ( request.cookies.get(ACTAS_COOKIE_NAME) or
+             request.headers.get("act_as_user") )
 
 api.add_resource(Users, '/api/users')
 api.add_resource(Groups, '/api/groups')

@@ -4,7 +4,9 @@ ngx.req.set_header("auth_action", "auth")
 local req_res = ngx.location.capture("/auth", {body=req_data})
 
 if req_res.status == ngx.HTTP_FORBIDDEN then
-    ngx.exit(req_res.status)
+    ngx.print(res.body)
+    ngx.status = res.status
+    ngx.exit(ngx.OK)
 end
 
 if req_res.status == ngx.HTTP_UNAUTHORIZED then
