@@ -8,7 +8,9 @@ if res.status == ngx.HTTP_OK then
 end
 
 if res.status == ngx.HTTP_FORBIDDEN then
-    ngx.exit(res.status)
+    ngx.print(res.body)
+    ngx.status = res.status
+    ngx.exit(ngx.OK)
 end
 
 if res.status == ngx.HTTP_UNAUTHORIZED then

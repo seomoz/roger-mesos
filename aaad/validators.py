@@ -6,6 +6,9 @@ import sys
 import json
 import yaml
 import re
+import logging
+
+logger = logging.getLogger(os.getenv('LOGGER_NAME', __name__))
 
 quota_file = os.getenv('QUOTA_FILE', '')
 master_url = os.getenv('MESOS_MASTER_URL', 'http://localhost:5050')
@@ -30,6 +33,7 @@ class Validator:
                 requested_resources['disk'] = float(body['disk'])
             return requested_resources
         except (Exception) as e:
+            logger.exception("Exception while trying to get requested resources with request_body: {}, requested_resources: {}".format(request_body, requested_resources))
             self.messages = []
             self.messages.append('Quota validation failed because the request body could not be read - {}.'.format(str(e)))
             return {}
@@ -37,14 +41,13 @@ class Validator:
     def validate_resource_quotas(self, act_as, action, request_body):
         if not action.lower() in [ "put", "post" ]:
             return True
-
         if not quota_file:
             return True
-
         requested_resources = self.get_requested_resources(request_body)
         try:
             tasks = mesos.get_tasks(master_url)
-        except (BaseException) as e:
+        except (Exception) as e:
+            logger.exception("Exception while trying to get tasks during validate resource quota with request_body: {}, requested_resources: {}".format(request_body, requested_resources))
             self.messages = []
             self.messages.append('Quota validation failed because there was a problem accessing mesos master on {}.'.format(master_url))
             return False

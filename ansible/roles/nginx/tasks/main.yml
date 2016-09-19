@@ -74,19 +74,23 @@
     copy: src=../files/auth_request.lua dest={{ nginx_auth_script_dir }} mode=0644
     when: nginx_auth_enable is defined and nginx_auth_enable|bool
     become: yes
+    notify: restart nginx
     tags:
       - install
       - nginx
       - lua
+      - proxy-config
 
   - name: Copy Lua Auth and Filter Response Script file
     copy: src=../files/auth_request_and_filter_response.lua dest={{ nginx_auth_script_dir }} mode=0644
     when: nginx_auth_enable is defined and nginx_auth_enable|bool
     become: yes
+    notify: restart nginx
     tags:
       - install
       - nginx
       - lua
+      - proxy-config
 
   - name: Copy Chronos overridden template file
     copy: src=chronos_overrides/templates/job_persistence_error.hbs dest={{ nginx_chronos_auth_templates_dir }} mode=0644

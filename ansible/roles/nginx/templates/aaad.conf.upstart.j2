@@ -22,9 +22,8 @@ env SESSION_ID_DOMAIN={{ aaadsid_domain }}{% endif %}
 {% if actas_cookie_name is defined %}
 env ACTAS_COOKIE_NAME={{ actas_cookie_name }}{% endif %}
 
-env MESOS_MASTER_URL=http://mesos.{{ env_name }}.roger.dal.moz.com
-
 env LOG_LEVEL={{ log_level | default('warning')}}
+env LOGGER_NAME=aaad
 
 env PYTHON_HOME={{ nginx_conf_dir }}/aaad/venv
 exec $PYTHON_HOME/bin/python {{ nginx_conf_dir }}/aaad/server.py

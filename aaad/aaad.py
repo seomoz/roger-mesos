@@ -28,7 +28,7 @@ def setup_logging():
         context_provider = ContextualFilter()
         app.logger.addFilter(context_provider)
         handler = logging.StreamHandler() # sys.stderr
-        formatter = logging.Formatter('[%(asctime)-15s] %(levelname)s - ip:%(ip)s - user:%(user_id)s - %(method)s|%(url)s - module:%(module)s|%(lineno)s|%(funcName)s - %(message)s')
+        formatter = logging.Formatter('[%(asctime)-15s] %(levelname)s - ip:%(ip)s - user:%(user_id)s - %(method)s:%(url)s - module:%(module)s|%(lineno)s|%(funcName)s - %(message)s')
         handler.setFormatter(formatter)
         app.logger.addHandler(handler)
         log_levels = {'debug': logging.DEBUG,
@@ -60,15 +60,18 @@ def authorize():
     data = request.get_data()
     content_type = request.headers.get('content-type', '')
     action = request.headers.get('method', '')
-    #client_ip = request.headers.get('X-Forwarded-For')
 
     if action.lower() in [ "get", "head", "connect", "trace" ]:
         app.logger.info("Received {} on {} with user acting as {}".format(action, resource, actas))
     else:
         app.logger.warning("Received {} on {} with user acting as {}".format(action, resource, actas))
 
-    if not FileAuthorizer().instance.authorize(user, actas, resource, app.logger, data, content_type, action):
-        abort(403)
+    auth_result = FileAuthorizer().instance.authorize(user=user, act_as=actas, resource=resource, data=data, content_type=content_type, action=action)
+    if not auth_result:
+        if not auth_result.messages:
+            abort(403)
+        else:
+            return json.dumps({'success':False, 'messages':auth_result.messages}), 403, {'ContentType':'application/json'}
 
     return json.dumps({'success':True}), 200, {'ContentType':'application/json'}
 

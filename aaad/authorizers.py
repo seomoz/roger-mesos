@@ -6,8 +6,20 @@ import os
 import sys
 from validators import Validator
 from frameworkUtils import FrameworkUtils
+import logging
+
+logger = logging.getLogger(os.getenv('LOGGER_NAME', __name__))
 
 permissions_file = os.getenv('PERMISSIONS_FILE')
+
+class AuthorizeResult:
+
+    def __init__(self, result, messages=None):
+        self.result = result
+        self.messages = messages
+
+    def __nonzero__(self):
+        return self.result
 
 class FileAuthorizer:
     class __FileAuthorizer:
@@ -77,24 +89,26 @@ class FileAuthorizer:
                 self._get_merged_data(user, allowed_users_list, [], self.data, '')
             return allowed_users_list
 
-        def authorize(self, user, act_as, resource, logger, data, content_type, action = "GET"):
+        def authorize(self, user, act_as, resource, data, content_type, action = None):
+            if not action:
+                action = 'GET'
             if not user or not act_as or not resource:
-                return False
+                return AuthorizeResult(False)
 
             if user not in self.data.keys() or act_as not in self.data.keys():
                 logger.warning("Invalid user [{}] or act as user [{}]".format(user, act_as))
-                return False
+                return AuthorizeResult(False)
 
             if user != act_as:
                 if 'can_act_as' not in self.data[user]:
                     logger.warning("User {} not authorized to act as {}".format(user, act_as))
-                    return False
+                    return AuthorizeResult(False)
 
             allowed_users_list = self._get_act_as_list(user)
 
             if act_as not in allowed_users_list:
                 logger.warning("User {} not authorized to act as {}".format(user, act_as))
-                return False
+                return AuthorizeResult(False)
 
             allowed_users_list = []
             allowed_actions = []
@@ -116,18 +130,18 @@ class FileAuthorizer:
             result = self.resource_check(resource, data, allowed_actions, content_type)
             if result == False:
                 logger.warning("User {} acting as {} is not authorized to access [{}]".format(user, act_as, resource))
-                return False
+                return AuthorizeResult(False)
 
             try:
                 validator = Validator()
                 if not validator.validate(act_as, action, data):
-                    logger.warning("Invalid request. Reasons - {}".format(validator.messages))
-                    return False
+                    logger.warning("Validation failed. Reasons - {}".format(validator.messages))
+                    return AuthorizeResult(False, validator.messages)
             except (Exception) as e:
                 logger.error("Failed in request validation - {}".format(str(e)))
-                return False
+                return AuthorizeResult(False)
 
-            return True
+            return AuthorizeResult(True)
 
         def get_user_list(self, type=None):
             if not type:
