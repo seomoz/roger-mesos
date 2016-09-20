@@ -25,12 +25,13 @@ class Validator:
         requested_resources = {}
         try:
             body = json.loads(request_body)
+            instances = int(body.get('instances', '1'))
             if 'cpus' in body:
-                requested_resources['cpus'] = float(body['cpus'])
+                requested_resources['cpus'] = instances * float(body['cpus'])
             if 'mem' in body:
-                requested_resources['mem'] = float(body['mem'])
+                requested_resources['mem'] = instances * float(body['mem'])
             if 'disk' in body:
-                requested_resources['disk'] = float(body['disk'])
+                requested_resources['disk'] = instances * float(body['disk'])
             return requested_resources
         except (Exception) as e:
             logger.exception("Exception while trying to get requested resources with request_body: {}, requested_resources: {}".format(request_body, requested_resources))
