@@ -75,11 +75,16 @@ class FileAuthorizer:
                         return False
 
                 prog = re.compile("^{}$".format(attribute_rules[attribute]))
-                result = prog.match(temp_data)
-                if result:
-                    continue
-                else:
-                    return False
+                if type(temp_data) == list:
+                    logger.warning("Kill ids' list -> {}".format(temp_data)) 
+                    for item_val in temp_data:
+                        result = prog.match(item_val)
+                        if not result:
+                            return False
+                else:   # temp_data is of type 'str'
+                    result = prog.match(temp_data)
+                    if not result:
+                        return False
 
             return True
 

@@ -131,7 +131,7 @@ class Marathon(Framework):
                 if 'apps' in request_uri:
                     app_id = request_uri[request_uri.rindex("v2/apps/")+8:]
             else:
-                app_id = request_body['id']
+                app_id = request_body.get('id', None)
 
             if not app_id:
                 return allocated
