@@ -76,7 +76,6 @@ class FileAuthorizer:
 
                 prog = re.compile("^{}$".format(attribute_rules[attribute]))
                 if type(temp_data) == list:
-                    logger.warning("Kill ids' list -> {}".format(temp_data)) 
                     for item_val in temp_data:
                         result = prog.match(item_val)
                         if not result:
