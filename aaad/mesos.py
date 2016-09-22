@@ -29,7 +29,7 @@ def get_tasks(master_url):
     resp = requests.get('{}'.format(url))
     if not resp.status_code // 100 == 2:
         logger.error('Got response {} from {}'.format(resp.status_code, url))
-        raise ValueError('Got a non-2xx response ({}) from {}.'.format(resp.status_code), url)
+        raise ValueError('Got a non-2xx response ({}) from {}.'.format(resp.status_code, url))
     data = resp.json()
     for task in data['tasks']:
         if task['state'] in ['TASK_RUNNING', 'TASK_STAGING', 'TASK_STARTING']:

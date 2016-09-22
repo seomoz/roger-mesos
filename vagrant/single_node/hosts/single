@@ -12,7 +12,7 @@ chronos_webui_host=localhost
 chronos_webui_port=4400
 
 [machines]
-localmesos01 env=local base_data_dir=/data shared_mount=/vagrant mesos_leader_ui_url=http://192.168.2.101:5050/
+localmesos01 env=local base_data_dir=/data shared_mount=/vagrant mesos_leader_ui_url=http://192.168.2.101:5050/ marathon_leader_url=192.168.2.101 chronos_leader_url=192.168.2.101
 
 [monitored:children]
 machines
