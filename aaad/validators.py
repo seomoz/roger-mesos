@@ -24,7 +24,6 @@ class Validator:
     def _get_requested_details(self, request_body):
         requested = { "instances": 1, "resources": {} }
         try:
-            #instances = int(request_body.get('instances', '1'))
             requested['instances'] = int(request_body.get('instances', '1'))
             if 'cpus' in request_body:
                 requested['resources']['cpus'] = float(request_body['cpus'])
