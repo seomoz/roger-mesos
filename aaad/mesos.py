@@ -11,7 +11,7 @@ def get_metrics_snapshot(master_url):
     resp = requests.get('{}'.format(url))
     if not resp.status_code // 100 == 2:
         logger.error('Got response {} from {}'.format(resp.status_code, url))
-        raise ValueError('Got a non-2xx response ({}) from {}.'.format(resp.status_code), url)
+        raise ValueError('Got a non-2xx response ({}) from {}.'.format(resp.status_code, url))
     return resp.json()
 
 def get_tasks_counts(master_url):

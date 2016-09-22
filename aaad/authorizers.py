@@ -134,7 +134,8 @@ class FileAuthorizer:
 
             try:
                 validator = Validator()
-                if not validator.validate(act_as, action, data):
+                framework = FrameworkUtils().getFramework(resource)
+                if not validator.validate(act_as, resource, action, data, framework):
                     logger.warning("Validation failed. Reasons - {}".format(validator.messages))
                     return AuthorizeResult(False, validator.messages)
             except (Exception) as e:
