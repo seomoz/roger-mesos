@@ -50,22 +50,31 @@ class CanActAsUsers(Resource):
         return jsonify(filtered_users)
 
 class QuotaBuckets(Resource):
-    get_args = {
-        'getAlloc': fields.Boolean(required=False)
-    }
-    @use_args(get_args)
     #@login_required
-    def get(self, args, bucket=None):
+    def get(self, bucket=None):
         ret_data = None
         if bucket:
             ret_data = Quotas().instance.get_quota_for_bucket(bucket)
-            if ret_data and args and args['getAlloc']:
-                ret_data.update(Quotas().instance.get_task_allocation(bucket))
         else:
             ret_data = Quotas().instance.get_buckets()
-            if args and args['getAlloc']:
-                for item in buckets:
-                    item.update(ret_data.update(Quotas().instance.get_task_allocation(bucket)))
+        if not ret_data:
+            abort(404)
+        return jsonify(ret_data)
+
+class QuotaAllocations(Resource):
+    #@login_required
+    def get(self, bucket=None):
+        ret_data = {}
+        if bucket:
+            allocation = Quotas().instance.get_task_allocation(bucket)
+            if allocation:
+                ret_data.update({ bucket: allocation })
+        else:
+            buckets = Quotas().instance.get_buckets()
+            for item in buckets.keys():
+                allocation = Quotas().instance.get_task_allocation(item)
+                if allocation:
+                    ret_data.update({ item: allocation })
         if not ret_data:
             abort(404)
         return jsonify(ret_data)

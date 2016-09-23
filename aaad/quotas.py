@@ -40,8 +40,11 @@ class Quotas:
 
         def get_task_allocation(self, bucket_name):
             ''' Computes and returns total allocation across all tasks using the bucket '''
+            if not self.quota_data['buckets'].get(bucket_name):
+                return None
+            allocation = { 'resources': {'cpus': 0, 'mem': 0 } }
             # TODO - Implementation pending
-            return None
+            return allocation
 
     instance = None
     def __init__(self):
