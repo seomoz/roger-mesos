@@ -12,3 +12,7 @@ class Framework(object):
     def filterResponseBody(self, body, allowed_namespaces, request_uri):
         pass
 
+    @abstractmethod
+    def get_allocation(self, request_body, request_uri):
+        pass
+

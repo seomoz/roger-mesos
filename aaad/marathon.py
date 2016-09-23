@@ -5,7 +5,11 @@ import os
 import sys
 import json
 import re
+import requests
 from framework import Framework
+import logging
+
+logger = logging.getLogger(os.getenv('LOGGER_NAME', __name__))
 
 class Marathon(Framework):
 
@@ -116,3 +120,40 @@ class Marathon(Framework):
                        allowed_groups.append(filtered_item)
 
         return allowed_groups
+
+    def get_allocation(self, request_body, request_uri):
+        app_id = None
+        allocated = { "instances": 0, "resources": { "cpus": 0.0, "mem": 0.0, "disk": 0.0 } }
+        try:
+            uri_pattern = re.compile("^{}$".format("/marathon/+v2/apps/+.+/.+"))
+            uri_match = uri_pattern.match(request_uri)
+            if uri_match:     #app_id is in the request_uri, else fetch from request body
+                if 'apps' in request_uri:
+                    app_id = request_uri[request_uri.rindex("v2/apps/")+8:]
+            else:
+                app_id = request_body.get('id', None)
+
+            if not app_id:
+                return allocated
+
+            marathon_master_url = os.environ['MARATHON_MASTER_URL']
+            url = '{}/v2/apps/{}'.format(marathon_master_url.rstrip('/'), app_id)
+            resp = requests.get('{}'.format(url))
+            if not resp.status_code // 100 == 2:
+                return allocated
+            data = resp.json()
+            if not 'app' in data:
+                # Application has not been deployed previously
+                return allocated
+            data = data['app']
+            instances = int(data.get('instances', '0'))
+            allocated['instances'] = instances
+            resources = {}
+            resources['cpus'] = float(data.get('cpus', '0.0'))
+            resources['mem'] = float(data.get('mem', '0.0'))
+            resources['disk'] = float(data.get('disk', '0.0'))
+            allocated['resources'] = resources
+
+            return allocated
+        except (Exception) as e:
+            logger.exception("Exception -> {}. Failed to get allocated resources from Marathon with request body: {} and request uri:{}".format(str(e), json.dumps(request_body), request_uri))

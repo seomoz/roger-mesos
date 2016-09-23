@@ -75,11 +75,15 @@ class FileAuthorizer:
                         return False
 
                 prog = re.compile("^{}$".format(attribute_rules[attribute]))
-                result = prog.match(temp_data)
-                if result:
-                    continue
-                else:
-                    return False
+                if type(temp_data) == list:
+                    for item_val in temp_data:
+                        result = prog.match(item_val)
+                        if not result:
+                            return False
+                else:   # temp_data is of type 'str'
+                    result = prog.match(temp_data)
+                    if not result:
+                        return False
 
             return True
 
@@ -134,7 +138,8 @@ class FileAuthorizer:
 
             try:
                 validator = Validator()
-                if not validator.validate(act_as, action, data):
+                framework = FrameworkUtils().getFramework(resource)
+                if not validator.validate(act_as, resource, action, data, framework):
                     logger.warning("Validation failed. Reasons - {}".format(validator.messages))
                     return AuthorizeResult(False, validator.messages)
             except (Exception) as e:
