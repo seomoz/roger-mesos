@@ -6,12 +6,13 @@ import sys
 import json
 import yaml
 import re
+from quotas import Quotas
 import logging
 
 logger = logging.getLogger(os.getenv('LOGGER_NAME', __name__))
 
-quota_file = os.getenv('QUOTA_FILE', '')
-master_url = os.getenv('MESOS_MASTER_URL', 'http://localhost:5050')
+quota_file = os.getenv('QUOTA_FILE', '') #TODO - Remove this after refactoring
+master_url = os.getenv('MESOS_MASTER_URL', 'http://localhost:5050')  #TODO - Remove this after refactoring
 
 class Validator:
 
@@ -37,9 +38,7 @@ class Validator:
             return {}
 
     def _validate_resource_quotas(self, act_as, request_uri, action, request_body, framework):
-        if not action.lower() in [ "put", "post" ]:
-            return True
-        if not quota_file:
+        if not action.lower() in [ "put", "post" ] or not Quotas().instance.is_quota_enabled():
             return True
         try:
             body = json.loads(request_body)
