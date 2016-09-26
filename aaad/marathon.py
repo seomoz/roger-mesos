@@ -121,9 +121,8 @@ class Marathon(Framework):
 
         return allowed_groups
 
-    def get_allocation(self, request_body, request_uri):
+    def get_id(self, request_body, request_uri):
         app_id = None
-        allocated = { "instances": 0, "resources": { "cpus": 0.0, "mem": 0.0, "disk": 0.0 } }
         try:
             uri_pattern = re.compile("^{}$".format("/marathon/+v2/apps/+.+/.+"))
             uri_match = uri_pattern.match(request_uri)
@@ -132,6 +131,22 @@ class Marathon(Framework):
                     app_id = request_uri[request_uri.rindex("v2/apps/")+8:]
             else:
                 app_id = request_body.get('id', None)
+
+            return app_id
+        except (Exception) as e:
+            logger.exception("Exception -> {}. Failed to get allocated resources from Marathon with request body: {} and request uri:{}".format(str(e), json.dumps(request_body), request_uri))
+
+    def get_allocation(self, id):
+        app_id = id
+        allocated = { "instances": 0, "resources": { "cpus": 0.0, "mem": 0.0, "disk": 0.0 } }
+        try:
+            #uri_pattern = re.compile("^{}$".format("/marathon/+v2/apps/+.+/.+"))
+            #uri_match = uri_pattern.match(request_uri)
+            #if uri_match:     #app_id is in the request_uri, else fetch from request body
+            #    if 'apps' in request_uri:
+            #        app_id = request_uri[request_uri.rindex("v2/apps/")+8:]
+            #else:
+            #    app_id = request_body.get('id', None)
 
             if not app_id:
                 return allocated
@@ -156,4 +171,4 @@ class Marathon(Framework):
 
             return allocated
         except (Exception) as e:
-            logger.exception("Exception -> {}. Failed to get allocated resources from Marathon with request body: {} and request uri:{}".format(str(e), json.dumps(request_body), request_uri))
+            logger.exception("Exception -> {}. Failed to get allocated resources from Marathon with app id -> {}.".format(str(e), id))

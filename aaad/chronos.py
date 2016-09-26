@@ -29,14 +29,26 @@ class Chronos(Framework):
         except (Exception) as e:
             return ""
 
-    def get_allocation(self, request_body, request_uri):
+    def get_id(self, request_body, request_uri):
         job_name = None
-        allocated = { "instances": 0, "resources": { "cpus": 0.0, "mem": 0.0, "disk": 0.0 } }
         try:
             uri_pattern = re.compile("^{}$".format("/chronos/+scheduler/(iso8601|dependency)/*"))
             uri_match = uri_pattern.match(request_uri)
             if uri_match:     #job_name for chronos is always in the request body
                 job_name = request_body['name']
+
+            return job_name
+        except (Exception) as e:
+            logger.exception("Failed to get id from Chronos with request body: {} and request uri:{}".format(json.dumps(request_body), request_uri))
+
+    def get_allocation(self, id):
+        job_name = id
+        allocated = { "instances": 0, "resources": { "cpus": 0.0, "mem": 0.0, "disk": 0.0 } }
+        try:
+            #uri_pattern = re.compile("^{}$".format("/chronos/+scheduler/(iso8601|dependency)/*"))
+            #uri_match = uri_pattern.match(request_uri)
+            #if uri_match:     #job_name for chronos is always in the request body
+            #    job_name = request_body['name']
 
             if not job_name:
                 return allocated
@@ -59,4 +71,4 @@ class Chronos(Framework):
 
             return allocated
         except (Exception) as e:
-            logger.exception("Failed to get allocated resources from Marathon with request body: {} and request uri:{}".format(json.dumps(request_body), request_uri))
+            logger.exception("Failed to get allocated resources from Chronos with job name -> {} in request body".format(id))
