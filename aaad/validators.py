@@ -64,9 +64,9 @@ class Validator:
         total_allocated_mem = total_allocation['resources'].get('mem', 0.0)
         total_allocated_disk = total_allocation['resources'].get('disk', 0.0)
 
-        cpu_quota = float(resource_quotas.get("cpus", 0.0))
-        mem_quota = float(resource_quotas.get("mem", 0.0))
-        disk_quota = float(resource_quotas.get("disk", 0.0))
+        cpu_quota = float(resource_quotas['resources'].get("cpus", 0.0))
+        mem_quota = float(resource_quotas['resources'].get("mem", 0.0))
+        disk_quota = float(resource_quotas['resources'].get("disk", 0.0))
         requested_cpu = int(requested['instances']) * float(requested['resources'].get('cpus', 0.0))
         requested_mem = int(requested['instances']) * float(requested['resources'].get('mem', 0.0))
         requested_disk = int(requested['instances']) * float(requested['resources'].get('disk', 0.0))

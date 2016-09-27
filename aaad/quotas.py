@@ -58,6 +58,7 @@ class Quotas:
                     if item.values()[0] == bucket_name:
                         allowed_names.append(item.keys()[0])
 
+            tasks = None
             try:
                 tasks = mesos.get_tasks(master_url)
             except (Exception) as e:
@@ -71,6 +72,7 @@ class Quotas:
                         total_allocated_cpu += float(tasks[task]['cpus'])
                         total_allocated_mem += float(tasks[task]['mem'])
                         total_allocated_disk += float(tasks[task]['disk'])
+                        break
 
             allocation['resources']['cpus'] = total_allocated_cpu
             allocation['resources']['mem'] = total_allocated_mem
