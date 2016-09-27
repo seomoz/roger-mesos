@@ -18,7 +18,7 @@ def get_tasks_counts(master_url):
     data = get_metrics_snapshot(master_url.rstrip('/'))
     counts = {}
     for t in ['error', 'failed', 'finished', 'killed', 'killing', 'lost', 'running', 'staging', 'starting']:
-        counts.update({ t: data['master/tasks_{}'.format(t)] })
+        counts.update({ t: data.get('master/tasks_{}'.format(t), 0.0) })
     return counts
 
 def get_tasks(master_url):

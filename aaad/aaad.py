@@ -166,4 +166,5 @@ api.add_resource(QuotaBuckets, '/api/quota/buckets', '/api/quota/buckets/<string
 api.add_resource(QuotaAllocations, '/api/quota/allocations', '/api/quota/allocations/<string:bucket>')
 
 if __name__ == '__main__':
+    logging.basicConfig()
     app.run(debug=True, port=8888)
