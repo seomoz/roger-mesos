@@ -68,7 +68,7 @@ class QuotaAllocations(Resource):
         if bucket:
             allocation = Quotas().instance.get_task_allocation(bucket)
             if allocation:
-                ret_data.update({ bucket: allocation })
+                ret_data.update(allocation)
         else:
             buckets = Quotas().instance.get_buckets()
             for item in buckets.keys():
