@@ -31,7 +31,6 @@ class Marathon(Framework):
 
         return ""
 
-
     def filterV2AppsResponse(self, body, allowed_namespaces):
         filtered_apps = []
         filtered_response = {}
@@ -120,6 +119,18 @@ class Marathon(Framework):
                        allowed_groups.append(filtered_item)
 
         return allowed_groups
+
+    def is_delete_request(self, request_uri):
+        is_delete_request = False
+        try:
+            uri_pattern = re.compile("^{}$".format("/marathon/v2/tasks/(delete|delete\?.*)"))
+            uri_match = uri_pattern.match(request_uri)
+            if uri_match:
+                is_delete_request = True
+
+            return is_delete_request
+        except (Exception) as e:
+            logger.exception("Exception -> {}. Failed in is_delete_request in Marathon with request uri:{}".format(str(e), request_uri))
 
     def get_id(self, request_body, request_uri):
         app_id = None

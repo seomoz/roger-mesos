@@ -20,3 +20,7 @@ class Framework(object):
     def get_allocation(self, id):
         pass
 
+    @abstractmethod
+    def is_delete_request(self, request_uri):
+        pass
+
