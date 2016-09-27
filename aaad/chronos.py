@@ -45,11 +45,6 @@ class Chronos(Framework):
         job_name = id
         allocated = { "instances": 0, "resources": { "cpus": 0.0, "mem": 0.0, "disk": 0.0 } }
         try:
-            #uri_pattern = re.compile("^{}$".format("/chronos/+scheduler/(iso8601|dependency)/*"))
-            #uri_match = uri_pattern.match(request_uri)
-            #if uri_match:     #job_name for chronos is always in the request body
-            #    job_name = request_body['name']
-
             if not job_name:
                 return allocated
 
