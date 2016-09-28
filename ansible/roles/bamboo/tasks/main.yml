@@ -47,7 +47,7 @@
 - name: Install the Bamboo package - bamboo_{{ bamboo_version }}
   apt: deb="{{ bamboo_tmp_dir }}/bamboo_{{ bamboo_version }}-1_all.deb"
   become: yes
-  when: not ansible_check_mode
+  when: ansible_check_mode is not defined or not ansible_check_mode
   notify: restart bamboo
   tags:
     - bamboo
@@ -55,7 +55,7 @@
 - name: Update the owner and group of HAProxy log dir
   file: path={{ haproxy_log_dir }} owner=syslog group=syslog mode=0755
   become: yes
-  when: not ansible_check_mode
+  when: ansible_check_mode is not defined or not ansible_check_mode
   notify: restart rsyslog
   tags:
     - bamboo
