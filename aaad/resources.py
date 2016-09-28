@@ -78,3 +78,12 @@ class QuotaAllocations(Resource):
         if not ret_data:
             abort(404)
         return jsonify(ret_data)
+
+class QuotaUsers(Resource):
+    #@login_required
+    def get(self, user):
+        buckets = []
+        authorized_names = FileAuthorizer().instance.get_allowed_namespace_patterns(user)
+        if authorized_names:
+            buckets = Quotas().instance.get_buckets_for_names(authorized_names)
+        return jsonify(buckets)

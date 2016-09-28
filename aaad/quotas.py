@@ -31,15 +31,12 @@ class Quotas:
 
         def get_bucket_for_task_name(self, name):
             ''' Returns the bucket for the task name '''
-            bucket = None
-            names = self.quota_data['names']
-            for item in names:
-                item_name = item.keys()[0]
-                prog = re.compile("^{}$".format(item_name))
-                if prog.match(name):
-                    bucket = item[item_name]
+            names_to_buckets = self.quota_data['names']
+            for key, bucket in names_to_buckets.iteritems():
+                prog = re.compile("^{}$".format(name))
+                if prog.match(key):
                     return bucket
-            return bucket
+            return None
 
         def get_quota_for_bucket(self, bucket_name):
             ''' Returns bucket details for the given bucket_name '''
@@ -53,16 +50,17 @@ class Quotas:
                 return None
             allocation = { 'resources': {'cpus': 0.0, 'mem': 0.0, 'disk': 0.0 } }
             if bucket_name:
-                allowed_names = []
-                for item in self.quota_data['names']:
-                    if item.values()[0] == bucket_name:
-                        allowed_names.append(item.keys()[0])
+                allowed_names = set()
+                for name, bucket in self.quota_data['names'].iteritems():
+                    if bucket == bucket_name:
+                        allowed_names.add(name)
 
             tasks = None
             try:
                 tasks = mesos.get_tasks(master_url)
             except (Exception) as e:
                 logger.exception("Exception while trying to get tasks using master url: {}".format(master_url))
+                raise
 
             total_allocated_cpu, total_allocated_mem, total_allocated_disk = (0.0,)*3
             for task in tasks.keys():
@@ -79,6 +77,15 @@ class Quotas:
             allocation['resources']['disk'] = total_allocated_disk
 
             return allocation
+
+        def get_buckets_for_names(self, names):
+            ''' Returns the list of buckets that the names have access to '''
+            quota_name_buckets = self.quota_data['names']
+            intersection = set(quota_name_buckets).intersection(names)
+            buckets = set()
+            for name_keys in intersection:
+                buckets.add(quota_name_buckets[name_keys])
+            return list(buckets)
 
     instance = None
     def __init__(self):

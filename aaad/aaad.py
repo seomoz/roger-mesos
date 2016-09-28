@@ -9,7 +9,7 @@ import logging
 
 from authenticators import FileAuthenticator
 from authorizers import FileAuthorizer
-from resources import Users, Groups, CanActAsUsers, QuotaBuckets, QuotaAllocations
+from resources import Users, Groups, CanActAsUsers, QuotaBuckets, QuotaAllocations, QuotaUsers
 from sessions import login_manager, SessionUser
 from logs import ContextualFilter
 
@@ -164,6 +164,7 @@ api.add_resource(Groups, '/api/groups')
 api.add_resource(CanActAsUsers, '/api/users/<string:user>/can_act_as')
 api.add_resource(QuotaBuckets, '/api/quota/buckets', '/api/quota/buckets/<string:bucket>')
 api.add_resource(QuotaAllocations, '/api/quota/allocations', '/api/quota/allocations/<string:bucket>')
+api.add_resource(QuotaUsers, '/api/quota/users/<string:user>')
 
 if __name__ == '__main__':
     logging.basicConfig()

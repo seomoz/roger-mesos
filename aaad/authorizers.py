@@ -170,7 +170,7 @@ class FileAuthorizer:
 
         def filter_response(self, resource, data, actas):
             framework = FrameworkUtils().getFramework(resource)
-            allowed_namespaces = self._get_allowed_namespace_patterns(actas, self.data)
+            allowed_namespaces = self._get_allowed_namespace_patterns(actas)
             if not allowed_namespaces:    #Empty list
                 return ""
             return framework.filterResponseBody(data, allowed_namespaces, resource)
@@ -201,7 +201,8 @@ class FileAuthorizer:
             for u in data[user]['can_act_as']:
                 self._get_merged_data(u, allowed_users, allowed_actions, data, action)
 
-        def _get_allowed_namespace_patterns(self, act_as, permissions):
+        def get_allowed_namespace_patterns(self, act_as):
+            permissions = self.data
             allowed_users_list = []
             self._get_merged_data(act_as, allowed_users_list, [], permissions, '')
             allowed_namespace_patterns = []
