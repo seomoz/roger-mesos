@@ -19,7 +19,7 @@ server {
 {% if cert_subdomain is defined %}
 server {
        listen 80;
-       server_name ~^marathon.+$ {% if env_name == 'local' %}default_server{% endif %} ;
+       server_name ~^marathon.+${% if env_name == 'local' %} default_server{% endif %} ;
        rewrite ^ https://marathon-{{env_name}}-roger.{{cert_subdomain}}$request_uri redirect;
 }
 
@@ -31,7 +31,7 @@ server {
 
 server {
         listen 443 ssl;
-        server_name ~^marathon.+$ {% if env_name == 'local' %}default_server{% endif %};
+        server_name ~^marathon.+${% if env_name == 'local' %} default_server{% endif %} ;
 
         ssl on;
         #access_log      /var/log/upstart/nginx.log;
