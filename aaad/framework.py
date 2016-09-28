@@ -21,6 +21,6 @@ class Framework(object):
         pass
 
     @abstractmethod
-    def is_delete_request(self, request_uri):
+    def is_quota_validation_required(self, request_uri):
         pass
 
