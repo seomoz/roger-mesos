@@ -41,7 +41,7 @@ class Chronos(Framework):
         except (Exception) as e:
             logger.exception("Failed to get id from Chronos with request body: {} and request uri:{}".format(json.dumps(request_body), request_uri))
 
-    def is_delete_request(self, request_uri):
+    def is_quota_validation_required(self, request_uri):
         return False
 
     def get_allocation(self, id):

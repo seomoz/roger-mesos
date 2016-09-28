@@ -120,15 +120,17 @@ class Marathon(Framework):
 
         return allowed_groups
 
-    def is_delete_request(self, request_uri):
-        is_delete_request = False
+    def is_quota_validation_required(self, request_uri):
+        is_quota_validation_required = True
         try:
-            uri_pattern = re.compile("^{}$".format("/marathon/v2/tasks/(delete|delete\?.*)"))
-            uri_match = uri_pattern.match(request_uri)
-            if uri_match:
-                is_delete_request = True
+            delete_request_uri_pattern = re.compile("^{}$".format("/marathon/v2/tasks/(delete|delete\?.*)"))
+            delete_request_uri_match = uri_pattern.match(request_uri)
+            event_subscriptions_uri_pattern = re.compile("^{}$".format("/marathon/+v2/eventSubscriptions\?.*"))
+            event_subscriptions_uri_match = uri_pattern.match(request_uri)
+            if delete_request_uri_match or event_subscriptions_uri_match:
+                is_quota_validation_required = False
 
-            return is_delete_request
+            return is_quota_validation_required
         except (Exception) as e:
             logger.exception("Exception -> {}. Failed in is_delete_request in Marathon with request uri:{}".format(str(e), request_uri))
 

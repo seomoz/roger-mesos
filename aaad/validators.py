@@ -35,8 +35,10 @@ class Validator:
             return {}
 
     def _validate_resource_quotas(self, act_as, request_uri, action, request_body, framework):
-        if not action.lower() in [ "put", "post" ] or not Quotas().instance.is_quota_enabled() or framework.is_delete_request(request_uri):
+        if not action.lower() in [ "put", "post" ] or not Quotas().instance.is_quota_enabled() or not framework.is_quota_validation_required(request_uri):
             return True
+
+        body = None
         try:
             body = json.loads(request_body)
         except (Exception) as e:
