@@ -33,8 +33,8 @@ class Quotas:
             ''' Returns the bucket for the task name '''
             names_to_buckets = self.quota_data['names']
             for key, bucket in names_to_buckets.iteritems():
-                prog = re.compile("^{}$".format(name))
-                if prog.match(key):
+                prog = re.compile("^{}$".format(key))
+                if prog.match(name):
                     return bucket
             return None
 
