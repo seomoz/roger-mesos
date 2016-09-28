@@ -50,7 +50,7 @@ class CanActAsUsers(Resource):
         return jsonify(filtered_users)
 
 class QuotaBuckets(Resource):
-    #@login_required
+    @login_required
     def get(self, bucket=None):
         ret_data = None
         if bucket:
@@ -62,7 +62,7 @@ class QuotaBuckets(Resource):
         return jsonify(ret_data)
 
 class QuotaAllocations(Resource):
-    #@login_required
+    @login_required
     def get(self, bucket=None):
         ret_data = {}
         if bucket:
@@ -80,7 +80,7 @@ class QuotaAllocations(Resource):
         return jsonify(ret_data)
 
 class QuotaUsers(Resource):
-    #@login_required
+    @login_required
     def get(self, user):
         buckets = []
         authorized_names = FileAuthorizer().instance.get_allowed_namespace_patterns(user)
