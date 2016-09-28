@@ -86,4 +86,6 @@ class QuotaUsers(Resource):
         authorized_names = FileAuthorizer().instance.get_allowed_namespace_patterns(user)
         if authorized_names:
             buckets = Quotas().instance.get_buckets_for_names(authorized_names)
+        if not buckets:
+            abort(404)
         return jsonify(buckets)
