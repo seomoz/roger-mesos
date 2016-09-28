@@ -129,6 +129,7 @@
       - install
       - nginx
       - permissions-sync
+      - aaad
 
   - name: Copy permissions file from local src to nginx conf when nginx_auth_local_dir is defined
     when: nginx_auth_enable is defined and nginx_auth_enable|bool and

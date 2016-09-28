@@ -13,6 +13,14 @@ class Framework(object):
         pass
 
     @abstractmethod
-    def get_allocation(self, request_body, request_uri):
+    def get_id(self, request_body, request_uri):
+        pass
+
+    @abstractmethod
+    def get_allocation(self, id):
+        pass
+
+    @abstractmethod
+    def is_delete_request(self, request_uri):
         pass
 

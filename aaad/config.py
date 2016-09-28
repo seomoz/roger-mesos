@@ -1,7 +1,7 @@
 import os
 from datetime import timedelta
 
-LOGGER_NAME = os.environ['LOGGER_NAME'] # used across modules
+LOGGER_NAME = os.getenv('LOGGER_NAME', 'aaad') # used across modules
 
 SECRET_KEY = os.environ['APP_SECRET_KEY'] # flask
 SESSION_COOKIE_NAME = os.getenv('SESSION_COOKIE_NAME', 'aaadsid') # flask

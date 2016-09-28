@@ -6,12 +6,10 @@ import sys
 import json
 import yaml
 import re
+from quotas import Quotas
 import logging
 
 logger = logging.getLogger(os.getenv('LOGGER_NAME', __name__))
-
-quota_file = os.getenv('QUOTA_FILE', '')
-master_url = os.getenv('MESOS_MASTER_URL', 'http://localhost:5050')
 
 class Validator:
 
@@ -37,9 +35,7 @@ class Validator:
             return {}
 
     def _validate_resource_quotas(self, act_as, request_uri, action, request_body, framework):
-        if not action.lower() in [ "put", "post" ]:
-            return True
-        if not quota_file:
+        if not action.lower() in [ "put", "post" ] or not Quotas().instance.is_quota_enabled() or framework.is_delete_request(request_uri):
             return True
         try:
             body = json.loads(request_body)
@@ -49,7 +45,8 @@ class Validator:
             self.messages.append('Quota validation failed because the request body could not be read - {}.'.format(str(e)))
 
         requested = self._get_requested_details(body)
-        allocated = framework.get_allocation(body, request_uri)
+        id = framework.get_id(body, request_uri)
+        allocated = framework.get_allocation(id)
         logger.debug("Allocated resources from framework {} -> {}".format(framework, allocated))
         instances = requested['instances']
         if not requested['resources']:
@@ -59,28 +56,17 @@ class Validator:
             # Scale down request
             return True
 
-        try:
-            tasks = mesos.get_tasks(master_url)
-        except (Exception) as e:
-            logger.exception("Exception while trying to get tasks during validate resource quota with request_body: {}, requested_resources: {}".format(request_body, requested))
-            self.messages = []
-            self.messages.append('Quota validation failed because there was a problem accessing mesos master on {}.'.format(master_url))
-            return False
+        quotas = Quotas().instance
+        bucket_name = quotas.get_bucket_for_task_name(id)
+        resource_quotas = quotas.get_quota_for_bucket(bucket_name)
+        total_allocation = quotas.get_task_allocation(bucket_name)
+        total_allocated_cpu = total_allocation['resources'].get('cpus', 0.0)
+        total_allocated_mem = total_allocation['resources'].get('mem', 0.0)
+        total_allocated_disk = total_allocation['resources'].get('disk', 0.0)
 
-        pattern = re.compile(".*\.{}.*".format(act_as))
-        total_allocated_cpu, total_allocated_mem, total_allocated_disk = (0.0,)*3
-        for task in tasks.keys():
-            if pattern.match(task):
-                total_allocated_cpu += float(tasks[task]['cpus'])
-                total_allocated_mem += float(tasks[task]['mem'])
-                total_allocated_disk += float(tasks[task]['disk'])
-
-        resource_quotas = ""
-        resource_quotas = utils.parse_permissions_file(quota_file).get(act_as, {})
-        resource_quotas = resource_quotas.get("resources", {})
-        cpu_quota = float(resource_quotas.get("cpus", 0.0))
-        mem_quota = float(resource_quotas.get("mem", 0.0))
-        disk_quota = float(resource_quotas.get("disk", 0.0))
+        cpu_quota = float(resource_quotas['resources'].get("cpus", 0.0))
+        mem_quota = float(resource_quotas['resources'].get("mem", 0.0))
+        disk_quota = float(resource_quotas['resources'].get("disk", 0.0))
         requested_cpu = int(requested['instances']) * float(requested['resources'].get('cpus', 0.0))
         requested_mem = int(requested['instances']) * float(requested['resources'].get('mem', 0.0))
         requested_disk = int(requested['instances']) * float(requested['resources'].get('disk', 0.0))
