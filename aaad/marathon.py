@@ -121,7 +121,7 @@ class Marathon(Framework):
         return allowed_groups
 
     def is_quota_validation_required(self, request_uri):
-        if (request_uri.startswith('/marathon/v2/delete') or request_uri.startswith('/marathon/v2/eventSubscriptions')):
+        if (request_uri.startswith('/marathon/v2/tasks/delete') or request_uri.startswith('/marathon/v2/eventSubscriptions')):
             return False
         return True
 
