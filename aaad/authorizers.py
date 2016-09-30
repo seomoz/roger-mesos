@@ -160,8 +160,7 @@ class FileAuthorizer:
         def get_canactas_list(self, user):
             actas_users = []
             for key in self._get_act_as_list(user):
-                if (key != user and
-                  self.data.get(key).get('type', 'user') != 'internal'):
+                if (self.data.get(key).get('type', 'user') != 'internal'):
                     actas_users.append(key)
             return actas_users
 
