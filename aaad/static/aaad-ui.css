@@ -13,7 +13,7 @@
   text-align: center;
   background-color: var(--env-bg-color);
   border-bottom: 2px solid var(--env-border-color);
-  color: var(--env-dd-text-color)
+  color: var(--env-dd-text-color);
 }
 #aaadselector {
   display: inline-block;
@@ -23,7 +23,10 @@
   border-bottom-right-radius: 5px;
   cursor: pointer;
   background-color: var(--env-bg-color);
-  color: var(--env-dd-text-color)
+  color: var(--env-dd-text-color);
+}
+#welcomeuser, #actasdetails {
+  display: inline;
 }
 .rogermascotimg {
   width: 25px;

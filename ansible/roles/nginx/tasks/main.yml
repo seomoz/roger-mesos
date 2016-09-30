@@ -180,6 +180,7 @@
       - nginx
       - update
       - aaad
+      - aaadsync
 
   - name: Template AAAD environment specific files file to nginx conf directory for now
     template: src="{{item}}.j2" dest="{{nginx_conf_dir}}/aaad/static/{{item}}" owner=root group=root mode=0644

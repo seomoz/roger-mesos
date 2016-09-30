@@ -118,6 +118,8 @@ def login():
             actas = request.form.get('act_as')
 
         if current_user.is_authenticated:
+            if not actas:
+                actas = current_user.get_username()
             if actas in FileAuthorizer().instance.get_canactas_list(current_user.get_username()):
                 # all's well, let's set cookie and redirect
                 resp = make_response(redirect(redirect_url or '/'))
@@ -141,6 +143,13 @@ def login():
         flash('Please log in.')
 
     return make_response(render_template('index.html', **locals()))
+
+@app.route('/login/user', methods=['GET'])
+def user_details():
+    username = ''
+    if current_user.is_authenticated:
+        username = current_user.get_username()
+    return jsonify({ 'username': username })
 
 @app.route('/logout')
 def logout():
