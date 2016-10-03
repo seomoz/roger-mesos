@@ -111,7 +111,7 @@
 
   - name: Copy basic auth credentials file to the nginx conf
     copy: src={{ creds_dir }}/{{nginx_basic_auth_file_name}} dest="{{nginx_conf_dir}}/{{nginx_basic_auth_file_name}}"  mode=0644
-    when: auth_permissions_gspreadsheets is defined and not(auth_permissions_gspreadsheets | trim == '') and
+    when: auth_permissions_gspreadsheets is defined and not(auth_permissions_gspreadsheets | trim == '') or
           generate_basic_auth_file is defined and generate_basic_auth_file|bool
     become: yes
     notify: restart nginx
