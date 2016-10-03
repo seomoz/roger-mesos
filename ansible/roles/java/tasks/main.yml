@@ -27,16 +27,16 @@
   tags:
     - java
 
-- name: Install Oracle Java
-  apt: name="oracle-java8-installer={{ oracle_java_version }}" state=present
-  become: yes
-  tags:
-    - java
-    - java-install
+#- name: Install Oracle Java
+#  apt: name="oracle-java8-installer={{ oracle_java_version }}" state=present
+#  become: yes
+#  tags:
+#    - java
+#    - java-install
 
-- name: Install Oracle Java defaults
-  apt: name="oracle-java8-set-default={{ oracle_java_version }}" state=present
-  become: yes
-  tags:
-    - java
-    - java-install
+#- name: Install Oracle Java defaults
+#  apt: name="oracle-java8-set-default={{ oracle_java_version }}" state=present
+#  become: yes
+#  tags:
+#    - java
+#    - java-install

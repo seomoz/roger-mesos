@@ -8,7 +8,7 @@ vagrant reload
 
 echo "Starting ansible-playbook to set up other services..."
 
-ansible-playbook -i hosts/single --user=vagrant --ask-pass --extra-vars="mesos_cluster_name=localcluster-on-`hostname` mesos_master_network_interface=ansible_eth1 mesos_slave_network_interface=ansible_eth1" ../../ansible/initial-cluster.yml -e @$HOME/rogeros-ansible-secrets.yml.encrypted --vault-password-file ~/.rogeros-ansible-vault-pass --diff 
+ansible-playbook -i hosts/single --user=vagrant --ask-pass --extra-vars="mesos_cluster_name=localcluster-on-`hostname` mesos_master_network_interface=ansible_eth1 mesos_slave_network_interface=ansible_eth1" ../../ansible/initial-cluster.yml --diff -e "@../../ansible_vars.yml"
 
 # restart Zookeeper
 ansible zookeeper -i hosts/single --user=vagrant -s -m command -a "service zookeeper restart" --ask-pass

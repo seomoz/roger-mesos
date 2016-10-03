@@ -1,7 +1,7 @@
-- name: Check for cgroup memory and swap accounting parameter
-  command: "grep 'GRUB_CMDLINE_LINUX_DEFAULT=\"cgroup_enable=memory swapaccount=1 transparent_hugepage=never\"' /etc/default/grub"
-  tags:
-    - checks
+#- name: Check for cgroup memory and swap accounting parameter
+#  command: "grep 'GRUB_CMDLINE_LINUX_DEFAULT=\"cgroup_enable=memory swapaccount=1 transparent_hugepage=never\"' /etc/default/grub"
+#  tags:
+#    - checks
 
 - name: Create host independent directories which need to exist, if necessary
   file: path={{item}} state=directory owner=root

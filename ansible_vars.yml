@@ -5,3 +5,10 @@ aaadsid_rem_cookie_duration_seconds: 120 # This is the remember cookie duration.
 #cert_subdomain: example.com # Optional. This is the (sub)domain for which the https cert is valid.
 marathon_leader_url: http://localmesos01:8080
 chronos_leader_url: https://localmesos01:4400
+chronos_http_port: 4400
+marathon_http_port: 8080
+nginx_http_port: 7070
+marathon_admin_user: local_user
+marathon_admin_password: local_user
+marathon_bamboo_user: local_user
+marathon_bamboo_pass: local_user
