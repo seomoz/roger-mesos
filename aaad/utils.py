@@ -19,10 +19,10 @@ def get_merged_data(user, allowed_users, allowed_actions, data, action):
                 else:
                     if type(item) == dict:
                         temp_item = item
-                          
+
                 if not temp_item in allowed_actions:
                     allowed_actions.append(temp_item)
-                            
+
     if 'can_act_as' not in data[user]:
         return
 
@@ -34,7 +34,7 @@ def getAllowedNamespacePatterns(act_as, permissions):
     allowed_users_list = []
     get_merged_data(act_as, allowed_users_list, [], permissions, '')
 
-    allowed_namespace_patterns = []    
+    allowed_namespace_patterns = []
 
     for user in allowed_users_list:
         if 'allowed_names' in permissions[user]:
@@ -44,3 +44,12 @@ def getAllowedNamespacePatterns(act_as, permissions):
 
     return allowed_namespace_patterns
 
+def merge_dicts(dict1, dict2):
+    ''' merges dict2 into dict1 and returns dict1 '''
+    if isinstance(dict1, dict) and isinstance(dict2, dict):
+        for k, v in dict2.iteritems():
+            if k not in dict1:
+                dict1[k] = v
+            else:
+                dict1[k] = merge(dict1[k], v)
+    return dict1

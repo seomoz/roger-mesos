@@ -175,9 +175,11 @@ class FileAuthorizer:
             return framework.filterResponseBody(data, allowed_namespaces, resource)
 
         def _parse_permissions_file(self, filename):
-            with open(filename, 'r') as data_file:
-                return yaml.load(data_file)
-            return ''
+            permissions = {}
+            for item in filename.split(','):
+                with open(item.strip(), 'r') as data_file:
+                    utils.merge_dicts(permissions, yaml.load(data_file))
+            return permissions
 
         def _get_merged_data(self, user, allowed_users, allowed_actions, data, action):
             if user in allowed_users:
