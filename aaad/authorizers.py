@@ -10,7 +10,7 @@ import logging
 
 logger = logging.getLogger(os.getenv('LOGGER_NAME', __name__))
 
-permissions_file = os.getenv('PERMISSIONS_FILE')
+permissions_files = os.getenv('PERMISSIONS_FILES')
 
 class AuthorizeResult:
 
@@ -24,9 +24,9 @@ class AuthorizeResult:
 class FileAuthorizer:
     class __FileAuthorizer:
 
-        def __init__(self, filename):
-            self.filename = filename
-            self.data = self._parse_permissions_file(filename)
+        def __init__(self, filenames):
+            self.filenames = filenames
+            self.data = self._parse_permissions_files(filenames)
 
         def resource_check(self, request_uri, body, allowed_actions, content_type):
             for item in allowed_actions:
@@ -174,9 +174,9 @@ class FileAuthorizer:
                 return ""
             return framework.filterResponseBody(data, allowed_namespaces, resource)
 
-        def _parse_permissions_file(self, filename):
+        def _parse_permissions_files(self, filenames):
             permissions = {}
-            for item in filename.split(','):
+            for item in filenames.split(','):
                 with open(item.strip(), 'r') as data_file:
                     utils.merge_dicts(permissions, yaml.load(data_file))
             return permissions
@@ -219,6 +219,6 @@ class FileAuthorizer:
     instance = None
     def __init__(self):
         if not FileAuthorizer.instance:
-            FileAuthorizer.instance = FileAuthorizer.__FileAuthorizer(permissions_file)
+            FileAuthorizer.instance = FileAuthorizer.__FileAuthorizer(permissions_files)
         else:
-            FileAuthorizer.instance.filename = permissions_file
+            FileAuthorizer.instance.filenames = permissions_files
