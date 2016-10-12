@@ -13,7 +13,7 @@ env APP_SECRET_KEY={{ aaad_app_secret_key }}
 env SESSION_TOKEN_SECRET_KEY={{ aaadsid_secret_key }}
 env REMEMBER_COOKIE_DURATION_SECONDS={{ aaadsid_rem_cookie_duration_seconds }}
 
-env MESOS_MASTER_URL={{ mesos_leader_ui_url | default('http://127.0.0.1:5050') }}
+env MESOS_MASTER_URL={{ mesos_elected_leader_url | default('http://127.0.0.1:5050') }}
 env MARATHON_MASTER_URL={% if marathon_leader_url is defined %}{{ marathon_leader_url }}{% else %}http://localhost:{{ marathon_http_port }}{% endif %}
 
 env CHRONOS_MASTER_URL={% if chronos_leader_url is defined %}{{ chronos_leader_url }}{% else %}http://localhost:{{ chronos_http_port }}{% endif %}
