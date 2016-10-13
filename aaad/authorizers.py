@@ -180,7 +180,7 @@ class FileAuthorizer:
                 filename = item.strip()
                 if filename:
                     with open(filename, 'r') as data_file:
-                        utils.merge_dicts(permissions, yaml.load(data_file))
+                        permissions = utils.merge_dicts(permissions, yaml.load(data_file))
             return permissions
 
         def _get_merged_data(self, user, allowed_users, allowed_actions, data, action):

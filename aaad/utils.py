@@ -44,12 +44,13 @@ def getAllowedNamespacePatterns(act_as, permissions):
 
     return allowed_namespace_patterns
 
-def merge_dicts(dict1, dict2):
-    ''' merges dict2 into dict1 and returns dict1 '''
-    if isinstance(dict1, dict) and isinstance(dict2, dict):
-        for k, v in dict2.iteritems():
-            if k not in dict1:
-                dict1[k] = v
-            else:
-                dict1[k] = merge(dict1[k], v)
-    return dict1
+def merge_dicts(*dict_args):
+    '''
+    Given any number of dicts, shallow copy and merge into a new dict,
+    precedence goes to key value pairs in latter dicts.
+    Reference - http://stackoverflow.com/questions/38987/how-to-merge-two-python-dictionaries-in-a-single-expression
+    '''
+    result = {}
+    for dictionary in dict_args:
+        result.update(dictionary)
+    return result
