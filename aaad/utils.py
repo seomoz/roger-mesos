@@ -47,7 +47,6 @@ def merge_dicts(dict1, dict2):
     ''' Merge dict2 into dict1 recursively, merging lists for the same keys, overriding with latter value for non-list values, and return updated dict1 '''
     if isinstance(dict1, dict) and isinstance(dict2, dict):
         for k, v in dict2.iteritems():
-            print k, v
             if k not in dict1:
                 dict1[k] = v
             else:
