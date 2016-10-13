@@ -177,7 +177,7 @@ class FileAuthorizer:
         def _parse_permissions_files(self, filenames):
             permissions = {}
             for item in filenames.split(','):
-                filename = item.strip(' ,') # strip ',' and ' '
+                filename = item.strip()
                 if filename:
                     with open(filename, 'r') as data_file:
                         utils.merge_dicts(permissions, yaml.load(data_file))
