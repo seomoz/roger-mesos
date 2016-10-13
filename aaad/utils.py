@@ -44,7 +44,7 @@ def getAllowedNamespacePatterns(act_as, permissions):
     return allowed_namespace_patterns
 
 def merge_dicts(dict1, dict2):
-    ''' Merge dict2 into dict1 recursively, merging lists for the same keys, overriding with latter value for non-list values, and return updated dict1 '''
+    ''' Merge dict2 into dict1 recursively, merging lists for the same keys, overriding with the latter value (for non-list values), and return updated dict1 '''
     if isinstance(dict1, dict) and isinstance(dict2, dict):
         for k, v in dict2.iteritems():
             if k not in dict1:
