@@ -31,7 +31,7 @@ $(document).ready(function(){
           clearInterval($aaad_update_timer_id);
         }
       }
-    }, 5000);
+    }, 1000);
   }
 });
 function updateUserDetails() {
