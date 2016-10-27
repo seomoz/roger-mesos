@@ -51,6 +51,26 @@ def get_tasks(master_url):
     cache[cache_key] = tasks
     return tasks
 
+def get_task_ids_and_resources(master_url):
+    tasks_count = mesos.get_tasks_counts(master_url.rstrip('/'))
+    limit = int(sum(tasks_count.values()))
+    url = '{}/tasks?limit={}'.format(master_url.rstrip('/'), limit)
+    cache_key = 'get_tasks' + master_url
+    tasks = cache.get(cache_key)
+    if tasks:
+        return tasks
+    tasks = {}
+    resp = requests.get('{}'.format(url))
+    if not resp.status_code // 100 == 2:
+        logger.error('Got response {} from {}'.format(resp.status_code, url))
+        raise ValueError('Got a non-2xx response ({}) from {}.'.format(resp.status_code, url))
+    data = resp.json()
+    for task in data['tasks']:
+        if task['state'] in ['TASK_RUNNING', 'TASK_STAGING', 'TASK_STARTING']:
+            tasks[task['id']] = { 'cpus': task['resources']['cpus'], 'mem': task['resources']['mem'], 'disk': task['resources']['disk'] }
+    cache[cache_key] = tasks
+    return tasks
+
 def get_resources(master_url):
     data = get_metrics_snapshot(master_url)
     resources = {}

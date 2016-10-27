@@ -53,11 +53,11 @@ class Quotas:
                 allowed_names = set()
                 for name, bucket in self.quota_data['names'].iteritems():
                     if bucket == bucket_name:
-                        allowed_names.add(name)
+                        allowed_names.add(name.replace("/","_"))
 
             tasks = None
             try:
-                tasks = mesos.get_tasks(master_url)
+                tasks = mesos.get_task_ids_and_resources(master_url)
             except (Exception) as e:
                 logger.exception("Exception while trying to get tasks using master url: {}".format(master_url))
                 raise
@@ -65,7 +65,7 @@ class Quotas:
             total_allocated_cpu, total_allocated_mem, total_allocated_disk = (0.0,)*3
             for task in tasks.keys():
                 for allowed_name in allowed_names:
-                    pattern = re.compile(".*\.{}.*".format(allowed_name))
+                    pattern = re.compile("^{}$".format(allowed_name))
                     if pattern.match(task):
                         total_allocated_cpu += float(tasks[task]['cpus'])
                         total_allocated_mem += float(tasks[task]['mem'])
