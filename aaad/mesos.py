@@ -17,9 +17,9 @@ def get_metrics_snapshot(master_url):
     if resp_json:
         return resp_json
     resp = requests.get('{}'.format(url))
-    if not resp.status_code // 100 == 2:
+    if resp.status_code // 100 != 2:
         logger.error('Got response {} from {}'.format(resp.status_code, url))
-        raise ValueError('Got a non-2xx response ({}) from {}.'.format(resp.status_code, url))
+        Response.raise_for_status()
     resp_json = resp.json()
     cache[cache_key] = resp_json
     return resp_json
@@ -41,9 +41,9 @@ def get_tasks(master_url):
         return tasks
     tasks = {}
     resp = requests.get('{}'.format(url))
-    if not resp.status_code // 100 == 2:
+    if resp.status_code // 100 != 2:
         logger.error('Got response {} from {}'.format(resp.status_code, url))
-        raise ValueError('Got a non-2xx response ({}) from {}.'.format(resp.status_code, url))
+        Response.raise_for_status()
     data = resp.json()
     for task in data['tasks']:
         if task['state'] in ['TASK_RUNNING', 'TASK_STAGING', 'TASK_STARTING']:
@@ -61,9 +61,9 @@ def get_task_ids_and_resources(master_url):
         return tasks
     tasks = {}
     resp = requests.get('{}'.format(url))
-    if not resp.status_code // 100 == 2:
+    if resp.status_code // 100 != 2:
         logger.error('Got response {} from {}'.format(resp.status_code, url))
-        raise ValueError('Got a non-2xx response ({}) from {}.'.format(resp.status_code, url))
+        Response.raise_for_status()
     data = resp.json()
     for task in data['tasks']:
         if task['state'] in ['TASK_RUNNING', 'TASK_STAGING', 'TASK_STARTING']:
