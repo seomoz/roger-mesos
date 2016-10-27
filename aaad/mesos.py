@@ -55,7 +55,7 @@ def get_task_ids_and_resources(master_url):
     tasks_count = mesos.get_tasks_counts(master_url.rstrip('/'))
     limit = int(sum(tasks_count.values()))
     url = '{}/tasks?limit={}'.format(master_url.rstrip('/'), limit)
-    cache_key = 'get_tasks' + master_url
+    cache_key = 'get_task_ids_and_resources' + master_url
     tasks = cache.get(cache_key)
     if tasks:
         return tasks
