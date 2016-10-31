@@ -1,9 +1,10 @@
+
 import os
 import yaml
 import logging
-import mesos
 import re
 
+import mesos
 import utils
 
 logger = logging.getLogger(os.getenv('LOGGER_NAME', __name__))
@@ -13,6 +14,8 @@ master_url = os.getenv('MESOS_MASTER_URL', 'http://localhost:5050')
 
 class Quotas:
     class __Quotas:
+        '''Takes a commas separated list of yaml file paths in the QUOTA_FILES environment variable.
+        '''
         def __init__(self, filenames_spec):
             self.quota_data = None
             self.REGEX_PATTERN = "^{}$"

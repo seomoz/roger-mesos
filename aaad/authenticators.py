@@ -3,11 +3,13 @@ import os
 
 from passlib.apache import HtpasswdFile
 
-
 htpasswd_files = os.environ['HTPASSWD_FILES']
+
 
 class FileAuthenticator:
     class __FileAuthenticator:
+        '''Takes a commas separated list of htpasswd file paths in the HTPASSWD_FILES environment variable.
+        '''
         def __init__(self, filenames_spec):
             self.data = self._parse_htpasswd_files(filenames_spec)
 
