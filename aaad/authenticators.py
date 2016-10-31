@@ -20,7 +20,7 @@ class FileAuthenticator:
                 filename = item.strip()
                 if filename:
                     with open(filename, 'r') as data_file:
-                        data = data + data_file.read()
+                        data += data_file.read()
             return HtpasswdFile.from_string(data)
 
         def authenticate(self, username, password):
