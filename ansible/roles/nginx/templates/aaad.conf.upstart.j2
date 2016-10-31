@@ -5,7 +5,7 @@ stop on runlevel [0156]
 
 chdir {{nginx_conf_dir}}/aaad
 
-env HTPASSWD_FILE={{ nginx_conf_dir }}/{{ nginx_basic_auth_file_name }}
+env HTPASSWD_FILES={{ nginx_conf_dir }}/{{ nginx_basic_auth_file_name }}
 env PERMISSIONS_FILES={{ nginx_conf_dir }}/permissions.yml
 
 env APP_SECRET_KEY={{ aaad_app_secret_key }}
@@ -18,7 +18,7 @@ env MARATHON_MASTER_URL={% if marathon_leader_url is defined %}{{ marathon_leade
 
 env CHRONOS_MASTER_URL={% if chronos_leader_url is defined %}{{ chronos_leader_url }}{% else %}http://localhost:{{ chronos_http_port }}{% endif %}
 
-env QUOTA_FILE={{ nginx_conf_dir }}/quotas.yml
+env QUOTA_FILES={{ nginx_conf_dir }}/quotas.yml
 
 {% if aaadsid_domain is defined %}
 env SESSION_ID_DOMAIN={{ aaadsid_domain }}{% endif %}
