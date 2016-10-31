@@ -1,23 +1,35 @@
+
 import os
 import yaml
 import logging
-import mesos
 import re
+
+import mesos
+import utils
 
 logger = logging.getLogger(os.getenv('LOGGER_NAME', __name__))
 
-quota_file = os.getenv('QUOTA_FILE', '')
+quota_files = os.getenv('QUOTA_FILES', '')
 master_url = os.getenv('MESOS_MASTER_URL', 'http://localhost:5050')
 
 class Quotas:
     class __Quotas:
-        def __init__(self, filename):
-            self.filename = filename
+        '''Takes a commas separated list of yaml file paths in the QUOTA_FILES environment variable.
+        '''
+        def __init__(self, filenames_spec):
             self.quota_data = None
             self.REGEX_PATTERN = "^{}$"
-            if filename:
-                with open(filename, 'r') as data_file:
-                    self.quota_data = yaml.load(data_file)
+            self.quota_data = self._parse_quota_files(filenames_spec)
+
+        def _parse_quota_files(self, filenames_spec):
+            self.quota_data = {}
+            filenames = filenames_spec.split(',')
+            for item in filenames:
+                filename = item.strip()
+                if filename:
+                    with open(filename, 'r') as data_file:
+                        self.quota_data = utils.merge_dicts(self.quota_data, yaml.load(data_file))
+            return self.quota_data
 
         def is_quota_enabled(self):
             if self.quota_data:
@@ -91,4 +103,4 @@ class Quotas:
     instance = None
     def __init__(self):
         if not Quotas.instance:
-            Quotas.instance = Quotas.__Quotas(quota_file)
+            Quotas.instance = Quotas.__Quotas(quota_files)

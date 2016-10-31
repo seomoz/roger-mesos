@@ -1,16 +1,18 @@
-import utils
+
 import re
 import json
 import yaml
 import os
-import sys
+import logging
+
+import utils
 from validators import Validator
 from frameworkUtils import FrameworkUtils
-import logging
 
 logger = logging.getLogger(os.getenv('LOGGER_NAME', __name__))
 
 permissions_files = os.getenv('PERMISSIONS_FILES')
+
 
 class AuthorizeResult:
 
@@ -23,7 +25,8 @@ class AuthorizeResult:
 
 class FileAuthorizer:
     class __FileAuthorizer:
-
+        '''Takes a commas separated list of permissions file paths in the PERMISSIONS_FILES environment variable.
+        '''
         def __init__(self, filenames):
             self.filenames = filenames
             self.data = self._parse_permissions_files(filenames)
