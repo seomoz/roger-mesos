@@ -165,7 +165,7 @@
 
   - name: Synchronize AAA daemon to nginx conf directory for now
     synchronize:
-      src: ../../../../aaad/
+      src: "{{ role_path }}/../../../aaad/"
       dest: "{{nginx_conf_dir}}/aaad/"
       recursive: yes
       delete: yes
