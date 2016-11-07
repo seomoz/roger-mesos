@@ -1,6 +1,9 @@
 #inventory file for local multi-node cluster environment
 
 [machines:vars]
+env_name=local
+env_color=gray
+env_border_color=black
 marathon_auth_enable=false
 nginx_auth_enable=true
 marathon_webui_host=localmesos02:4080/marathon
