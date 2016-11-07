@@ -73,8 +73,6 @@
     always_run: yes # run during check mode
     with_items:
        - htpasswd
-       - gspread
-       - oauth2client
        - PyYAML
     delegate_to: 127.0.0.1
     run_once: yes
