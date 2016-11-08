@@ -7,7 +7,7 @@ import htpasswd
 import yaml
 import os
 
-def generate_http_basic_auth_file(permissions_files, output_file):
+def generate_nginx_basic_auth_file(permissions_files, output_file):
     if not permissions_files:
         return
 
@@ -47,4 +47,4 @@ if __name__ == '__main__':
         sys.exit("Usage: %s <permissions_files_delimited_by_space> <output_file>" % sys.argv[0])
     permissions_files = sys.argv[1]
     output_file = sys.argv[2]
-    generate_http_basic_auth_file(permissions_files, output_file)
+    generate_nginx_basic_auth_file(permissions_files, output_file)
