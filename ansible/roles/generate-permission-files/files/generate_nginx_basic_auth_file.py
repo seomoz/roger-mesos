@@ -16,7 +16,10 @@ def generate_nginx_basic_auth_file(permissions_files, output_file):
         filename = item.strip()
         if filename:
             with open(filename) as data_file:
-                permissions = merge_dicts(permissions, yaml.load(data_file))
+                if not permissions:
+                    permissions = yaml.load(data_file)
+                else:
+                    permissions.update(yaml.load(data_file))
 
     if os.path.exists(output_file):
         os.remove(output_file)
@@ -28,13 +31,6 @@ def generate_nginx_basic_auth_file(permissions_files, output_file):
             if type == "user":
                 htpasswd_file.add(username, username)
 
-def merge_dicts(dict1, dict2):
-    if isinstance(dict1, dict) and isinstance(dict2, dict):
-        for k, v in dict2.iteritems():
-            dict1[k] = v
-
-    return dict1
-            
 if __name__ == '__main__':
     if len(sys.argv) < 3:
         sys.exit("Usage: %s <permission_files_delimited_by_comma> <output_file>" % sys.argv[0])
