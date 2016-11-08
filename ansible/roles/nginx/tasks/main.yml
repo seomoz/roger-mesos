@@ -133,7 +133,7 @@
   - name: Copy permissions file from local src to nginx conf when nginx_auth_local_dir is defined
     when: nginx_auth_enable is defined and nginx_auth_enable|bool and
           nginx_auth_local_dir is defined and not(nginx_auth_local_dir | trim == '')
-    copy:  src="{{ nginx_auth_local_dir }}/{% if env_name is defined and env_name == \"local\" %}permissions_{{ env_name }}.yml{% else %}permissions.yml{% endif %}"  dest="{{nginx_conf_dir}}/permissions.yml" owner=root group=root mode=0644
+    copy:  src="{{ nginx_auth_local_dir }}/{% if env_name is defined and env_name == \"local\" %}permissions_local.yml{% else %}permissions.yml{% endif %}"  dest="{{nginx_conf_dir}}/permissions.yml" owner=root group=root mode=0644
     become: yes
     notify: restart aaad
     tags:

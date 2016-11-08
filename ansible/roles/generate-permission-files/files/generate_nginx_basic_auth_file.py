@@ -7,12 +7,16 @@ import htpasswd
 import yaml
 import os
 
-def generate_http_basic_auth_file(permissions_file, output_file):
-    if not permissions_file:
+def generate_http_basic_auth_file(permissions_files, output_file):
+    if not permissions_files:
         return
-    permissions = ""
-    with open(permissions_file) as data_file:
-        permissions = yaml.load(data_file)
+
+    permissions = {}
+    for item in permissions_files.split(','):
+        filename = item.strip()
+        if filename:
+            with open(filename) as data_file:
+                permissions = merge_dicts(permissions, yaml.load(data_file))
 
     if os.path.exists(output_file):
         os.remove(output_file)
@@ -23,10 +27,24 @@ def generate_http_basic_auth_file(permissions_file, output_file):
             type = user_data.get('type', 'user')
             if type == "user":
                 htpasswd_file.add(username, username)
+
+def merge_dicts(dict1, dict2):
+    ''' Merge dict2 into dict1 recursively, merging lists for the same keys, overriding with the latter value (for non-list values), and return updated dict1 '''
+    if isinstance(dict1, dict) and isinstance(dict2, dict):
+        for k, v in dict2.iteritems():
+            if k not in dict1:
+                dict1[k] = v
+            else:
+                dict1[k] = merge_dicts(dict1[k], v) # recursively merge dicts
+    elif isinstance(dict1, list) and isinstance(dict2, list):
+        dict1 += dict2 # merge lists
+    else:
+        dict1 = dict2 # latter value overrides
+    return dict1
             
 if __name__ == '__main__':
     if len(sys.argv) < 3:
-        sys.exit("Usage: %s <permissions_file> <output_file>" % sys.argv[0])
-    permissions_file = sys.argv[1]
+        sys.exit("Usage: %s <permissions_files_delimited_by_space> <output_file>" % sys.argv[0])
+    permissions_files = sys.argv[1]
     output_file = sys.argv[2]
-    generate_http_basic_auth_file(permissions_file, output_file)
+    generate_http_basic_auth_file(permissions_files, output_file)
