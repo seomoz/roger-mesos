@@ -7,12 +7,19 @@ import htpasswd
 import yaml
 import os
 
-def generate_http_basic_auth_file(permissions_file, output_file):
-    if not permissions_file:
+def generate_nginx_basic_auth_file(permissions_files, output_file):
+    if not permissions_files:
         return
-    permissions = ""
-    with open(permissions_file) as data_file:
-        permissions = yaml.load(data_file)
+
+    permissions = {}
+    for item in permissions_files.split(','):
+        filename = item.strip()
+        if filename:
+            with open(filename) as data_file:
+                if not permissions:
+                    permissions = yaml.load(data_file)
+                else:
+                    permissions.update(yaml.load(data_file))
 
     if os.path.exists(output_file):
         os.remove(output_file)
@@ -23,10 +30,10 @@ def generate_http_basic_auth_file(permissions_file, output_file):
             type = user_data.get('type', 'user')
             if type == "user":
                 htpasswd_file.add(username, username)
-            
+
 if __name__ == '__main__':
     if len(sys.argv) < 3:
-        sys.exit("Usage: %s <permissions_file> <output_file>" % sys.argv[0])
-    permissions_file = sys.argv[1]
+        sys.exit("Usage: %s <permission_files_delimited_by_comma> <output_file>" % sys.argv[0])
+    permissions_files = sys.argv[1]
     output_file = sys.argv[2]
-    generate_http_basic_auth_file(permissions_file, output_file)
+    generate_nginx_basic_auth_file(permissions_files, output_file)

@@ -1,27 +1,16 @@
-
 import os
 
 from passlib.apache import HtpasswdFile
 
-htpasswd_files = os.environ['HTPASSWD_FILES']
-
+htpasswd_file = os.environ['HTPASSWD_FILE']
 
 class FileAuthenticator:
     class __FileAuthenticator:
-        '''Takes a commas separated list of htpasswd file paths in the HTPASSWD_FILES environment variable.
+        '''Takes a htpasswd file path from the HTPASSWD_FILE environment variable.
         '''
-        def __init__(self, filenames_spec):
-            self.data = self._parse_htpasswd_files(filenames_spec)
-
-        def _parse_htpasswd_files(self, filenames_spec):
-            data = ""
-            filenames = filenames_spec.split(',')
-            for item in filenames:
-                filename = item.strip()
-                if filename:
-                    with open(filename, 'r') as data_file:
-                        data += data_file.read()
-            return HtpasswdFile.from_string(data)
+        def __init__(self, filename):
+            self.filename = filename
+            self.data = HtpasswdFile(self.filename)
 
         def authenticate(self, username, password):
             """ Returns True if username exists and password is valid, False otherwise """
@@ -41,6 +30,6 @@ class FileAuthenticator:
     instance = None
     def __init__(self):
         if not FileAuthenticator.instance:
-            FileAuthenticator.instance = FileAuthenticator.__FileAuthenticator(htpasswd_files)
+            FileAuthenticator.instance = FileAuthenticator.__FileAuthenticator(htpasswd_file)
         else:
-            FileAuthenticator.instance.filenames = htpasswd_files
+            FileAuthenticator.instance.filename = htpasswd_file

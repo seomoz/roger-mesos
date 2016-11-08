@@ -111,8 +111,7 @@
 
   - name: Copy basic auth credentials file to the nginx conf
     copy: src={{ creds_dir }}/{{nginx_basic_auth_file_name}} dest="{{nginx_conf_dir}}/{{nginx_basic_auth_file_name}}"  mode=0644
-    when: auth_permissions_gspreadsheets is defined and not(auth_permissions_gspreadsheets | trim == '') or
-          generate_basic_auth_file is defined and generate_basic_auth_file|bool
+    when: generate_basic_auth_file is defined and generate_basic_auth_file|bool
     become: yes
     notify: restart nginx
     tags:
@@ -134,7 +133,7 @@
   - name: Copy permissions file from local src to nginx conf when nginx_auth_local_dir is defined
     when: nginx_auth_enable is defined and nginx_auth_enable|bool and
           nginx_auth_local_dir is defined and not(nginx_auth_local_dir | trim == '')
-    copy:  src="{{ nginx_auth_local_dir }}/permissions.yml"  dest="{{nginx_conf_dir}}/permissions.yml" owner=root group=root mode=0644
+    copy:  src="{{ nginx_auth_local_dir }}/{% if env_name is defined and env_name == \"local\" %}permissions_local.yml{% else %}permissions.yml{% endif %}"  dest="{{nginx_conf_dir}}/permissions.yml" owner=root group=root mode=0644
     become: yes
     notify: restart aaad
     tags:
@@ -142,10 +141,9 @@
       - nginx
       - permissions-sync
 
-  - name: Copy default nginx user-permissions.json file if neither nginx_auth_local_dir nor auth_permissions_gspreadsheets are defined, and there isn't already a permissions file
+  - name: Copy default nginx user-permissions.json file if nginx_auth_local_dir is not defined, and there isn't already a permissions file
     when: nginx_auth_enable is defined and nginx_auth_enable|bool and
-          nginx_auth_local_dir is not defined and
-          auth_permissions_gspreadsheets is not defined
+          nginx_auth_local_dir is not defined
     copy: src={{ role_path }}/files/permissions.yml dest="{{nginx_conf_dir}}/permissions.yml" owner=root group=root mode=0644
           force=no # ensure that this file doesn't overwrite any existing permissions file
     become: yes
