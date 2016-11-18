@@ -130,6 +130,17 @@
       - permissions-sync
       - aaad
 
+  - name: Copy quota file for test users to the nginx conf
+    copy: src={{ nginx_auth_local_dir }}/quotas_{{ nginx_test_user_env|default('local') }}.yml dest="{{nginx_conf_dir}}/quotas_test_users.yml"  mode=0644
+    when: nginx_auth_enable is defined and nginx_auth_enable|bool and nginx_set_test_users|bool
+    become: yes
+    notify: restart aaad
+    tags:
+      - install
+      - nginx
+      - permissions-sync
+      - aaad
+
   - name: Copy permissions file from local src to nginx conf when nginx_auth_local_dir is defined
     when: nginx_auth_enable is defined and nginx_auth_enable|bool and nginx_auth_local_dir is defined and not(nginx_auth_local_dir | trim == '')
     copy:  src="{{ nginx_auth_local_dir }}/permissions.yml"  dest="{{nginx_conf_dir}}/permissions.yml" owner=root group=root mode=0644
