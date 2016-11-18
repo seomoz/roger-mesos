@@ -131,9 +131,18 @@
       - aaad
 
   - name: Copy permissions file from local src to nginx conf when nginx_auth_local_dir is defined
-    when: nginx_auth_enable is defined and nginx_auth_enable|bool and
-          nginx_auth_local_dir is defined and not(nginx_auth_local_dir | trim == '')
-    copy:  src="{{ nginx_auth_local_dir }}/{% if env_name is defined and env_name == \"local\" %}permissions_local.yml{% else %}permissions.yml{% endif %}"  dest="{{nginx_conf_dir}}/permissions.yml" owner=root group=root mode=0644
+    when: nginx_auth_enable is defined and nginx_auth_enable|bool and nginx_auth_local_dir is defined and not(nginx_auth_local_dir | trim == '')
+    copy:  src="{{ nginx_auth_local_dir }}/permissions.yml"  dest="{{nginx_conf_dir}}/permissions.yml" owner=root group=root mode=0644
+    become: yes
+    notify: restart aaad
+    tags:
+      - install
+      - nginx
+      - permissions-sync
+
+  - name: Copy permissions file of test users from local src to nginx conf when nginx_auth_local_dir is defined
+    when: nginx_auth_enable is defined and nginx_auth_enable|bool and nginx_auth_local_dir is defined and not(nginx_auth_local_dir | trim == '') and set_test_users is defined and set_test_users|bool
+    copy:  src="{{ nginx_auth_local_dir }}/permissions_local.yml"  dest="{{nginx_conf_dir}}/permissions_test_users.yml" owner=root group=root mode=0644
     become: yes
     notify: restart aaad
     tags:
@@ -194,6 +203,7 @@
 
   - name: Update env name in aaad-js file
     lineinfile: dest="{{nginx_conf_dir}}/aaad/static/aaad-ui.js" regexp="^\$env_name = " line="$env_name = '{{ env_name }}'"
+    when: ansible_check_mode is not defined or not ansible_check_mode
     become: yes
     tags:
       - install

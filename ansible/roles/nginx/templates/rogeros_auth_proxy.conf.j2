@@ -6,37 +6,36 @@ upstream chronos {
         server localhost:4400;
 }
 
+{% if env_name != 'local' %}
 server {
       listen 80 default_server;
       server_name _ ;
-{% if env_name == 'local' %}
-      rewrite ^ https://$host$request_uri redirect;
-{% else %}
       return 444;
-{% endif %}
 }
+{% endif %}
 
-{% if cert_subdomain is defined %}
+{% if env_name != 'local' %}
 server {
        listen 80;
        server_name ~^mesos.+$ ;
        location / {
              proxy_pass {{ mesos_elected_leader_url }};
        }
-}
+}{% endif %}
 
 server {
        listen 80;
        server_name ~^marathon.+${% if env_name == 'local' %} default_server{% endif %} ;
-       rewrite ^ https://marathon-{{env_name}}-roger.{{cert_subdomain}}$request_uri redirect;
+       rewrite ^ https://{% if env_name == 'local' %}{{ roger_http_url_base }}{% else %}marathon-{{env_name}}-roger.{{cert_subdomain}}{% endif %}$request_uri redirect;
 }
 
 server {
        listen 80;
        server_name ~^chronos.+$ ;
-       rewrite ^ https://chronos-{{env_name}}-roger.{{cert_subdomain}}$request_uri redirect;
-}{% endif %}
+       rewrite ^ https://{% if env_name == 'local' %}{{ roger_http_url_base }}{% else %}chronos-{{env_name}}-roger.{{cert_subdomain}}{% endif %}$request_uri redirect;
+}
 
+{% if env_name != 'local' %}
 server {
         listen 443 ssl;
         server_name ~^mesos.+$ ;
@@ -59,7 +58,7 @@ server {
         location / {
               proxy_pass {{ mesos_elected_leader_url }};
         }
-}
+}{% endif %}
 
 server {
         listen 443 ssl;
