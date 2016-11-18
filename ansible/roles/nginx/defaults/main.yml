@@ -1,0 +1,4 @@
+---
+# file: roles/nginx/defaults/main.yml
+# if not overridden in inventory or as a parameter, this is the value that will be used
+nginx_set_test_users: false
