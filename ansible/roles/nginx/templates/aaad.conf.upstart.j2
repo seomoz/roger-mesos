@@ -18,7 +18,7 @@ env MARATHON_MASTER_URL={% if marathon_leader_url is defined %}{{ marathon_leade
 
 env CHRONOS_MASTER_URL={% if chronos_leader_url is defined %}{{ chronos_leader_url }}{% else %}http://localhost:{{ chronos_http_port }}{% endif %}
 
-env QUOTA_FILES={{ nginx_conf_dir }}/quotas.yml
+env QUOTA_FILES={{ nginx_conf_dir }}/quotas.yml{% if nginx_set_test_users|bool %},{{ nginx_conf_dir }}/quotas_test_users.yml{% endif %}
 
 {% if aaadsid_domain is defined %}
 env SESSION_ID_DOMAIN={{ aaadsid_domain }}{% endif %}
