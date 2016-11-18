@@ -141,7 +141,7 @@
       - permissions-sync
 
   - name: Copy permissions file of test users from local src to nginx conf when nginx_auth_local_dir is defined
-    when: nginx_auth_enable is defined and nginx_auth_enable|bool and nginx_auth_local_dir is defined and not(nginx_auth_local_dir | trim == '') and nginx_set_test_users is defined and nginx_set_test_users|bool
+    when: nginx_auth_enable is defined and nginx_auth_enable|bool and nginx_auth_local_dir is defined and not(nginx_auth_local_dir | trim == '') and nginx_set_test_users|bool
     copy:  src="{{ nginx_auth_local_dir }}/permissions_local.yml"  dest="{{nginx_conf_dir}}/permissions_test_users.yml" owner=root group=root mode=0644
     become: yes
     notify: restart aaad
