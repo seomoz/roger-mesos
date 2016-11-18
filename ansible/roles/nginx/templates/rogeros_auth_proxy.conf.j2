@@ -12,9 +12,7 @@ server {
       server_name _ ;
       return 444;
 }
-{% endif %}
 
-{% if env_name != 'local' %}
 server {
        listen 80;
        server_name ~^mesos.+$ ;
@@ -24,8 +22,8 @@ server {
 }{% endif %}
 
 server {
-       listen 80;
-       server_name ~^marathon.+${% if env_name == 'local' %} default_server{% endif %} ;
+       listen 80{% if env_name == 'local' %} default_server{% endif %} ;
+       server_name ~^marathon.+$ ;
        rewrite ^ https://{% if env_name == 'local' %}{{ roger_http_url_base }}{% else %}marathon-{{env_name}}-roger.{{cert_subdomain}}{% endif %}$request_uri redirect;
 }
 
@@ -61,8 +59,8 @@ server {
 }{% endif %}
 
 server {
-        listen 443 ssl;
-        server_name ~^marathon.+${% if env_name == 'local' %} default_server{% endif %} ;
+        listen 443 ssl{% if env_name == 'local' %} default_server{% endif %} ;
+        server_name ~^marathon.+$ ;
 
         ssl on;
         #access_log      /var/log/upstart/nginx.log;
@@ -150,6 +148,7 @@ server {
                 proxy_pass http://marathon/;
                 add_header act-as-user $http_x_upstream_act_as_user;
                 proxy_set_header Host $host;
+                proxy_set_header Accept-Encoding deflate;
                 proxy_set_header X-Real-IP $remote_addr;
                 proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
                 proxy_set_header X-Scheme $scheme;
@@ -159,6 +158,7 @@ server {
 
         location = /marathon_internal {
                 proxy_set_header Host $host;
+                proxy_set_header Accept-Encoding deflate;
                 proxy_pass http://marathon/$marathon_endpoint;
                 internal;
         }
@@ -199,6 +199,7 @@ server {
 
         location = /chronos_internal {
                 proxy_set_header Host $host;
+                proxy_set_header Accept-Encoding deflate;
                 proxy_pass http://chronos/$chronos_endpoint;
                 internal;
         }
@@ -226,6 +227,7 @@ server {
                 access_by_lua_file '/usr/local/openresty/nginx/auth_request.lua';
                 proxy_pass http://chronos/;
                 proxy_set_header Host $host;
+                proxy_set_header Accept-Encoding deflate;
                 proxy_set_header X-Real-IP $remote_addr;
                 proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
                 proxy_set_header X-Scheme $scheme;
