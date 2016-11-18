@@ -87,7 +87,7 @@
 
   - name: Generate nginx basic auth file if generate_basic_auth_file is set && it requires permissions file locally
     when: generate_basic_auth_file is defined and generate_basic_auth_file|bool
-    shell: "{{ creds_dir }}/venv/bin/python {{ role_path }}/files/generate_nginx_basic_auth_file.py {{ nginx_auth_local_dir }}/{% if set_test_users is defined and set_test_users|bool %}permissions.yml,{{ nginx_auth_local_dir }}/permissions_local.yml{% else %}permissions.yml{% endif %} {{ creds_dir }}/{{ nginx_basic_auth_file_name }}"
+    shell: "{{ creds_dir }}/venv/bin/python {{ role_path }}/files/generate_nginx_basic_auth_file.py {{ nginx_auth_local_dir }}/{% if nginx_set_test_users is defined and nginx_set_test_users|bool %}permissions.yml,{{ nginx_auth_local_dir }}/permissions_local.yml{% else %}permissions.yml{% endif %} {{ creds_dir }}/{{ nginx_basic_auth_file_name }}"
     delegate_to: 127.0.0.1
     always_run: yes # run during check mode
     run_once: yes

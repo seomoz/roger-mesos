@@ -6,7 +6,7 @@ stop on runlevel [0156]
 chdir {{nginx_conf_dir}}/aaad
 
 env HTPASSWD_FILE={{ nginx_conf_dir }}/{{ nginx_basic_auth_file_name }}
-env PERMISSIONS_FILES={{ nginx_conf_dir }}/permissions.yml{% if set_test_users is defined and set_test_users|bool %},{{ nginx_conf_dir }}/permissions_test_users.yml{% endif %}
+env PERMISSIONS_FILES={{ nginx_conf_dir }}/permissions.yml{% if nginx_set_test_users is defined and nginx_set_test_users|bool %},{{ nginx_conf_dir }}/permissions_test_users.yml{% endif %}
 
 env APP_SECRET_KEY={{ aaad_app_secret_key }}
 

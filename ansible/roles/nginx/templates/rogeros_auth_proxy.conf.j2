@@ -22,7 +22,7 @@ server {
 }{% endif %}
 
 server {
-       listen 80 {{ default_server|default('') }} ;
+       listen 80 {{ nginx_default_server|default('') }} ;
        server_name ~^marathon.+$ ;
        rewrite ^ https://{% if env_name == 'local' %}{{ roger_http_url_base }}{% else %}marathon-{{env_name}}-roger.{{cert_subdomain}}{% endif %}$request_uri redirect;
 }
@@ -59,7 +59,7 @@ server {
 }{% endif %}
 
 server {
-        listen 443 ssl {{ default_server|default('') }} ;
+        listen 443 ssl {{ nginx_default_server|default('') }} ;
         server_name ~^marathon.+$ ;
 
         ssl on;
