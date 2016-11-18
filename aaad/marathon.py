@@ -17,13 +17,13 @@ class Marathon(Framework):
         return "Marathon"
 
     def filterResponseBody(self, body, allowed_namespaces, request_uri):
-        uri_pattern = re.compile("^{}$".format("/marathon/*v2/apps.*"))
+        uri_pattern = re.compile("^{}$".format("/marathon/+v2/apps.*"))
         uri_match = uri_pattern.match(request_uri)
         if uri_match:
             response = self.filterV2AppsResponse(body, allowed_namespaces)
             return response
 
-        uri_pattern = re.compile("^{}$".format("/marathon/*v2/groups.*"))
+        uri_pattern = re.compile("^{}$".format("/marathon/+v2/groups.*"))
         uri_match = uri_pattern.match(request_uri)
         if uri_match:
             response = self.filterV2GroupsResponse(body, allowed_namespaces)
