@@ -128,7 +128,7 @@ class Marathon(Framework):
     def get_id(self, request_body, request_uri):
         app_id = None
         try:
-            uri_pattern = re.compile("^{}$".format("/marathon/+v2/apps/+.+/.+"))
+            uri_pattern = re.compile("^/marathon/+v2/apps/+.+$")
             uri_match = uri_pattern.match(request_uri)
             if uri_match:     #app_id is in the request_uri, else fetch from request body
                 if 'apps' in request_uri:
