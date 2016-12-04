@@ -175,7 +175,7 @@ server {
         location = /marathon/v2/groups {
                 error_page 401 @error401;
                 set $auth_action '';
-                set $marathon_endpoint 'v2/groups';
+                set $marathon_endpoint $request_uri;
                 set $location_endpoint '/marathon_internal';
                 lua_use_default_type off;
                 access_by_lua_file '/usr/local/openresty/nginx/auth_request_and_filter_response.lua';
